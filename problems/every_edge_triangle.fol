@@ -1,0 +1,74 @@
+(sort Node)
+(relation edge Node Node)
+
+(model +
+   ((e0 Node) (e1 Node))
+)
+
+(model +
+   ((e0 Node) (e1 Node) (e2 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+   (edge e2 e1)
+   (edge e1 e2)
+   (edge e0 e2)
+   (edge e2 e0)
+)
+
+
+(model +
+   ((e0 Node) (e1 Node) (e2 Node) (e3 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+   (edge e2 e1)
+   (edge e1 e2)
+   (edge e0 e2)
+   (edge e2 e0)
+   (edge e3 e2)
+   (edge e2 e3)
+   (edge e3 e1)
+   (edge e1 e3)
+)
+
+(model +
+   ((e0 Node) (e1 Node) (e2 Node) (e3 Node) (e4 Node) (e5 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+   (edge e2 e1)
+   (edge e1 e2)
+   (edge e0 e2)
+   (edge e2 e0)
+
+   (edge e3 e4)
+   (edge e4 e3)
+   (edge e3 e5)
+   (edge e5 e3)
+   (edge e4 e5)
+   (edge e5 e4)
+)
+
+(model -
+   ((e0 Node) (e1 Node) (e2 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+   (edge e2 e1)
+   (edge e1 e2)
+)
+
+(model -
+   ((e0 Node) (e1 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+)
+
+(model -
+   ((e0 Node) (e1 Node) (e2 Node) (e3 Node))
+   (edge e0 e1)
+   (edge e1 e0)
+   (edge e2 e1)
+   (edge e1 e2)
+   (edge e0 e2)
+   (edge e2 e0)
+   (edge e3 e2)
+   (edge e2 e3)
+)

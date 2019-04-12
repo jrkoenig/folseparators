@@ -1,0 +1,8 @@
+; Sig
+(sort element)
+(relation p element element)
+(constant a element)
+(constant b element)
+; End sig
+
+(conjecture (p a b))

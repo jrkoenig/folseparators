@@ -1,0 +1,73 @@
+; Undirected graphs, as an example
+
+(sort Node)
+(relation edge Node Node)
+
+; edges are undirected
+(axiom (forall x Node (forall y Node
+          (or (not (edge x y)) (edge y x))
+        )))
+
+; no self-loops
+(axiom (forall x Node (not (edge x x))))
+
+; Property: every node is connected to some edge
+
+; Positive Models:
+; * --- *
+(model +
+   ((m0 Node) (m1 Node))
+   (edge m0 m1) (edge m1 m0)
+)
+
+; * --- * --- *
+(model +
+   ((m0 Node) (m1 Node) (m2 Node))
+   (edge m0 m1) (edge m1 m0)
+   (edge m1 m2) (edge m2 m1)
+)
+
+; * --- *   * --- *
+(model +
+   ((m0 Node) (m1 Node) (m2 Node) (m3 Node))
+   (edge m0 m1) (edge m1 m0)
+   (edge m2 m3) (edge m3 m2)
+)
+
+
+; * --- *
+;  \   /
+;   \ /
+;    *
+(model +
+   ((m0 Node) (m1 Node) (m2 Node))
+   (edge m0 m1) (edge m1 m0)
+   (edge m1 m2) (edge m2 m1)
+   (edge m0 m2) (edge m2 m0)
+)
+
+
+; Negative Models:
+; *
+(model -
+   ((m0 Node))
+)
+
+; *   *
+(model -
+   ((m0 Node) (m1 Node))
+)
+
+; * --- *   *
+(model -
+   ((m0 Node) (m1 Node) (m2 Node))
+   (edge m0 m1) (edge m1 m0)
+)
+
+
+; * --- * --- *   *
+(model -
+   ((m0 Node) (m1 Node) (m2 Node) (m3 Node))
+   (edge m0 m1) (edge m1 m0)
+   (edge m1 m2) (edge m2 m1)
+)

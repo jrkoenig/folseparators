@@ -1,0 +1,24 @@
+; Sig
+(sort node)
+(sort epoch)
+(relation le epoch epoch)
+(relation locked epoch node)
+(relation transfer epoch node)
+(relation held node)
+(constant zero epoch)
+(function ep node epoch)
+; End sig
+
+; Axiom axiom1
+(axiom (forall X epoch (le X X)))
+; Axiom axiom2
+(axiom (forall Y epoch (forall Z epoch (forall X epoch (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom axiom3
+(axiom (forall Y epoch (forall X epoch (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom axiom4
+(axiom (forall Y epoch (forall X epoch (or (le X Y) (le Y X)))))
+; Axiom axiom5
+(axiom (forall X epoch (le zero X)))
+
+; Conjecture invar11
+(conjecture (forall N2 node (forall N1 node (forall E epoch (or (not (and (locked E N1) (locked E N2))) (= N1 N2))))))

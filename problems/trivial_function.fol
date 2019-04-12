@@ -1,0 +1,15 @@
+(sort A)
+(function f A A)
+(constant a A)
+
+(model + ((e0 A) (e1 A))
+  (= a e0)
+  (= (f e0) e0)
+  (= (f e1) e0)
+)
+
+(model - ((e0 A) (e1 A))
+  (= a e0)
+  (= (f e0) e1)
+  (= (f e1) e0)
+)
