@@ -3,60 +3,61 @@ import itertools, copy, sys
 import z3
 from array import array
 
-from models import *
+from models import And, Or, Not, Func, Var, Relation, Equal
 from check import check, resolve_term
 
 K_function_unrolling = 1
 
-def compute_dnf(M, tr, fl):
-    def reduce(clause):
-        changed = True
-        while changed:
-            i = 0
-            changed = False
-            while i < len(clause):
-                for m_index in fl:
-                    if all(M[a][0][m_index] == value for (a, value) in clause[:i]) and \
-                       all(M[a][0][m_index] == value for (a, value) in clause[i+1:]):
-                        i += 1
-                        break
-                else:
-                    del clause[i]
-                    changed = True
-        return clause
 
-    if True:
-        print("Reduced matrix: (true | false  atom)")
-        for (row, atom) in M:
-            x = ''
-            for t in tr:
-                x += '1' if row[t] else '0'
-            x += ' | '
-            for f in fl:
-                x += '1' if row[f] else '0'
-            x += "  " + str(atom)
-            print(x)
+# models is a map from name (eg M134) to model. sat_formula is a formula that
+# uses the variables M_i, and should be made true by the resulting formula.
+# sat_formula must be satisfiable, but may potentially have many satisfying
+# assignments that must be explored to find a good generalizable matrix formula.
+def infer_matrix(models, sig, sat_formula):
 
-    # dnf is a list of lists. Inner is "and", outer is "or"
-    dnf = [[(a, M[a][0][t]) for a in range(len(M))] for t in tr]
-    dnf = [reduce(clause) for clause in dnf]
-    minimal = []
-    dnf.sort(key = len)
-    # need to cover all the true models
-    remaining_tr = set(tr)
-    for clause in dnf:
-        keep = False
-        old = set(remaining_tr)
-        for t in old:
-            if all(M[a][0][t] == value for (a, value) in clause):
-                remaining_tr.remove(t)
-                keep = True
-        if keep:
-            minimal.append(clause)
-    dnf = minimal
-    used_literals = set(a for clause in dnf for (a, _) in clause)
-    print("Used", len(used_literals), "literals")
-    return Or([And([M[a][1] if polarity else Not(M[a][1]) for (a, polarity) in clause]) for clause in dnf])
+    trivial = trivial_check(sat_formula, models.keys())
+    if trivial is not None:
+        return trivial
+
+    print ("Computing atom-model matrix")
+    model_positions = dict((model_id, i) for (i, model_id) in enumerate(models.keys()))
+    atom_model_matrix = [(array('b', (check(a, m) for m in models.values())), a) for a in atoms(sig)]
+    atom_model_matrix_reduced = [(row, atom) for (row, atom) in atom_model_matrix if not (all(row) or all(not x for x in row))]
+    atom_model_matrix_reduced.sort()
+    for i in range(len(atom_model_matrix_reduced)-1, 1, -1):
+        (r1, _), (r2, _) = atom_model_matrix_reduced[i-1], atom_model_matrix_reduced[i]
+        if r1 == r2:
+            del atom_model_matrix_reduced[i]
+
+    print ("Retained", len(atom_model_matrix_reduced), "of", len(atom_model_matrix), "atoms")
+    print ("Have", len(models), "distinct FO-types/models")
+
+    # print("\n".join(["".join('1' if x else '0' for x in row) + " " + str(atom) for (row, atom) in atom_model_matrix_reduced]))
+    # print (sat_formula)
+    # print (models.keys())
+
+    M = atom_model_matrix_reduced
+
+    m = compute_minimal_with_z3(M, model_positions, sat_formula)
+    return trivial_simplify(m)
+
+    # (true_model_ids, false_model_ids) = compute_assignment(sat_formula, models.keys())
+    # dnf = compute_dnf(M, [model_positions[i] for i in true_model_ids], [model_positions[i] for i in false_model_ids])
+    # dnf = trivial_simplify(dnf)
+    # return dnf
+
+def trivial_check(sat_formula, vars):
+    s = z3.Solver()
+    s.add(sat_formula)
+    s.push()
+    for x in vars: s.add(z3.Bool('M'+str(x)))
+    if s.check() == z3.sat:
+        return And([])
+    s.pop()
+    for x in vars: s.add(z3.Not(z3.Bool('M'+str(x))))
+    if s.check() == z3.sat:
+        return Or([])
+    return None
 
 # M has a row per literal and a column per model. A model x corresponds to
 # Mx in the sat formula,
@@ -117,55 +118,26 @@ def compute_minimal_with_z3(M, model_positions, sat_formula):
         solver.pop()
     assert False
 
-# models is a map from name (eg M134) to model. sat_formula is a formula that
-# uses the variables M_i, and should be made true by the resulting formula.
-# sat_formula must be satisfiable, but may potentially have many satisfying
-# assignments that must be explored to find a good generalizable matrix formula.
-def infer_matrix(models, sig, sat_formula):
+def atoms(sig):
+    terms_by_sort = dict([(s,[]) for s in sig.sorts])
 
-    trivial = trivial_check(sat_formula, models.keys())
-    if trivial is not None:
-        return trivial
+    for c, sort in sig.constants.items():
+        terms_by_sort[sort].append(Var(c))
 
-    print ("Computing atom-model matrix")
-    model_positions = dict((model_id, i) for (i, model_id) in enumerate(models.keys()))
-    atom_model_matrix = [(array('b', (check(a, m) for m in models.values())), a) for a in atoms(sig)]
-    atom_model_matrix_reduced = [(row, atom) for (row, atom) in atom_model_matrix if not (all(row) or all(not x for x in row))]
-    atom_model_matrix_reduced.sort()
-    for i in range(len(atom_model_matrix_reduced)-1, 1, -1):
-        (r1, a1), (r2, a2) = atom_model_matrix_reduced[i-1], atom_model_matrix_reduced[i]
-        if r1 == r2:
-            del atom_model_matrix_reduced[i]
+    for iter in range(K_function_unrolling):
+        prior_terms = copy.deepcopy(terms_by_sort)
+        for f, (arg_sorts, result_sort) in sig.functions.items():
+            arg_terms = itertools.product(*[prior_terms[s] for s in arg_sorts])
+            terms_by_sort[result_sort].extend([Func(f, list(a)) for a in arg_terms])
 
-    print ("Retained", len(atom_model_matrix_reduced), "of", len(atom_model_matrix), "atoms")
-    print ("Have", len(models), "distinct FO-types/models")
+    for r, sorts in sig.relations.items():
+        for args in itertools.product(*[terms_by_sort[s] for s in sorts]):
+            yield Relation(r, args)
 
-    # print("\n".join(["".join('1' if x else '0' for x in row) + " " + str(atom) for (row, atom) in atom_model_matrix_reduced]))
-    # print (sat_formula)
-    # print (models.keys())
+    for sort in sig.sorts:
+        for (a,b) in itertools.product(terms_by_sort[sort], terms_by_sort[sort]):
+            yield (Equal(a, b))
 
-    M = atom_model_matrix_reduced
-
-    m = compute_minimal_with_z3(M, model_positions, sat_formula)
-    return trivial_simplify(m)
-
-    (true_model_ids, false_model_ids) = compute_assignment(sat_formula, models.keys())
-    dnf = compute_dnf(M, [model_positions[i] for i in true_model_ids], [model_positions[i] for i in false_model_ids])
-    dnf = trivial_simplify(dnf)
-    return dnf
-
-def trivial_check(sat_formula, vars):
-    s = z3.Solver()
-    s.add(sat_formula)
-    s.push()
-    for x in vars: s.add(z3.Bool('M'+str(x)))
-    if s.check() == z3.sat:
-        return And([])
-    s.pop()
-    for x in vars: s.add(z3.Not(z3.Bool('M'+str(x))))
-    if s.check() == z3.sat:
-        return Or([])
-    return None
 
 
 def compute_assignment(sat_formula, vars):
@@ -195,22 +167,56 @@ def compute_assignment(sat_formula, vars):
             false_model_ids.add(x)
     return true_model_ids, false_model_ids
 
+def compute_dnf(M, tr, fl):
+    def reduce(clause):
+        changed = True
+        while changed:
+            i = 0
+            changed = False
+            while i < len(clause):
+                for m_index in fl:
+                    if all(M[a][0][m_index] == value for (a, value) in clause[:i]) and \
+                       all(M[a][0][m_index] == value for (a, value) in clause[i+1:]):
+                        i += 1
+                        break
+                else:
+                    del clause[i]
+                    changed = True
+        return clause
 
-    # if len(false_models) < len(true_models):
-    #     cnf = And([Not(all_facts2(fl, sig)) for fl in false_models])
-    #     cnf = trivial_simplify(cnf)
-    #     cnf = simplify_formula_wrt_models(cnf, true_models, false_models)
-    #     cnf = simplify_wrt_sat_formula(cnf, models, sat_formula)
-    #     cnf = trivial_simplify(cnf)
-    #     final = cnf
-    # else:
-    #     dnf = Or([all_facts2(tr, sig) for tr in true_models])
-    #     dnf = trivial_simplify(dnf)
-    #     dnf = simplify_formula_wrt_models(dnf, true_models, false_models)
-    #     dnf = simplify_wrt_sat_formula(dnf, models, sat_formula)
-    #     dnf = trivial_simplify(dnf)
-    #     final = dnf
-    # return final
+    if True:
+        print("Reduced matrix: (true | false  atom)")
+        for (row, atom) in M:
+            x = ''
+            for t in tr:
+                x += '1' if row[t] else '0'
+            x += ' | '
+            for f in fl:
+                x += '1' if row[f] else '0'
+            x += "  " + str(atom)
+            print(x)
+
+    # dnf is a list of lists. Inner is "and", outer is "or"
+    dnf = [[(a, M[a][0][t]) for a in range(len(M))] for t in tr]
+    dnf = [reduce(clause) for clause in dnf]
+    minimal = []
+    dnf.sort(key = len)
+    # need to cover all the true models
+    remaining_tr = set(tr)
+    for clause in dnf:
+        keep = False
+        old = set(remaining_tr)
+        for t in old:
+            if all(M[a][0][t] == value for (a, value) in clause):
+                remaining_tr.remove(t)
+                keep = True
+        if keep:
+            minimal.append(clause)
+    dnf = minimal
+    used_literals = set(a for clause in dnf for (a, _) in clause)
+    print("Used", len(used_literals), "literals")
+    return Or([And([M[a][1] if polarity else Not(M[a][1]) for (a, polarity) in clause]) for clause in dnf])
+
 
 # Simplify boolean formula preserving truth on true models and falsehood on false models
 def simplify_formula_wrt_models(formula, true_models, false_models):
@@ -275,29 +281,10 @@ def removals(f, allow_dropping_disjuncts = True):
     else:
         return
 
-def atoms(sig):
-    terms_by_sort = dict([(s,[]) for s in sig.sorts])
-
-    for c, sort in sig.constants.items():
-        terms_by_sort[sort].append(Var(c))
-
-    for iter in range(K_function_unrolling):
-        prior_terms = copy.deepcopy(terms_by_sort)
-        for f, (arg_sorts, result_sort) in sig.functions.items():
-            arg_terms = itertools.product(*[prior_terms[s] for s in arg_sorts])
-            terms_by_sort[result_sort].extend([Func(f, list(a)) for a in arg_terms])
-
-    for r, sorts in sig.relations.items():
-        for args in itertools.product(*[terms_by_sort[s] for s in sorts]):
-            yield Relation(r, args)
-
-    for sort in sig.sorts:
-        for (a,b) in itertools.product(terms_by_sort[sort], terms_by_sort[sort]):
-            yield (Equal(a, b))
 
 
-def all_facts2(model, sig):
-    return And([a if check(a, model) else Not(a) for a in atoms(sig)])
+# def all_facts2(model, sig):
+#     return And([a if check(a, model) else Not(a) for a in atoms(sig)])
     #
     # terms_by_sort = dict([(s,[]) for s in sig.sorts])
     #

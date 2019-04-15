@@ -56,7 +56,7 @@ def extract_model(solver, sig, label = ""):
             ev = m.evaluate(z3_rel_func[rel](*t), model_completion = True)
             if ev:
                 M.add_relation(rel, [str(x) for x in t])
-    for func, (sorts, result_sort) in sorted(sig.functions.items()):
+    for func, (sorts, _) in sorted(sig.functions.items()):
         univs = [m.get_universe(sorts_to_z3[s]) for s in sorts]
         for t in itertools.product(*univs):
             ev = m.evaluate(z3_rel_func[func](*t), model_completion = True)

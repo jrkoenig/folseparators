@@ -20,7 +20,7 @@ def term(env, token):
             args = [term(env, t) for t in token[1:]]
             if len(args) != len(expected_sorts):
                 error_at("Function has wrong arity", f)
-            for es, (arg, arg_sort), i in zip(expected_sorts, args, range(1, len(token))):
+            for es, (_, arg_sort), i in zip(expected_sorts, args, range(1, len(token))):
                 if es != arg_sort:
                     error_at("Sort mismatch", token[i])
             return (Func(f.name(), [a[0] for a in args]), ret_sort)
@@ -76,7 +76,7 @@ def formula(env, token):
         if len(expected_sorts) != len(token) - 1:
             error_at("Relation has incorrect arity", head)
         args = [term(env, t) for t in token[1:]]
-        for es, (t, term_sort), src in zip(expected_sorts, args, token[1:]):
+        for es, (_, term_sort), src in zip(expected_sorts, args, token[1:]):
             if (es != term_sort):
                 error_at("Sort mismatch", src)
         return Relation(head.name(), [a[0] for a in args])
@@ -94,7 +94,7 @@ def interpret(commands):
             if isinstance(s, Atom) and s.name() in sig.sorts:
                 resolved_sorts.append(s.name())
             else:
-                error_at("Must be sort", sort)
+                error_at("Must be sort", s)
         return resolved_sorts
     def is_free_name(token):
         return isinstance(token, Atom) and sig.is_free_name(token.name())
@@ -222,7 +222,7 @@ if __name__=="__main__":
     print(sig)
     for ax in axioms:
         print("Axiom:", ax)
-    for ax in conjecture:
+    for ax in conjectures:
         print("Conjecture:", ax)
     for m in models:
         print(m)
