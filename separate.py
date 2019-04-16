@@ -205,7 +205,7 @@ def separate(models, sig, max_depth = 1000000):
             c = check_prefix(models, p, sig, collapsed, solver)
             if c is not None:
                 return c
-        prefixes = [[(k, s)]+p for k in [True] for p in prefixes for s in sorted(sig.sorts)]
+        prefixes = [[(k, s)]+p for k in [True, False] for p in prefixes for s in sorted(sig.sorts)]
 
 if __name__ == "__main__":
     from interpret import interpret
