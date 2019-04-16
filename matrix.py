@@ -10,7 +10,7 @@ K_function_unrolling = 1
 
 
 # models is a map from name (eg M134) to model. sat_formula is a formula that
-# uses the variables M_i, and should be made true by the resulting formula.
+# uses the variables Mi, and should be made true by the resulting formula.
 # sat_formula must be satisfiable, but may potentially have many satisfying
 # assignments that must be explored to find a good generalizable matrix formula.
 def infer_matrix(models, sig, sat_formula):
@@ -36,9 +36,7 @@ def infer_matrix(models, sig, sat_formula):
     # print (sat_formula)
     # print (models.keys())
 
-    M = atom_model_matrix_reduced
-
-    m = compute_minimal_with_z3(M, model_positions, sat_formula)
+    m = compute_minimal_with_z3_maxsat(atom_model_matrix_reduced, model_positions, sat_formula)
     return trivial_simplify(m)
 
 def trivial_check(sat_formula, vars):
@@ -54,12 +52,10 @@ def trivial_check(sat_formula, vars):
         return Or([])
     return None
 
-# M has a row per literal and a column per model. A model x corresponds to
-# Mx in the sat formula,
-def compute_minimal_with_z3(M, model_positions, sat_formula):
+def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
     N_clauses = 10
 
-    solver = z3.Solver()
+    solver = z3.Optimize()
     B = z3.Bool
     solver.add(z3.simplify(sat_formula))
     p_terms = [[B("xp{}_{}".format(i,j)) for j in range(len(M))] for i in range(N_clauses)]
@@ -69,7 +65,7 @@ def compute_minimal_with_z3(M, model_positions, sat_formula):
         definition = []
         for i in range(N_clauses):
             clause = []
-            for j, (row, atom) in enumerate(M):
+            for j, (row, _) in enumerate(M):
                 if row[m_index]:
                     clause.append(p_terms[i][j])
                 else:
@@ -82,36 +78,34 @@ def compute_minimal_with_z3(M, model_positions, sat_formula):
         for j in range(len(M)):
             solver.add(z3.Or(z3.Not(B("xp{}_{}".format(i,j))),
                              z3.Not(B("xn{}_{}".format(i,j)))))
-    num_literals = z3.Sum(*[z3.If(z3.Or(*[B("{}{}_{}".format(p, i, j)) for i in range(N_clauses) for p in ["xp", "xn"]]), 1, 0) for j in range(len(M))])
+    
+    for j in range(len(M)):
+        solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format(p, i, j)) for i in range(N_clauses) for p in ["xp", "xn"]])))
     print("Constructed minimization problem")
-    for K_bound in range(0, len(M) + 1):
-        solver.push()
-        solver.add(num_literals <= K_bound)
-        r = solver.check()
-        if r == z3.sat:
-            print("Found a formula with", K_bound, "literals and", N_clauses, "clauses")
-            assignment = solver.model()
-            f = []
-            for i in range(N_clauses):
-                cl = []
-                for j, (row, atom) in enumerate(M):
-                    if assignment[B("xp{}_{}".format(i,j))]:
-                        cl.append(atom)
-                    elif assignment[B("xn{}_{}".format(i,j))]:
-                        cl.append(Not(atom))
-                cl.sort()
-                f.append(Or(cl))
-            f.sort()
-            f_minimal = []
-            for clause in f:
-                if len(f_minimal) > 0 and f_minimal[-1] == clause:
-                    continue
-                f_minimal.append(clause)
-            return And(f_minimal)
-        else:
-            print("Couldn't do it in", K_bound, "literals and", N_clauses, "clauses")
-        solver.pop()
-    assert False
+    r = solver.check()
+    if r == z3.sat:
+        print("Found a formula")
+        assignment = solver.model()
+        f = []
+        for i in range(N_clauses):
+            cl = []
+            for j, (row, atom) in enumerate(M):
+                if assignment[B("xp{}_{}".format(i,j))]:
+                    cl.append(atom)
+                elif assignment[B("xn{}_{}".format(i,j))]:
+                    cl.append(Not(atom))
+            cl.sort()
+            f.append(Or(cl))
+        f.sort()
+        f_minimal = []
+        for clause in f:
+            if len(f_minimal) > 0 and f_minimal[-1] == clause:
+                continue
+            f_minimal.append(clause)
+        return And(f_minimal)
+    else:
+        print("Error, z3 could not solve max-SAT problem")
+        assert False
 
 def atoms(sig):
     terms_by_sort = dict([(s,[]) for s in sig.sorts])
