@@ -7,31 +7,7 @@ from matrix import infer_matrix, K_function_unrolling
 import itertools, copy
 import sys
 
-# def collapse2(model, assignment):
-#     mapping = {}
-#     consts = []
-#     rels = []
-#     for const in sorted(model.constants.keys()):
-#         e = model.constants[const]
-#         if e not in mapping:
-#             mapping[e] = len(mapping)
-#         consts.append(mapping[e])
-#     for e in assignment:
-#         if e not in mapping:
-#             mapping[e] = len(mapping)
-#         consts.append(mapping[e])
-#     for rel in sorted(model.relations.keys()):
-#         tuples = model.relations[rel]
-#         collapsed_tuples = []
-#         for t in tuples:
-#             if all([x in mapping for x in t]):
-#                 collapsed_tuples.append(tuple([mapping[x] for x in t]))
-#         collapsed_tuples.sort()
-#         rels.append(collapsed_tuples)
-#     return repr((consts, rels))
-
-
-def collapse3(model, sig, assignment):
+def collapse(model, sig, assignment):
     mapping = {}
     consts = []
     funcs = []
@@ -74,25 +50,6 @@ def collapse3(model, sig, assignment):
         rels.append(collapsed_tuples)
     return repr((consts, funcs, rels))
 
-# def all_submodels(models, n, sort):
-#     collapsed = {}
-#     L = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'+'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.lower()
-#
-#     for model in models:
-#         print("Model:", model.label)
-#         for consts in itertools.product(*([model.elems_of_sort[sort]] * n)):
-#             for i,x in enumerate(consts):
-#                 model.constants["x_"+str(i)] = x
-#             c = str(collapse(model))
-#             if c not in collapsed:
-#                 collapsed[c] = len(collapsed)
-#             print(" ".join([model.names[x] for x in consts]), L[collapsed[c]])
-#             for i,x in enumerate(consts):
-#                 del model.constants["x_"+str(i)]
-#
-#     for c, i in sorted(collapsed.items(), key = lambda x: x[1]):
-#         print(L[i], "=", c)
-
 class CollapseCache(object):
     def __init__(self, sig, models):
         self.models = models
@@ -109,7 +66,7 @@ class CollapseCache(object):
         if (index, assignment) in self.cache:
             return self.cache[(index, assignment)]
         # collapse model
-        key = collapse3(self.models[index], self.sig, assignment)
+        key = collapse(self.models[index], self.sig, assignment)
         if key not in self.collapsed:
             r = len(self.collapsed)
             self.collapsed[key] = r
