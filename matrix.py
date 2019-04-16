@@ -3,7 +3,7 @@ import itertools, copy, sys
 import z3
 from array import array
 
-from models import And, Or, Not, Func, Var, Relation, Equal
+from logic import And, Or, Not, Func, Var, Relation, Equal
 from check import check, resolve_term
 
 K_function_unrolling = 1

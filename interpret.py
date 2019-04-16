@@ -1,6 +1,6 @@
 
 from parse import parse, Atom, List
-from models import *
+from logic import *
 
 def error_at(desc, node):
     raise RuntimeError(desc + " at " + str(node.loc[0]) + ":" + str(node.loc[1]))

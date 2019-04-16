@@ -1,7 +1,7 @@
 
 import z3
 
-from models import *
+from logic import *
 from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
 import itertools, copy

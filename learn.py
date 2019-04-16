@@ -2,7 +2,7 @@
 import itertools
 import z3
 
-from models import *
+from logic import *
 from check import check
 from separate import separate
 
