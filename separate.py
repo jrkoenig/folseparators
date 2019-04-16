@@ -101,14 +101,27 @@ def build_prefix_formula(prefix, f, n = 0):
     else:
         return Exists("x_"+str(n), sort, build_prefix_formula(prefix[1:], f, n+1))
 
+class VarSet(object):
+    def __init__(self):
+        self.vars = set()
+        self.pos = set()
+        self.neg = set()
+    def add(self, v, polarity):
+        self.vars.add(v)
+        if polarity:
+            self.pos.add(v)
+        else:
+            self.neg.add(v)
+    def __iter__(self): return iter(self.vars)
 
 def formula_for_model(model_index, assignment, prefix, collapsed, vars):
     m = collapsed.models[model_index]
     if len(prefix) == 0:
         x = collapsed.get(model_index, assignment)
         v = z3.Bool("M"+str(x))
-        vars.add(x)
-        return v if m.label.startswith("+") else z3.Not(v)
+        polarity = m.label.startswith("+")
+        vars.add(x, polarity)
+        return v if polarity else z3.Not(v)
     else:
         (is_forall, sort) = prefix[0]
         rest = prefix[1:]
@@ -123,8 +136,9 @@ def formula_for_model(model_index, assignment, prefix, collapsed, vars):
 
 def check_prefix(models, prefix, sig, collapsed, solver):
     solver.push()
-    vars = set()
+    vars = VarSet()
     sat_formula = z3.And([formula_for_model(m_index, [], prefix, collapsed, vars) for m_index in range(len(models))])
+    print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
     solver.add(sat_formula)
     result = solver.check()
     solver.pop()
