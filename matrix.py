@@ -113,7 +113,7 @@ def atoms(sig):
     for c, sort in sig.constants.items():
         terms_by_sort[sort].append(Var(c))
 
-    for iter in range(K_function_unrolling):
+    for _ in range(K_function_unrolling):
         prior_terms = copy.deepcopy(terms_by_sort)
         for f, (arg_sorts, result_sort) in sig.functions.items():
             arg_terms = itertools.product(*[prior_terms[s] for s in arg_sorts])

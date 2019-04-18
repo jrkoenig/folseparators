@@ -1,7 +1,7 @@
 
 import z3
 
-from logic import *
+from logic import Forall, Exists
 from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
 import itertools, copy
@@ -24,13 +24,13 @@ def collapse(model, sig, assignment):
             mapping[e] = len(mapping)
         consts.append(mapping[e])
 
-    for iter in range(K_function_unrolling):
+    for _ in range(K_function_unrolling):
         # we need to iterate over elements of the collapsed model in a way
         # consistent with their collapsed identity, hence iterating over them
         # in the mapping value order
         reachable = list(sorted(mapping.keys(), key = lambda x: mapping[x]))
         for f in sorted(model.functions.keys()):
-            (arg_sorts, result_sort) = sig.functions[f]
+            (arg_sorts, _) = sig.functions[f]
             arg_tuples = itertools.product(*[[r for r in reachable if model.sorts[r] == sort] for sort in arg_sorts])
             f_repr = model.functions[f]
             for t in arg_tuples:
@@ -149,7 +149,7 @@ def check_prefix(models, prefix, sig, collapsed, solver):
         for x in vars:
             models[x] = collapsed.get_concrete(x)
         sig_with_bv = copy.deepcopy(sig)
-        for i,(is_forall, sort) in enumerate(prefix):
+        for i,(_, sort) in enumerate(prefix):
             assert "x_"+str(i) not in sig_with_bv.constants
             sig_with_bv.constants["x_"+str(i)] = sort
         matrix = infer_matrix(models, sig_with_bv, sat_formula)
@@ -168,7 +168,7 @@ def separate(models, sig, max_depth = 1000000):
     collapsed = CollapseCache(sig, models)
     solver = z3.Solver()
 
-    for depth in range(max_depth+1):
+    for _ in range(max_depth+1):
         for p in prefixes:
             if prefix_is_redundant(p):
                 continue
