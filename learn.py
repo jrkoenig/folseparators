@@ -35,8 +35,7 @@ def toZ3(f, env):
         print ("Can't translate", f)
         assert False
 
-def extract_model(solver, sig, label = ""):
-    m = solver.model()
+def extract_model(m, sig, label = ""):
     M = Model(sig)
     M.label = label
     z3_to_model_elems = {}
@@ -63,6 +62,49 @@ def extract_model(solver, sig, label = ""):
             M.add_function(func, [str(x) for x in t], str(ev))
     return M
 
+def fm(a, b, env, solver):
+    solver.push()
+    solver.add(toZ3(a, env))
+    solver.add(z3.Not(toZ3(b, env)))
+    r = solver.check()
+    m = None
+    if r == z3.sat:
+        m = solver.model()
+    solver.pop()
+    return (r, m)
+
+def bound_sort_counts(solver, bounds):
+    for sort, K in bounds.items():
+        S = sorts_to_z3[sort]
+        bv = z3.Const("elem_{}".format(sort), S)
+        solver.add(z3.ForAll(bv, z3.Or([z3.Const("elem_{}_{}".format(sort, i), S) == bv for i in range(K)])))            
+
+def find_model_or_equivalence(current, formula, env, models, s):
+    (r1, m) = fm(current, formula, env, s)
+    if m is not None:
+        for k in range(1, 100000):
+            s.push()
+            bound_sort_counts(s, dict((s,k) for s in env.sig.sorts))
+            (_, m) = fm(current, formula, env, s)
+            s.pop()
+            if m is not None:
+                return extract_model(m, sig, "-")
+        assert False
+    (r2, m) = fm(formula, current, env, s)
+    if m is not None:
+        for k in range(1, 100000):
+            s.push()
+            bound_sort_counts(s, dict((s,k) for s in env.sig.sorts))
+            (_, m) = fm(formula, current, env, s)
+            s.pop()
+            if m is not None:
+                return extract_model(m, sig, "+")
+        assert False
+    if r1 == z3.unsat and r2 == z3.unsat:
+        return None
+    
+    # TODO: try bounded model checking up to some limit
+    raise RuntimeError("Z3 did not produce equivalence or model")
 
 def learn(sig, axioms, formula):
     # ask z3 if the current formula and the ot
@@ -76,7 +118,6 @@ def learn(sig, axioms, formula):
     for fun, (sorts, ret) in sig.functions.items():
         z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
 
-    print ("Constructed environment")
     env = Environment(sig)
     current = Or([])
     models = []
@@ -86,51 +127,19 @@ def learn(sig, axioms, formula):
 
     while True:
         print ("Checking formula")
-        have_new_model = False
-        negative_was_unsat = False
-        positive_was_unsat = False
-
-        if not have_new_model:
-            s.push()
-            s.add(toZ3(current, env))
-            s.add(z3.Not(toZ3(formula, env)))
-            res = s.check()
-            if res == z3.sat:
-                print("Found new negative separating model")
-                have_new_model = True
-                models.append(extract_model(s, sig, "-"))
-                print(print_model(models[-1]))
-            elif res == z3.unsat:
-                negative_was_unsat = True
-            s.pop()
-
-        if not have_new_model:
-            s.push()
-            s.add(z3.Not(toZ3(current, env)))
-            s.add(toZ3(formula, env))
-            res = s.check()
-            if res == z3.sat:
-                print("Found new positive separating model")
-                have_new_model = True
-                models.append(extract_model(s, sig, "+"))
-                print(print_model(models[-1]))
-            elif res == z3.unsat:
-                positive_was_unsat = True
-            s.pop()
-
-        if negative_was_unsat and positive_was_unsat:
+        result = find_model_or_equivalence(current, formula, env, models, s)        
+        if result is None:
             print ("formula matches!")
             print (current)
             return models
-        elif have_new_model:
+        else:
+            models.append(result)
+            print (print_model(result))
             print ("Have new model, now have", len(models), "models total")
             current = separate(models, sig, 10)
             if current is None:
                 raise RuntimeError("couldn't separate models")
             print("Learned new possible formula: ", current)
-        else:
-            print("Error, z3 did not show equivalence or give a model")
-            raise RuntimeError("Z3 error")
 
 if __name__ == "__main__":
     from interpret import interpret
