@@ -59,7 +59,7 @@ ws = re.compile("^\s+")
 lparen = re.compile("^\\(")
 rparen = re.compile("^\\)")
 semicolon = re.compile("^;.*")
-ident = re.compile("(^[a-zA-Z_][a-zA-Z0-9_!']*)|[1-9][0-9]*|[+-/*&^|<>=?~]+")
+ident = re.compile("(^[a-zA-Z_][a-zA-Z0-9_!'.]*)|[1-9][0-9]*|[+-/*&^|<>=?~]+")
 
 def p_recur(input):
     elems = []
