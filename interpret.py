@@ -122,7 +122,7 @@ def interpret(commands):
 
             elif command == "relation":
                 if not in_sig: error_at("Signature must come before axioms and models", c)
-                if len(c) >= 3 and is_free_name(c[1]):
+                if len(c) >= 2 and is_free_name(c[1]):
                     sig.relations[c[1].name()] = sort_list(c[2:])
                 else:
                     error_at("Invalid relation definition", c)
