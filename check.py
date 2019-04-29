@@ -50,22 +50,26 @@ def check(formula, model):
         raise RuntimeError("Formula is illformed")
 
 if __name__ == "__main__":
-    from interpret import interpret
-    from parse import parse
+    from interpret import interpret, SemanticError
+    from parse import parse, SyntaxError
     import sys
 
     if len(sys.argv) not in [1,2]:
         print("Usage: python3 check.py [file.fol]")
         exit(1)
 
-    file = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
+    filen = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
+    print("Checking", filen)
+    try:
 
-    (sig, axioms, conjectures, models) = interpret(parse(open(file).read()))
-    for model in models:
-        for axiom in axioms:
-            if not check(axiom, model):
-                print("Model does not meet axiom!")
-                print(axiom)
-                print(model)
-            else:
-                print("Confirmed")
+        (sig, axioms, conjectures, models) = interpret(parse(open(filen).read()))
+        for model in models:
+            for axiom in axioms:
+                if not check(axiom, model):
+                    print("Model does not meet axiom!")
+                    print(axiom)
+                    print(model)
+    except SemanticError as e:
+        print(e)
+    except SyntaxError as e:
+        print(e)

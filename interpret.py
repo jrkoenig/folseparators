@@ -2,8 +2,14 @@
 from parse import parse, Atom, List
 from logic import *
 
+class SemanticError(Exception):
+    def __init__(self, desc = "?"):
+        self.desc = desc
+    def __str__(self):
+        return "Semantic Error: " + self.desc
+
 def error_at(desc, node):
-    raise RuntimeError(desc + " at " + str(node.loc[0]) + ":" + str(node.loc[1]))
+    raise SemanticError(desc + " at " + str(node.loc[0]) + ":" + str(node.loc[1]))
 
 
 def term(env, token):

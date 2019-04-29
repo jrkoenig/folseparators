@@ -2,6 +2,13 @@
 import re
 import sys
 
+
+class SyntaxError(Exception):
+    def __init__(self, desc = "?"):
+        self.desc = desc
+    def __str__(self):
+        return "Syntax Error: " + self.desc
+
 class Atom(object):
     def __init__(self, name, src_loc = (0,0)):
         self.n = name
@@ -53,7 +60,7 @@ class Input(object):
         context = self.string[self.index : self.index+s]
         if self.index + s < len(self.string):
             context += "..."
-        raise RuntimeError("Syntax error, "+str(desc)+" (at "+str(self.line)+":"+str(self.column)+"): " +context)
+        raise SyntaxError("Syntax error, "+str(desc)+" (at "+str(self.line)+":"+str(self.column)+"): " +context)
 
 ws = re.compile("^\s+")
 lparen = re.compile("^\\(")
