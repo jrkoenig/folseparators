@@ -173,26 +173,31 @@ class Separator(object):
         self.quiet = quiet
         self.logic = logic
         self.max_depth = max_depth
+        self.forget_learned_facts()
 
     def add_model(self, model):
         self.models.append(model)
         self.collapsed.add_model(model)
     def forget_learned_facts(self):
         """Forgets all inferred facts (about prenex, etc) but keeps models"""
-        pass
+        self.prefixes = [[]]
+        self.prefix_index = 0
     def separate(self):
-        prefixes = [[]]
         solver = z3.Solver()
-
-        for _ in range(self.max_depth+1):
-            for p in prefixes:
-                if prefix_is_redundant(p):
-                    continue
-                print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
+        while True:
+            if self.prefix_index == len(self.prefixes):
+                # We have reached our maximum depth
+                if len(self.prefixes[0]) == self.max_depth:
+                    return None
+                self.prefixes = [[(k, s)]+p for k in [True, False] for p in self.prefixes for s in sorted(self.sig.sorts)]
+                self.prefix_index = 0
+            p = self.prefixes[self.prefix_index]
+            if not prefix_is_redundant(p):
+                if not self.quiet: print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
                 c = check_prefix(self.models, p, self.sig, self.collapsed, solver)
                 if c is not None:
                     return c
-            prefixes = [[(k, s)]+p for k in [True, False] for p in prefixes for s in sorted(self.sig.sorts)]
+            self.prefix_index += 1
 
 if __name__ == "__main__":
     from interpret import interpret
