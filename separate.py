@@ -51,12 +51,14 @@ def collapse(model, sig, assignment):
     return repr((consts, funcs, rels))
 
 class CollapseCache(object):
-    def __init__(self, sig, models):
+    def __init__(self, sig, models = []):
         self.models = models
         self.sig = sig
         self.cache = {}
         self.collapsed = {}
         self.assignments = []
+    def add_model(self, model):
+        self.models.append(model)
     def get(self, index, assignment):
         N = len(self.models[index].sorts)
         assignment = tuple(assignment)
@@ -138,7 +140,7 @@ def check_prefix(models, prefix, sig, collapsed, solver):
     solver.push()
     vars = VarSet()
     sat_formula = z3.And([formula_for_model(m_index, [], prefix, collapsed, vars) for m_index in range(len(models))])
-    print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
+    # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
     solver.add(sat_formula)
     result = solver.check()
     solver.pop()
@@ -163,20 +165,34 @@ def check_prefix(models, prefix, sig, collapsed, solver):
     else:
         assert False and "Error, z3 returned unknown"
 
-def separate(models, sig, max_depth = 1000000):
-    prefixes = [[]]
-    collapsed = CollapseCache(sig, models)
-    solver = z3.Solver()
+class Separator(object):
+    def __init__(self, sig, quiet=False, logic="fol", max_depth = 100000):
+        self.sig = sig
+        self.collapsed = CollapseCache(sig)
+        self.models = []
+        self.quiet = quiet
+        self.logic = logic
+        self.max_depth = max_depth
 
-    for _ in range(max_depth+1):
-        for p in prefixes:
-            if prefix_is_redundant(p):
-                continue
-            print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
-            c = check_prefix(models, p, sig, collapsed, solver)
-            if c is not None:
-                return c
-        prefixes = [[(k, s)]+p for k in [True, False] for p in prefixes for s in sorted(sig.sorts)]
+    def add_model(self, model):
+        self.models.append(model)
+        self.collapsed.add_model(model)
+    def forget_learned_facts(self):
+        """Forgets all inferred facts (about prenex, etc) but keeps models"""
+        pass
+    def separate(self):
+        prefixes = [[]]
+        solver = z3.Solver()
+
+        for _ in range(self.max_depth+1):
+            for p in prefixes:
+                if prefix_is_redundant(p):
+                    continue
+                print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
+                c = check_prefix(self.models, p, self.sig, self.collapsed, solver)
+                if c is not None:
+                    return c
+            prefixes = [[(k, s)]+p for k in [True, False] for p in prefixes for s in sorted(self.sig.sorts)]
 
 if __name__ == "__main__":
     from interpret import interpret

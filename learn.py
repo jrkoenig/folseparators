@@ -6,7 +6,7 @@ from interpret import interpret
 from parse import parse
 from logic import *
 from check import check
-from separate import separate
+from separate import Separator
 
 
 sorts_to_z3 = {}
@@ -82,7 +82,7 @@ def bound_sort_counts(solver, bounds):
         bv = z3.Const("elem_{}".format(sort), S)
         solver.add(z3.ForAll(bv, z3.Or([z3.Const("elem_{}_{}".format(sort, i), S) == bv for i in range(K)])))            
 
-def find_model_or_equivalence(current, formula, env, models, s):
+def find_model_or_equivalence(current, formula, env, s):
     (r1, m) = fm(current, formula, env, s)
     if m is not None:
         for k in range(1, 100000):
@@ -123,7 +123,7 @@ def learn(sig, axioms, formula):
 
     env = Environment(sig)
     current = Or([])
-    models = []
+    separator = Separator(sig, quiet=args.quiet, logic=args.logic)
 
     for ax in axioms:
         s.add(toZ3(ax, env))
@@ -131,18 +131,20 @@ def learn(sig, axioms, formula):
     while True:
         if not args.quiet:
             print ("Checking formula")
-        result = find_model_or_equivalence(current, formula, env, models, s)        
+        result = find_model_or_equivalence(current, formula, env, s)        
         if result is None:
             if not args.quiet:
                 print ("formula matches!")
                 print (current)
-            return (current, models)
+            return (current, separator.models)
         else:
-            models.append(result)
+            separator.add_model(result)
             if not args.quiet:
                 print (print_model(result))
-                print ("Have new model, now have", len(models), "models total")
-            current = separate(models, sig, 10)
+                print ("Have new model, now have", len(separator.models), "models total")
+            if args.not_incremental:
+                separator.forget_learned_facts()
+            current = separator.separate()
             if current is None:
                 raise RuntimeError("couldn't separate models")
             
@@ -162,7 +164,7 @@ def main():
     parser.add_argument("--expand-partial", action="store_true", help="expand partial counterexample models")
     parser.add_argument("--skip-pure-prenex", action="store_true", help="skip pure variables during prenex search")
     parser.add_argument("--skip-pure-matrix", action="store_true", help="skip pure variables during matrix inference")
-    parser.add_argument("--form", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier (fol is unrestricted)")
+    parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
     
