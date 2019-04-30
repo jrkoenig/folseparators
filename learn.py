@@ -1,10 +1,13 @@
 
-import itertools
+import itertools, random, json, time, sys, argparse
 import z3
 
+from interpret import interpret
+from parse import parse
 from logic import *
 from check import check
 from separate import separate
+
 
 sorts_to_z3 = {}
 z3_rel_func = {}
@@ -88,7 +91,7 @@ def find_model_or_equivalence(current, formula, env, models, s):
             (_, m) = fm(current, formula, env, s)
             s.pop()
             if m is not None:
-                return extract_model(m, sig, "-")
+                return extract_model(m, env.sig, "-")
         assert False
     (r2, m) = fm(formula, current, env, s)
     if m is not None:
@@ -98,7 +101,7 @@ def find_model_or_equivalence(current, formula, env, models, s):
             (_, m) = fm(formula, current, env, s)
             s.pop()
             if m is not None:
-                return extract_model(m, sig, "+")
+                return extract_model(m, env.sig, "+")
         assert False
     if r1 == z3.unsat and r2 == z3.unsat:
         return None
@@ -126,35 +129,61 @@ def learn(sig, axioms, formula):
         s.add(toZ3(ax, env))
 
     while True:
-        print ("Checking formula")
+        if not args.quiet:
+            print ("Checking formula")
         result = find_model_or_equivalence(current, formula, env, models, s)        
         if result is None:
-            print ("formula matches!")
-            print (current)
-            return models
+            if not args.quiet:
+                print ("formula matches!")
+                print (current)
+            return (current, models)
         else:
             models.append(result)
-            print (print_model(result))
-            print ("Have new model, now have", len(models), "models total")
+            if not args.quiet:
+                print (print_model(result))
+                print ("Have new model, now have", len(models), "models total")
             current = separate(models, sig, 10)
             if current is None:
                 raise RuntimeError("couldn't separate models")
-            print("Learned new possible formula: ", current)
+            
+            if not args.quiet:
+                print("Learned new possible formula: ", current)
+
+def count_quantifier_prenex(f):
+    if isinstance(f, (Exists, Forall)):
+        return 1 + count_quantifier_prenex(f.f)
+    else: return 0
+
+def main():
+    global args
+    parser = argparse.ArgumentParser()
+    parser.add_argument("filename", metavar="FILE", help=".fol file to learn conjecture of")
+    parser.add_argument("--not-incremental", action="store_true", help="disable incremental inference")
+    parser.add_argument("--expand-partial", action="store_true", help="expand partial counterexample models")
+    parser.add_argument("--skip-pure-prenex", action="store_true", help="skip pure variables during prenex search")
+    parser.add_argument("--skip-pure-matrix", action="store_true", help="skip pure variables during matrix inference")
+    parser.add_argument("--form", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier (fol is unrestricted)")
+    parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
+    args = parser.parse_args()
+    
+    (sig, axioms, conjectures, models) = interpret(parse(open(args.filename).read()))
+
+    seed = random.randrange(0, 2**31)
+    z3.set_param("sat.random_seed", seed, "smt.random_seed", seed, "sls.random_seed", seed, "fp.spacer.random_seed", seed, "nlsat.seed", seed)
+    start = time.time()
+    formula, models = learn(sig, axioms, conjectures[0])
+    end = time.time()
+    if not args.quiet:
+        for m in models:
+            print(print_model(m))
+    result = {
+        'total_time': end-start,
+        'model_count': len(models),
+        'formula': str(formula),
+        'formula_quantifiers': count_quantifier_prenex(formula)
+    }
+    
+    print(json.dumps(result, separators=(',',':'), indent=None))
 
 if __name__ == "__main__":
-    from interpret import interpret
-    from parse import parse
-    import sys
-
-    if len(sys.argv) not in [1,2]:
-        print("Usage: python3 learn.py [file.fol]")
-        exit(1)
-
-    file = "conjectures/toy_lock_simple.fol" if len(sys.argv) == 1 else sys.argv[1]
-    (sig, axioms, conjectures, models) = interpret(parse(open(file).read()))
-
-    seed = 140297207
-    z3.set_param("sat.random_seed", seed, "smt.random_seed", seed, "sls.random_seed", seed, "fp.spacer.random_seed", seed, "nlsat.seed", seed)
-    models = learn(sig, axioms, conjectures[0])
-    for m in models:
-        print(print_model(m))
+    main()
