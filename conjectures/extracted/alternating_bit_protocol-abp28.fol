@@ -1,0 +1,75 @@
+; File: reasonable-ivy-examples/popl18-liveness/alternating_bit_protocol.ivy
+
+; Sig
+(sort abp.ack_msg_t)
+(sort abp.data_msg_t)
+(sort abp.index_t)
+(sort abp.value)
+(relation abp.abit abp.ack_msg_t)
+(relation abp.ack_msg.le abp.ack_msg_t abp.ack_msg_t)
+(relation abp.ack_no_send_flag )
+(function abp.d abp.data_msg_t abp.value)
+(relation abp.data_msg.le abp.data_msg_t abp.data_msg_t)
+(relation abp.data_no_send_flag )
+(relation abp.dbit abp.data_msg_t)
+(relation abp.fair_1 )
+(relation abp.fair_2 )
+(relation abp.fair_3 )
+(relation abp.fair_4 )
+(constant abp.i0 abp.index_t)
+(relation abp.index.le abp.index_t abp.index_t)
+(constant abp.index.zero abp.index_t)
+(relation abp.l2s.a_ack_msg abp.ack_msg_t)
+(relation abp.l2s.a_data_msg abp.data_msg_t)
+(relation abp.l2s.a_index abp.index_t)
+(relation abp.l2s.a_value abp.value)
+(relation abp.l2s.d_ack_msg abp.ack_msg_t)
+(relation abp.l2s.d_data_msg abp.data_msg_t)
+(relation abp.l2s.d_index abp.index_t)
+(relation abp.l2s.d_value abp.value)
+(relation abp.l2s.eta_1 )
+(relation abp.l2s.frozen )
+(relation abp.l2s.monitor_level_0 )
+(relation abp.l2s.monitor_level_1 )
+(relation abp.l2s.s_ack_msg.le abp.ack_msg_t abp.ack_msg_t)
+(relation abp.l2s.s_ack_no_send_flag )
+(relation abp.l2s.s_data_msg.le abp.data_msg_t abp.data_msg_t)
+(relation abp.l2s.s_data_no_send_flag )
+(function abp.l2s.s_receiver_array abp.index_t abp.value)
+(relation abp.l2s.s_receiver_bit )
+(constant abp.l2s.s_receiver_i abp.index_t)
+(function abp.l2s.s_sender_array abp.index_t abp.value)
+(relation abp.l2s.s_sender_bit )
+(constant abp.l2s.s_sender_i abp.index_t)
+(relation abp.l2s.saved )
+(relation abp.l2s.w_1 )
+(relation abp.l2s.w_2 )
+(relation abp.l2s.w_3 )
+(relation abp.l2s.w_4 )
+(relation abp.l2s.waiting )
+(function abp.receiver_array abp.index_t abp.value)
+(relation abp.receiver_bit )
+(constant abp.receiver_i abp.index_t)
+(function abp.sender_array abp.index_t abp.value)
+(relation abp.sender_bit )
+(constant abp.sender_i abp.index_t)
+; End sig
+
+; Axiom abp.index
+(axiom (forall X abp.index_t (abp.index.le X X)))
+; Axiom abp.index0
+(axiom (forall Z abp.index_t (forall X abp.index_t (forall Y abp.index_t (or (not (and (abp.index.le X Y) (abp.index.le Y Z))) (abp.index.le X Z))))))
+; Axiom abp.index1
+(axiom (forall X abp.index_t (forall Y abp.index_t (or (not (and (abp.index.le X Y) (abp.index.le Y X))) (= X Y)))))
+; Axiom abp.index2
+(axiom (forall X abp.index_t (forall Y abp.index_t (or (abp.index.le X Y) (abp.index.le Y X)))))
+; Axiom abp.index3
+(axiom (forall X abp.index_t (abp.index.le abp.index.zero X)))
+; Axiom abp.l2s
+(axiom (or (abp.l2s.monitor_level_0) (abp.l2s.monitor_level_1)))
+; Axiom abp.l2s0
+(axiom (or (not (abp.l2s.monitor_level_0)) (not (abp.l2s.monitor_level_1))))
+
+
+; Conjecture abp28
+(conjecture (forall I abp.index_t (or (not (not (abp.l2s.waiting))) (or (not (abp.index.le I abp.i0)) (abp.l2s.a_index I)))))

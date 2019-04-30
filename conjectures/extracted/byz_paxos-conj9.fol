@@ -1,0 +1,39 @@
+; File: reasonable-ivy-examples/fol-thresholds/byz_paxos.ivy
+
+; Sig
+(sort node)
+(sort quorum_c)
+(sort quorum_w)
+(sort round)
+(sort value)
+(relation decision node round value)
+(relation le round round)
+(relation left_rnd node round)
+(relation member_b node)
+(relation member_c node quorum_c)
+(relation member_w node quorum_w)
+(constant none round)
+(relation one_a round)
+(relation one_b node round)
+(relation prepare node round value)
+(relation proposal round value)
+(relation rcved_one_b node round node)
+(relation vote node round value)
+; End sig
+
+; Axiom axiom1
+(axiom (forall X round (le X X)))
+; Axiom axiom2
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom axiom3
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom axiom4
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+; Axiom axiom5
+(axiom (forall Q1 quorum_c (forall Q2 quorum_c (exists N node (and (and (not (member_b N)) (member_c N Q1)) (member_c N Q2))))))
+; Axiom axiom6
+(axiom (forall W quorum_w (exists N node (and (not (member_b N)) (member_w N W)))))
+
+
+; Conjecture conj9
+(conjecture (forall N node (forall R round (forall M node (or (not (and (and (not (member_b N)) (not (member_b M))) (rcved_one_b N R M))) (one_b M R))))))

@@ -1,0 +1,40 @@
+; File: reasonable-ivy-examples/oopsla17-paxos/vertical_paxos_epr_unverified_optimization.ivy
+
+; Sig
+(sort config)
+(sort node)
+(sort quorum)
+(sort round)
+(sort value)
+(relation configure_round_msg round config)
+(relation decision node round value)
+(relation irrelevant_msg round)
+(relation joined_round node round)
+(relation le round round)
+(relation left_rnd node round)
+(constant master_minrel round)
+(relation member node quorum)
+(relation minrelof config round)
+(constant none round)
+(relation one_a round round)
+(relation one_b_max_vote node round round value)
+(relation proposal round value)
+(function quorum_of_round round quorum)
+(relation quorumin quorum config)
+(relation vote node round value)
+; End sig
+
+; Axiom a
+(axiom (forall X round (le X X)))
+; Axiom a0
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a1
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a2
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+; Axiom a3
+(axiom (forall C config (forall Q2 quorum (forall Q1 quorum (or (not (and (quorumin Q1 C) (quorumin Q2 C))) (exists N node (and (member N Q1) (member N Q2))))))))
+
+
+; Conjecture c7
+(conjecture (forall R2 round (forall R1 round (or (not (and (irrelevant_msg R2) (not (le R2 R1)))) (exists C config (configure_round_msg R1 C))))))

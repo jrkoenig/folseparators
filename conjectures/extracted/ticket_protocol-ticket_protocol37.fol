@@ -1,0 +1,46 @@
+; File: reasonable-ivy-examples/popl18-liveness/ticket_protocol.ivy
+
+; Sig
+(sort ticket_protocol.thread)
+(sort ticket_protocol.ticket)
+(relation ticket_protocol.l2s.a_thread ticket_protocol.thread)
+(relation ticket_protocol.l2s.a_ticket ticket_protocol.ticket)
+(relation ticket_protocol.l2s.d_thread ticket_protocol.thread)
+(relation ticket_protocol.l2s.d_ticket ticket_protocol.ticket)
+(relation ticket_protocol.l2s.frozen )
+(relation ticket_protocol.l2s.s_m ticket_protocol.thread ticket_protocol.ticket)
+(constant ticket_protocol.l2s.s_next_ticket ticket_protocol.ticket)
+(relation ticket_protocol.l2s.s_pc1 ticket_protocol.thread)
+(relation ticket_protocol.l2s.s_pc2 ticket_protocol.thread)
+(relation ticket_protocol.l2s.s_pc3 ticket_protocol.thread)
+(constant ticket_protocol.l2s.s_service ticket_protocol.ticket)
+(relation ticket_protocol.l2s.saved )
+(relation ticket_protocol.l2s.w_last_scheduled ticket_protocol.thread)
+(relation ticket_protocol.l2s.w_request_flag )
+(relation ticket_protocol.l2s.waiting )
+(relation ticket_protocol.le ticket_protocol.ticket ticket_protocol.ticket)
+(relation ticket_protocol.m ticket_protocol.thread ticket_protocol.ticket)
+(constant ticket_protocol.next_ticket ticket_protocol.ticket)
+(relation ticket_protocol.pc1 ticket_protocol.thread)
+(relation ticket_protocol.pc2 ticket_protocol.thread)
+(relation ticket_protocol.pc3 ticket_protocol.thread)
+(relation ticket_protocol.request_flag )
+(constant ticket_protocol.service ticket_protocol.ticket)
+(constant ticket_protocol.t0 ticket_protocol.thread)
+(constant ticket_protocol.zero ticket_protocol.ticket)
+; End sig
+
+; Axiom ticket_protocol
+(axiom (forall X ticket_protocol.ticket (ticket_protocol.le X X)))
+; Axiom ticket_protocol0
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (forall Z ticket_protocol.ticket (or (not (and (ticket_protocol.le X Y) (ticket_protocol.le Y Z))) (ticket_protocol.le X Z))))))
+; Axiom ticket_protocol1
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (or (not (and (ticket_protocol.le X Y) (ticket_protocol.le Y X))) (= X Y)))))
+; Axiom ticket_protocol2
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (or (ticket_protocol.le X Y) (ticket_protocol.le Y X)))))
+; Axiom ticket_protocol3
+(axiom (forall X ticket_protocol.ticket (ticket_protocol.le ticket_protocol.zero X)))
+
+
+; Conjecture ticket_protocol37
+(conjecture (or (not (ticket_protocol.l2s.saved)) (ticket_protocol.le ticket_protocol.l2s.s_service ticket_protocol.service)))

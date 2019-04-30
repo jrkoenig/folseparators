@@ -1,0 +1,39 @@
+; File: reasonable-ivy-examples/oopsla17-paxos/fast_paxos_epr.ivy
+
+; Sig
+(sort c_quorum)
+(sort f_quorum)
+(sort node)
+(sort round)
+(sort value)
+(relation any_msg round)
+(relation c_member node c_quorum)
+(relation decision node round value)
+(relation f_member node f_quorum)
+(relation fast round)
+(relation le round round)
+(relation left_rnd node round)
+(constant none round)
+(relation one_a round)
+(relation one_b node round)
+(relation one_b_max_vote node round round value)
+(relation proposal round value)
+(relation vote node round value)
+; End sig
+
+; Axiom a
+(axiom (forall X round (le X X)))
+; Axiom a0
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a1
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a2
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+; Axiom a3
+(axiom (forall Q1 c_quorum (forall Q2 c_quorum (exists N node (and (c_member N Q1) (c_member N Q2))))))
+; Axiom a4
+(axiom (forall Q1 c_quorum (forall Q3 f_quorum (forall Q2 f_quorum (exists N node (and (and (c_member N Q1) (f_member N Q2)) (f_member N Q3)))))))
+
+
+; Conjecture c9
+(conjecture (forall V1 value (forall Q f_quorum (forall V2 value (forall R2 round (forall R1 round (or (not (and (and (fast R1) (not (le R2 R1))) (or (and (proposal R2 V2) (not (= V1 V2))) (any_msg R2)))) (exists N node (and (and (f_member N Q) (left_rnd N R1)) (not (vote N R1 V1)))))))))))

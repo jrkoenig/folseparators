@@ -1,0 +1,39 @@
+; File: reasonable-ivy-examples/fol-thresholds/fast_paxos.ivy
+
+; Sig
+(sort node)
+(sort quorum_c)
+(sort quorum_f)
+(sort round)
+(sort value)
+(relation any_msg round)
+(relation decision node round value)
+(relation fast round)
+(relation le round round)
+(relation left_rnd node round)
+(relation member_c node quorum_c)
+(relation member_f node quorum_f)
+(constant none round)
+(relation one_a round)
+(relation one_b node round)
+(relation proposal round value)
+(relation s node)
+(relation vote node round value)
+; End sig
+
+; Axiom a
+(axiom (forall Q1 quorum_c (forall Q2 quorum_c (exists N node (and (member_c N Q1) (member_c N Q2))))))
+; Axiom a0
+(axiom (forall Q3 quorum_f (forall Q1 quorum_c (forall Q2 quorum_f (exists N node (and (and (member_c N Q1) (member_f N Q2)) (member_f N Q3)))))))
+; Axiom a1
+(axiom (forall X round (le X X)))
+; Axiom a2
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a3
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a4
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+
+
+; Conjecture c3
+(conjecture (forall R round (forall V value (or (not (and (fast R) (exists N node (decision N R V)))) (exists Q quorum_f (forall N node (or (not (member_f N Q)) (vote N R V))))))))

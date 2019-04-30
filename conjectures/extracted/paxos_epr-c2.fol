@@ -1,0 +1,33 @@
+; File: reasonable-ivy-examples/oopsla17-paxos/paxos_epr.ivy
+
+; Sig
+(sort node)
+(sort quorum)
+(sort round)
+(sort value)
+(relation decision node round value)
+(relation le round round)
+(relation left_rnd node round)
+(relation member node quorum)
+(constant none round)
+(relation one_a round)
+(relation one_b node round)
+(relation one_b_max_vote node round round value)
+(relation proposal round value)
+(relation vote node round value)
+; End sig
+
+; Axiom a
+(axiom (forall X round (le X X)))
+; Axiom a0
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a1
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a2
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+; Axiom a3
+(axiom (forall Q2 quorum (forall Q1 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+
+; Conjecture c2
+(conjecture (forall R round (forall V value (or (not (exists N node (decision N R V))) (exists Q quorum (forall N node (or (not (member N Q)) (vote N R V))))))))

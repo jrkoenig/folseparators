@@ -1,0 +1,48 @@
+; File: reasonable-ivy-examples/oopsla17-paxos/stoppable_paxos_epr.ivy
+
+; Sig
+(sort inst)
+(sort node)
+(sort quorum)
+(sort round)
+(sort value)
+(sort votemap)
+(relation active round)
+(relation decision node inst round value)
+(relation inst_le inst inst)
+(relation joined_round node round)
+(relation le round round)
+(relation left_round node round)
+(function maxr votemap inst round)
+(function maxv votemap inst value)
+(relation member node quorum)
+(constant none round)
+(relation one_a round)
+(relation one_b_msg node round votemap)
+(relation proposal inst round value)
+(constant stop value)
+(relation vote node inst round value)
+; End sig
+
+; Axiom a
+(axiom (forall X round (le X X)))
+; Axiom a0
+(axiom (forall X round (forall Z round (forall Y round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a1
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a2
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+; Axiom a3
+(axiom (forall X inst (inst_le X X)))
+; Axiom a4
+(axiom (forall Z inst (forall Y inst (forall X inst (or (not (and (inst_le X Y) (inst_le Y Z))) (inst_le X Z))))))
+; Axiom a5
+(axiom (forall Y inst (forall X inst (or (not (and (inst_le X Y) (inst_le Y X))) (= X Y)))))
+; Axiom a6
+(axiom (forall Y inst (forall X inst (or (inst_le X Y) (inst_le Y X)))))
+; Axiom a7
+(axiom (forall Q2 quorum (forall Q1 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+
+; Conjecture c5
+(conjecture (forall R1 round (forall N node (forall V2 value (forall R2 round (forall M votemap (forall I inst (or (not (and (and (one_b_msg N R2 M) (= (maxr M I) none)) (not (le R2 R1)))) (not (vote N I R1 V2))))))))))

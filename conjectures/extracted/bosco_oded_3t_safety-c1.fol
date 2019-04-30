@@ -1,0 +1,33 @@
+; File: reasonable-ivy-examples/fol-thresholds/bosco_oded_3t_safety.ivy
+
+; Sig
+(sort node)
+(sort quorum_a)
+(sort quorum_b)
+(sort quorum_c)
+(sort value)
+(relation dec node value)
+(relation done node)
+(relation input node value)
+(relation member_a node quorum_a)
+(relation member_b node quorum_b)
+(relation member_c node quorum_c)
+(relation member_f node)
+(relation rcv_msg node node value)
+(relation rcv_msg_proj node node)
+(relation sent_msg node node value)
+(relation sent_msg_proj node node)
+(relation und_cons node value)
+(relation und_cons_dec value)
+; End sig
+
+; Axiom a
+(axiom (forall B quorum_b (forall A quorum_a (exists C quorum_c (forall N node (or (not (member_c N C)) (and (and (member_a N A) (member_b N B)) (not (member_f N)))))))))
+; Axiom a0
+(axiom (forall C quorum_c (forall B quorum_b (exists N node (and (and (member_b N B) (member_c N C)) (not (member_f N)))))))
+; Axiom a1
+(axiom (forall N node (forall V1 value (forall V2 value (or (not (and (and (not (member_f N)) (input N V1)) (input N V2))) (= V1 V2))))))
+
+
+; Conjecture c1
+(conjecture (forall V1 value (forall V2 value (forall M node (or (not (and (and (forall N node (or (not (not (member_f N))) (input N V1))) (not (= V1 V2))) (not (member_f M)))) (not (dec M V2)))))))
