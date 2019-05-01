@@ -9,7 +9,6 @@ class ResultsLogger(object):
         self.data = []
         self.last_written = 0
         self.filename = fn
-        self._write()
     def add_result(self, result):
         with self.lock:
             self.data.append(result)
@@ -24,9 +23,9 @@ class ResultsLogger(object):
             self._write()
 
 
-def run(r, args, logger):
+def run(r, logger):
     try:
-        ret = subprocess.run(args, capture_output = True, encoding = 'utf-8', timeout = 10*60)
+        ret = subprocess.run(r['args'], capture_output = True, encoding = 'utf-8', timeout = r['timeout'])
         if ret.returncode == 0:
             last_line = ret.stdout.strip().split("\n")[-1]
             stats = json.loads(last_line)
@@ -35,6 +34,7 @@ def run(r, args, logger):
         else:
             r['success'] = False
             r['stderr'] = ret.stderr
+        r['killed'] = False
     except subprocess.TimeoutExpired:
         r['killed'] = True
         r['success'] = False
@@ -43,13 +43,19 @@ def run(r, args, logger):
 
 def main():
     descs = json.load(open("out/extracted.json"))
-    args = ['python3', 'learn.py', '$F']
-    logger = ResultsLogger("out/results.json")
+    flags = ['--not-incremental']
+    N = 1
+    logger = ResultsLogger("out/results.baseline.json")
 
-    with ThreadPoolExecutor(max_workers=os.cpu_count()/2) as executor:
+    with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         for d in descs:
-            r = {"base": d['base'], "conjecture": d['conjecture'],"args": args}
-            executor.submit(run, r, [(d['file'] if a == '$F' else a) for a in args], logger)
+            for i in range(N):
+                r = {"base": d['base'],
+                     "conjecture": d['conjecture'],
+                     "index": i,
+                     "timeout": 10*60,
+                     "args": ['python3', 'learn.py'] + flags + [d['file']]}
+                executor.submit(run, r, logger)
     logger.close()
 
 if __name__ == '__main__':

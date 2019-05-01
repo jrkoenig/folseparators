@@ -1,3 +1,4 @@
+import argparse
 import json
 import numpy as np
 import pandas as pd
@@ -15,16 +16,23 @@ def intdistplot(x, **kwargs):
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("results", type=argparse.FileType('r'))
+    parser.add_argument("--description", type=argparse.FileType('r'), default = "out/extracted.json")
+    parser.add_argument("--suffix", default = "")
+    args = parser.parse_args()
+
     sns.set(style="white", palette="muted", color_codes=True)
-    descs = json.load(open("out/extracted.json"))
+    descs = json.load(args.description)
     desc_by_id = {}
     for d in descs:
         desc_by_id[(d['base'], d['conjecture'])] = d
 
-    results = json.load(open("out/results.json"))
+    results = json.load(args.results)
 
-    # TODO: remove this filtering step
-    results = [r for r in results if r['base'] != 'tlb-safety']
+    SUFFIX = args.suffix
+    if SUFFIX != "" and not SUFFIX.startswith("-"):
+        SUFFIX = "-" + SUFFIX
 
     #intdistplot([d['quantifiers'] for d in descs], axlabel="quantifier count", kde=False).get_figure().savefig("out/quantifier_distribution.png")
     
@@ -34,7 +42,7 @@ def main():
     ax.set_xlabel("number of conjuncts")
     plt.subplots_adjust(left=0.5)
     fig.suptitle("Distribution of conjucts over protocols")
-    plt.savefig("out/conjunct_distribution.png")
+    plt.savefig("out/conjunct_distribution"+SUFFIX+".png")
 
 
 
@@ -61,7 +69,7 @@ def main():
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     fig.suptitle("Success rate by protocol (normalized)")
-    plt.savefig("out/success_by_protocol.png")
+    plt.savefig("out/success_by_protocol"+SUFFIX+".png")
 
 
 
@@ -94,7 +102,7 @@ def main():
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
     fig.suptitle("Quantifier conjunct distribution with success rate")
-    plt.savefig("out/success_by_quantifier_count.png")
+    plt.savefig("out/success_by_quantifier_count"+SUFFIX+".png")
 
 
 
@@ -110,11 +118,11 @@ def main():
     plt.plot([x+0.5 for x in range(len(times))], times)
     plt.yscale("log")
     plt.xlim(0,len(times))
-    #plt.ylim(0,None)
+    plt.ylim(0.01,10)
     plt.ylabel("Time to learn (minutes)")
     plt.xlabel("Conjecture (ordinal)")
     fig.suptitle("Ordinal chart of time to learn conjuncts")
-    plt.savefig("out/times.png")
+    plt.savefig("out/ordinal_learning_times"+SUFFIX+".png")
 
 if __name__ == "__main__":
     main()
