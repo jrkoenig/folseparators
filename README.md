@@ -9,9 +9,9 @@ This code requires `python3` with `z3py` installed.
 
 ## Example Commands
 
-- `python3 separate.py problems/every_edge_triangle.fol`
 - `python3 check.py problems/toy_lock_simple.fol`
 - `python3 learn.py conjectures/toy_lock_invar11.fol`
+- `python3 separate.py problems/every_edge_triangle.fol` (*Currently does not work*)
 
 ## File format
 The `.fol` file format is an s-expr based format for representing FO signatures, models, and formula. An example file (`problems/example.fol`) is:
@@ -57,17 +57,24 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
         )))
 ```
 
-
-
 ## Source Files
 
 - `check.py`: determine whether all of the models in a file satisfy all the axioms. Implicitly also checks that the file parses correctly.
 - `interpret.py`: performs semantic analysis of the parse result via `interpret()`. Produces `Model`s, `Formula`s and `Signature`s.
-- `learn.py`: given a signature and a conjecture, runs `separate()` and generates models until enough positive and negative models exist so that the separator gives a formula equivalent to the conjecture.
+- `learn.py`: given a signature and a conjecture, runs `Separator.separate()` and generates models until enough positive and negative models exist so that the separator gives a formula equivalent to the conjecture.
 - `logic.py`: defines logic objects like `Model`s, `Formula`s and `Signature`s.
 - `matrix.py`: generates the matrix of a formula given the satisfying formula and FO-types via `infer_matrix()`.
 - `parse.py`: parses a s-expr file into lists of lists and atoms via `parse()`. Performs both lexing and parsing but does not check well-formedness of the resulting parse tree or build logic objects.
-- `separate.py`: given a set of postive and negative models, infer a formula which separates them via `separate()`.
+- `separate.py`: given a set of postive and negative models, infer a formula which separates them via a `Separator` object.
+- `experiments/describe_conjectures.py`: given a directory of conjecture `.fol` files, creates a JSON representation (in `extracted.json`) of each along with some basic statistics.
+- `experiments/make_charts.py`: generates summary charts given a `results.json` file.
+- `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `extracted.json` file, and produces a `results.json` file
+
+## Data files
+
+- `problems/`: contains a few simple seperation problems, created by hand. These are only suitable for debugging.
+- `conjectures/`: contains conjectures suitable for the learning process. The root level contains toy lock invariants, which are the simplest real-world tests of the learning process.
+- `conjectures/extracted/`: contains conjectures extracted from a number of correct ivy protocols. These are suitable as a development test set.
 
 ## License
 
