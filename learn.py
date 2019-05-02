@@ -123,7 +123,7 @@ def learn(sig, axioms, formula):
 
     env = Environment(sig)
     current = Or([])
-    separator = Separator(sig, quiet=args.quiet, logic=args.logic)
+    separator = Separator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
 
     for ax in axioms:
         s.add(toZ3(ax, env))

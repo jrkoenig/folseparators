@@ -1,7 +1,7 @@
 
 import z3
 
-from logic import Forall, Exists
+from logic import Forall, Exists, Equal, Relation, And, Or, Not
 from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
 import itertools, copy
@@ -165,14 +165,65 @@ def check_prefix(models, prefix, sig, collapsed, solver):
     else:
         assert False and "Error, z3 returned unknown"
 
+def ae_edges_of(sig):
+    ae = {sort: set() for sort in sig.sorts}
+    for f, (arg_sorts, ret_sort) in sig.functions.items():
+        for a in arg_sorts:
+            ae[a].add(ret_sort)
+    return ae
+
+def update_ae_edges(ae, f, negate=False, outer_universal_sorts=set()):
+    if isinstance(f, (Equal, Relation)):
+        return
+    elif isinstance(f, (Or, And)):
+        for subf in f.c:
+            update_ae_edges(ae, subf, negate, outer_universal_sorts)
+    elif isinstance(f, Not):
+        update_ae_edges(ae, f.f, not negate, outer_universal_sorts)
+    else:
+        assert isinstance(f, (Exists, Forall))
+        if isinstance(f, Forall) != negate:
+            # A, or ~E
+            update_ae_edges(ae, f.f, negate, outer_universal_sorts.union(set([f.sort])))
+        else:
+            # E, or ~A
+            for s in outer_universal_sorts:
+                ae[s].add(f.sort)
+            update_ae_edges(ae, f.f, negate, outer_universal_sorts)
+
+def digraph_is_acyclic(edges):
+    visited = set()
+    time = {}
+    def visit(n):
+        if n in visited: return
+        visited.add(n)
+        for m in edges[n]:
+            visit(m)
+        time[n] = len(time)
+    for root in edges.keys():
+        visit(root)
+    for n, neighbors in edges.items():
+        for m in neighbors:
+            if time[n] <= time[m]:
+                return False
+    return True
+
+
 class Separator(object):
-    def __init__(self, sig, quiet=False, logic="fol", max_depth = 100000):
+    def __init__(self, sig, quiet=False, logic="fol", max_depth = 100000, epr_wrt_formulas = []):
         self.sig = sig
         self.collapsed = CollapseCache(sig)
         self.models = []
         self.quiet = quiet
         self.logic = logic
         self.max_depth = max_depth
+        self.ae_edges = None
+        if logic == "epr":
+            self.ae_edges = ae_edges_of(sig)
+            for f in epr_wrt_formulas:
+                update_ae_edges(self.ae_edges, f)
+            if not digraph_is_acyclic(self.ae_edges):
+                raise RuntimeError("EPR logic requires background formulas to be already in EPR")
         self.forget_learned_facts()
 
     def add_model(self, model):
@@ -189,7 +240,8 @@ class Separator(object):
                 # We have reached our maximum depth
                 if len(self.prefixes[0]) == self.max_depth:
                     return None
-                self.prefixes = [[(k, s)]+p for k in [True, False] for p in self.prefixes for s in sorted(self.sig.sorts)]
+                self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False] for p in self.prefixes for s in sorted(self.sig.sorts)]
+                self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
                 self.prefix_index = 0
             p = self.prefixes[self.prefix_index]
             if not prefix_is_redundant(p):
@@ -198,6 +250,19 @@ class Separator(object):
                 if c is not None:
                     return c
             self.prefix_index += 1
+    def _filter_prefix(self, p):
+        if prefix_is_redundant(p):
+            return False
+        if self.logic == "epr":
+            ae_edges = copy.deepcopy(self.ae_edges)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), False)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), True)
+            return digraph_is_acyclic(ae_edges)
+        if self.logic == "universal":
+            return all(is_forall for (is_forall, _) in p)
+        if self.logic == "existential":
+            return all(not is_forall for (is_forall, _) in p)
+        return True
 
 if __name__ == "__main__":
     from interpret import interpret
