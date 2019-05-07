@@ -1,0 +1,48 @@
+; File: good-ivy-examples/fol-thresholds/hybrid_reliable_broadcast_cisa.ivy
+
+; Sig
+(sort node)
+(sort quorum_a)
+(sort quorum_b)
+(relation member_a node quorum_a)
+(relation member_b node quorum_b)
+(relation member_fa node)
+(relation member_fc node)
+(relation member_fi node)
+(relation member_fs node)
+(relation rb.accept node)
+(relation rb.correct node)
+(relation rb.d node)
+(relation rb.obedient node)
+(relation rb.rcv_init node)
+(relation rb.rcv_msg node node)
+(relation rb.sent_msg node node)
+(relation rb.sent_msg_proj node)
+(relation rb.symmetric node)
+(constant rb.tp_correctness.n0 node)
+(constant rb.tp_relay.n1 node)
+(constant rb.tp_relay.n2 node)
+; End sig
+
+; Axiom a
+(axiom (exists B quorum_b (forall N node (or (not (member_b N B)) (and (and (and (not (member_fa N)) (not (member_fc N))) (not (member_fs N))) (not (member_fi N)))))))
+; Axiom a0
+(axiom (forall A_BP quorum_a (exists N node (and (and (member_a N A_BP) (not (member_fa N))) (not (member_fs N))))))
+; Axiom a1
+(axiom (forall B_CF quorum_b (exists A quorum_a (forall N node (or (not (member_a N A)) (and (and (member_b N B_CF) (not (member_fa N))) (not (member_fi N))))))))
+; Axiom rb
+(axiom (forall N node (not (and (member_fc N) (member_fi N)))))
+; Axiom rb0
+(axiom (forall N node (not (and (member_fc N) (member_fs N)))))
+; Axiom rb1
+(axiom (forall N node (not (and (member_fc N) (member_fa N)))))
+; Axiom rb2
+(axiom (forall N node (not (and (member_fi N) (member_fs N)))))
+; Axiom rb3
+(axiom (forall N node (not (and (member_fi N) (member_fa N)))))
+; Axiom rb4
+(axiom (forall N node (not (and (member_fs N) (member_fa N)))))
+
+
+; Conjecture rb_tp_correctness_impl3
+(conjecture (rb.correct rb.tp_correctness.n0))

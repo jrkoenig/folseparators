@@ -1,4 +1,4 @@
-; File: reasonable-ivy-examples/fol-thresholds/fast_paxos.ivy
+; File: good-ivy-examples/fol-thresholds/fast_paxos.ivy
 
 ; Sig
 (sort node)

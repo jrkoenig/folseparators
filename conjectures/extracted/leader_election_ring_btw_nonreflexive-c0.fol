@@ -1,0 +1,34 @@
+; File: good-ivy-examples/pldi16/leader_election_ring_btw_nonreflexive.ivy
+
+; Sig
+(sort id)
+(sort node)
+(function idn node id)
+(relation le id id)
+(relation leader node)
+(relation pending id node)
+(relation ring.btw node node node)
+; End sig
+
+; Axiom ring
+(axiom (forall W node (forall Y node (forall X node (forall Z node (or (not (and (ring.btw W X Y) (ring.btw W Y Z))) (ring.btw W X Z)))))))
+; Axiom ring0
+(axiom (forall W node (forall Y node (forall X node (or (not (ring.btw W X Y)) (not (ring.btw W Y X)))))))
+; Axiom ring1
+(axiom (forall W node (forall Y node (forall X node (or (or (or (or (ring.btw W X Y) (ring.btw W Y X)) (= W X)) (= W Y)) (= X Y))))))
+; Axiom ring2
+(axiom (forall Y node (forall X node (forall Z node (or (not (ring.btw X Y Z)) (ring.btw Y Z X))))))
+; Axiom a
+(axiom (forall X id (le X X)))
+; Axiom a0
+(axiom (forall X id (forall Z id (forall Y id (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom a1
+(axiom (forall X id (forall Y id (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom a2
+(axiom (forall X id (forall Y id (or (le X Y) (le Y X)))))
+; Axiom a3
+(axiom (forall Y node (forall X node (or (not (= (idn X) (idn Y))) (= X Y)))))
+
+
+; Conjecture c0
+(conjecture (forall N0 node (forall N1 node (not (and (and (le (idn N1) (idn N0)) (pending (idn N1) N1)) (not (= (idn N1) (idn N0))))))))

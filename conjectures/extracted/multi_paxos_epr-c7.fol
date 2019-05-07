@@ -1,4 +1,4 @@
-; File: reasonable-ivy-examples/oopsla17-paxos/multi_paxos_epr.ivy
+; File: good-ivy-examples/oopsla17-paxos/multi_paxos_epr.ivy
 
 ; Sig
 (sort inst)

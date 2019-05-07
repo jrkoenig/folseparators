@@ -1,4 +1,4 @@
-; File: reasonable-ivy-examples/oopsla17-paxos/vertical_paxos_epr_unverified_optimization.ivy
+; File: good-ivy-examples/oopsla17-paxos/vertical_paxos_epr_unverified_optimization.ivy
 
 ; Sig
 (sort config)

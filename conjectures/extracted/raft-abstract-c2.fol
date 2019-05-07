@@ -1,0 +1,78 @@
+; File: good-ivy-examples/misc/raft-abstract.ivy
+
+; Sig
+(sort history)
+(sort index)
+(sort node)
+(sort quorum)
+(sort term)
+(sort value)
+(relation append_entry_msg node term index term value index term)
+(relation append_reply_msg node term index)
+(constant commit_history history)
+(constant commit_ix index)
+(constant commit_quorum quorum)
+(constant commit_term term)
+(relation committed index value)
+(relation curr_term node term)
+(relation filled_ix history index)
+(function hist node history)
+(relation is_leader node)
+(relation logt_at_ix history index term)
+(relation member node quorum)
+(relation request_vote_msg node term index term)
+(relation request_vote_nolog_msg node term)
+(relation started term)
+(relation term_bigeq node term)
+(relation term_bigger node term)
+(function term_hist term history)
+(function term_leader term node)
+(function val_at_ix history index value)
+(relation vote_msg node term node)
+(function voting_quorum term quorum)
+; End sig
+
+; Axiom a
+(axiom (forall Q2 quorum (forall Q1 quorum (exists N node (and (member N Q1) (member N Q2))))))
+; Axiom a0
+(axiom (forall X term (<= X X)))
+; Axiom a1
+(axiom (forall Y term (forall Z term (forall X term (or (not (and (<= X Y) (<= Y Z))) (<= X Z))))))
+; Axiom a2
+(axiom (forall Y term (forall X term (or (not (and (<= X Y) (<= Y X))) (= X Y)))))
+; Axiom a3
+(axiom (forall Y term (forall X term (or (<= X Y) (<= Y X)))))
+; Axiom a4
+(axiom (forall X term (<= 0 X)))
+; Axiom a5
+(axiom (forall Y term (forall X term (or (and (< X Y) (and (<= X Y) (not (= X Y)))) (and (not (< X Y)) (not (and (<= X Y) (not (= X Y)))))))))
+; Axiom a6
+(axiom (forall Y term (forall X term (or (and (> X Y) (< Y X)) (and (not (> X Y)) (not (< Y X)))))))
+; Axiom a7
+(axiom (forall Y term (forall X term (or (and (>= X Y) (<= Y X)) (and (not (>= X Y)) (not (<= Y X)))))))
+; Axiom a8
+(axiom (forall X index (<= X X)))
+; Axiom a9
+(axiom (forall Y index (forall X index (forall Z index (or (not (and (<= X Y) (<= Y Z))) (<= X Z))))))
+; Axiom a10
+(axiom (forall Y index (forall X index (or (not (and (<= X Y) (<= Y X))) (= X Y)))))
+; Axiom a11
+(axiom (forall Y index (forall X index (or (<= X Y) (<= Y X)))))
+; Axiom a12
+(axiom (forall X index (<= 0 X)))
+; Axiom a13
+(axiom (forall Y index (forall X index (or (and (< X Y) (and (<= X Y) (not (= X Y)))) (and (not (< X Y)) (not (and (<= X Y) (not (= X Y)))))))))
+; Axiom a14
+(axiom (forall Y index (forall X index (or (and (> X Y) (< Y X)) (and (not (> X Y)) (not (< Y X)))))))
+; Axiom a15
+(axiom (forall Y index (forall X index (or (and (>= X Y) (<= Y X)) (and (not (>= X Y)) (not (<= Y X)))))))
+; Axiom a16
+(axiom (forall LOGT2 term (forall H history (forall LOGT1 term (forall IX index (or (not (and (logt_at_ix H IX LOGT1) (logt_at_ix H IX LOGT2))) (= LOGT1 LOGT2)))))))
+; Axiom a17
+(axiom (forall H history (forall IX index (forall LOGT term (or (not (logt_at_ix H IX LOGT)) (filled_ix H IX))))))
+; Axiom a18
+(axiom (forall SMALLIX index (forall H history (forall IX index (or (not (and (filled_ix H IX) (< SMALLIX IX))) (filled_ix H SMALLIX))))))
+
+
+; Conjecture c2
+(conjecture (forall N node (forall TSMALL term (or (not (term_bigger N TSMALL)) (term_bigeq N TSMALL)))))

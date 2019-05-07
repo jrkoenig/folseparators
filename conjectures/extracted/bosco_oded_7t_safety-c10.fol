@@ -1,4 +1,4 @@
-; File: reasonable-ivy-examples/fol-thresholds/bosco_oded_7t_safety.ivy
+; File: good-ivy-examples/fol-thresholds/bosco_oded_7t_safety.ivy
 
 ; Sig
 (sort node)

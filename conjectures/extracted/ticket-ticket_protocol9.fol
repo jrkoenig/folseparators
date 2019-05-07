@@ -1,0 +1,31 @@
+; File: good-ivy-examples/liveness/ticket.ivy
+
+; Sig
+(sort ticket_protocol.thread)
+(sort ticket_protocol.ticket)
+(relation ticket_protocol.le ticket_protocol.ticket ticket_protocol.ticket)
+(relation ticket_protocol.m ticket_protocol.thread ticket_protocol.ticket)
+(constant ticket_protocol.next_ticket ticket_protocol.ticket)
+(relation ticket_protocol.pc1 ticket_protocol.thread)
+(relation ticket_protocol.pc2 ticket_protocol.thread)
+(relation ticket_protocol.pc3 ticket_protocol.thread)
+(relation ticket_protocol.scheduled ticket_protocol.thread)
+(constant ticket_protocol.service ticket_protocol.ticket)
+(constant ticket_protocol.tp1.sk0 ticket_protocol.thread)
+(constant ticket_protocol.zero ticket_protocol.ticket)
+; End sig
+
+; Axiom ticket_protocol
+(axiom (forall X ticket_protocol.ticket (ticket_protocol.le X X)))
+; Axiom ticket_protocol0
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (forall Z ticket_protocol.ticket (or (not (and (ticket_protocol.le X Y) (ticket_protocol.le Y Z))) (ticket_protocol.le X Z))))))
+; Axiom ticket_protocol1
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (or (not (and (ticket_protocol.le X Y) (ticket_protocol.le Y X))) (= X Y)))))
+; Axiom ticket_protocol2
+(axiom (forall Y ticket_protocol.ticket (forall X ticket_protocol.ticket (or (ticket_protocol.le X Y) (ticket_protocol.le Y X)))))
+; Axiom ticket_protocol3
+(axiom (forall X ticket_protocol.ticket (ticket_protocol.le ticket_protocol.zero X)))
+
+
+; Conjecture ticket_protocol9
+(conjecture (forall T ticket_protocol.thread (or (not (= ticket_protocol.next_ticket ticket_protocol.zero)) (ticket_protocol.m T ticket_protocol.zero))))

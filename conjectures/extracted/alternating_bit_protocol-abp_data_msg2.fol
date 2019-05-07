@@ -1,0 +1,45 @@
+; File: good-ivy-examples/liveness/alternating_bit_protocol.ivy
+
+; Sig
+(sort abp.ack_msg_t)
+(sort abp.data_msg_t)
+(sort abp.index_t)
+(sort abp.value)
+(relation abp.abit abp.ack_msg_t)
+(relation abp.ack_msg.le abp.ack_msg_t abp.ack_msg_t)
+(relation abp.ack_received )
+(relation abp.ack_sent )
+(constant abp.bot abp.value)
+(function abp.d abp.data_msg_t abp.value)
+(relation abp.data_msg.le abp.data_msg_t abp.data_msg_t)
+(relation abp.data_received )
+(relation abp.data_sent )
+(relation abp.dbit abp.data_msg_t)
+(relation abp.index.le abp.index_t abp.index_t)
+(constant abp.index.zero abp.index_t)
+(function abp.receiver_array abp.index_t abp.value)
+(relation abp.receiver_bit )
+(constant abp.receiver_i abp.index_t)
+(relation abp.receiver_scheduled )
+(function abp.sender_array abp.index_t abp.value)
+(relation abp.sender_bit )
+(constant abp.sender_gen_i abp.index_t)
+(constant abp.sender_i abp.index_t)
+(relation abp.sender_scheduled )
+(constant abp.tp1.sk0 abp.index_t)
+; End sig
+
+; Axiom abp_index
+(axiom (forall X abp.index_t (abp.index.le X X)))
+; Axiom abp_index0
+(axiom (forall Z abp.index_t (forall X abp.index_t (forall Y abp.index_t (or (not (and (abp.index.le X Y) (abp.index.le Y Z))) (abp.index.le X Z))))))
+; Axiom abp_index1
+(axiom (forall X abp.index_t (forall Y abp.index_t (or (not (and (abp.index.le X Y) (abp.index.le Y X))) (= X Y)))))
+; Axiom abp_index2
+(axiom (forall X abp.index_t (forall Y abp.index_t (or (abp.index.le X Y) (abp.index.le Y X)))))
+; Axiom abp_index3
+(axiom (forall X abp.index_t (abp.index.le abp.index.zero X)))
+
+
+; Conjecture abp_data_msg2
+(conjecture (forall X abp.data_msg_t (forall Y abp.data_msg_t (or (not (and (abp.data_msg.le X X) (abp.data_msg.le Y Y))) (or (abp.data_msg.le X Y) (abp.data_msg.le Y X))))))

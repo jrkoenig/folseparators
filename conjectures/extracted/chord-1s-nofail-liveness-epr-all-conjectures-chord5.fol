@@ -1,0 +1,29 @@
+; File: good-ivy-examples/misc/chord-1s-nofail-liveness-epr-all-conjectures.ivy
+
+; Sig
+(sort chord.node)
+(relation chord.bs.f chord.node chord.node)
+(relation chord.bs.p chord.node chord.node chord.node)
+(relation chord.live chord.node)
+(relation chord.prd chord.node chord.node)
+(relation chord.prd_proj chord.node)
+(relation chord.ring.btw chord.node chord.node chord.node)
+(relation chord.scheduled_rectify chord.node chord.node)
+(relation chord.scheduled_stabilize chord.node chord.node)
+(relation chord.stable )
+(relation chord.started )
+(constant chord.tp1.n0 chord.node)
+; End sig
+
+; Axiom chord_ring_cyclic
+(axiom (forall Y chord.node (forall Z chord.node (forall X chord.node (or (not (chord.ring.btw X Y Z)) (chord.ring.btw Y Z X))))))
+; Axiom chord_ring_transitive
+(axiom (forall Y chord.node (forall W chord.node (forall Z chord.node (forall X chord.node (or (not (and (chord.ring.btw W X Y) (chord.ring.btw W Y Z))) (chord.ring.btw W X Z)))))))
+; Axiom chord_ring_antisimmeric
+(axiom (forall Y chord.node (forall Z chord.node (forall X chord.node (or (not (chord.ring.btw X Y Z)) (not (chord.ring.btw X Z Y)))))))
+; Axiom chord_ring_total
+(axiom (forall Y chord.node (forall Z chord.node (forall X chord.node (or (or (or (or (chord.ring.btw X Y Z) (chord.ring.btw X Z Y)) (= X Y)) (= X Z)) (= Y Z))))))
+
+
+; Conjecture chord5
+(conjecture (forall X chord.node (or (not (chord.prd_proj X)) (chord.live X))))

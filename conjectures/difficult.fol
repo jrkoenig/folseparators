@@ -1,0 +1,12 @@
+; File: good-ivy-examples/misc/chord-1s-nofail-liveness-epr-all-conjectures.ivy
+
+; Sig
+(sort A)
+(relation f A A)
+(relation p A A A)
+(constant L1 A)
+; End sig
+
+; Conjecture chord_bs6
+; (conjecture (forall X A (forall Y A (forall Z A (or (not (f X Y)) (and (p X Y Y) (or (not (p X Z Z)) (p X Y Z))))))))
+(conjecture (forall X A (forall Y A (forall Z A (or (not (f X Y)) (p X Y Z))))))

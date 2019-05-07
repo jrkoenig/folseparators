@@ -1,0 +1,27 @@
+; File: good-ivy-examples/toy/toy_lock_inv.ivy
+
+; Sig
+(sort epoch)
+(sort node)
+(function ep node epoch)
+(relation held node)
+(relation le epoch epoch)
+(relation locked epoch node)
+(relation transfer epoch node)
+(constant zero epoch)
+; End sig
+
+; Axiom axiom1
+(axiom (forall X epoch (le X X)))
+; Axiom axiom2
+(axiom (forall Y epoch (forall Z epoch (forall X epoch (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+; Axiom axiom3
+(axiom (forall Y epoch (forall X epoch (or (not (and (le X Y) (le Y X))) (= X Y)))))
+; Axiom axiom4
+(axiom (forall Y epoch (forall X epoch (or (le X Y) (le Y X)))))
+; Axiom axiom5
+(axiom (forall X epoch (le zero X)))
+
+
+; Conjecture conj12
+(conjecture (forall N node (forall E epoch (forall M node (or (not (and (transfer E N) (not (le E (ep N))))) (not (le E (ep M))))))))
