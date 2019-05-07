@@ -87,15 +87,19 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
         print("Found a formula")
         assignment = solver.model()
         f = []
+        used = set()
         for i in range(N_clauses):
             cl = []
             for j, (row, atom) in enumerate(M):
                 if assignment[B("xp{}_{}".format(i,j))]:
                     cl.append(atom)
+                    used.add(j)
                 elif assignment[B("xn{}_{}".format(i,j))]:
                     cl.append(Not(atom))
+                    used.add(j)
             cl.sort()
             f.append(Or(cl))
+        print("Used", len(used), "distinct atoms")
         f.sort()
         f_minimal = []
         for clause in f:
