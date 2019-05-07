@@ -86,7 +86,7 @@ def formula(env, token):
             if (es != term_sort):
                 error_at("Sort mismatch", src)
         return Relation(head.name(), [a[0] for a in args])
-    error_at("Invalid formaula", token)
+    error_at("Invalid formula", token)
 
 # From the List of commands, intepret the definitions to construct a representation
 # of the signature, axioms and models
