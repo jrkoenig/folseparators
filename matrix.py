@@ -64,14 +64,9 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
     for x, m_index in model_positions.items():
         definition = []
         for i in range(N_clauses):
-            clause = []
-            for j, (row, _) in enumerate(M):
-                if row[m_index]:
-                    clause.append(p_terms[i][j])
-                else:
-                    clause.append(n_terms[i][j])
-            definition.append(z3.Or(*clause))
-        solver.add(B("M"+str(x)) == z3.And(*definition))
+            clause = [(p_terms[i][j] if row[m_index] else n_terms[i][j]) for j, (row, _) in enumerate(M)]
+            definition.append(z3.Or(clause))
+        solver.add(B("M"+str(x)) == z3.And(definition))
     # A clause may not have both positive and negative instances of an atom
     print("Adding disjunction exclusions")
     for i in range(N_clauses):
