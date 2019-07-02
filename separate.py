@@ -6,23 +6,26 @@ from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
 import itertools, copy
 import sys
+from collections import defaultdict
 
 def collapse(model, sig, assignment):
     mapping = {}
+    sorts = []
+    def get_element(e):
+        if e not in mapping:
+            mapping[e] = len(mapping)
+            sorts.append(model.sorts[e])
+        return mapping[e]
+
     consts = []
     funcs = []
     rels = []
 
     for const in sorted(model.constants.keys()):
-        e = model.constants[const]
-        if e not in mapping:
-            mapping[e] = len(mapping)
-        consts.append(mapping[e])
+        consts.append(get_element(model.constants[const]))
 
     for e in assignment:
-        if e not in mapping:
-            mapping[e] = len(mapping)
-        consts.append(mapping[e])
+        consts.append(get_element(e))
 
     for _ in range(K_function_unrolling):
         # we need to iterate over elements of the collapsed model in a way
@@ -34,11 +37,7 @@ def collapse(model, sig, assignment):
             arg_tuples = itertools.product(*[[r for r in reachable if model.sorts[r] == sort] for sort in arg_sorts])
             f_repr = model.functions[f]
             for t in arg_tuples:
-                e = f_repr[t]
-                if e not in mapping:
-                    mapping[e] = len(mapping)
-                funcs.append(mapping[e])
-
+                funcs.append(get_element(f_repr[t]))
 
     for rel in sorted(model.relations.keys()):
         tuples = model.relations[rel]
@@ -48,7 +47,7 @@ def collapse(model, sig, assignment):
                 collapsed_tuples.append(tuple([mapping[x] for x in t]))
         collapsed_tuples.sort()
         rels.append(collapsed_tuples)
-    return repr((consts, funcs, rels))
+    return repr((consts, funcs, rels, sorts))
 
 class CollapseCache(object):
     def __init__(self, sig, models = []):
@@ -57,6 +56,7 @@ class CollapseCache(object):
         self.cache = {}
         self.collapsed = {}
         self.assignments = []
+        self.all_assignments = defaultdict(list)
     def add_model(self, model):
         self.models.append(model)
     def get(self, index, assignment):
@@ -75,6 +75,7 @@ class CollapseCache(object):
             self.assignments.append((index, assignment))
         else:
             r = self.collapsed[key]
+        self.all_assignments[r].append((index, assignment))
         self.cache[(index, assignment)] = r
         return r
     def get_concrete(self, i):
@@ -116,20 +117,21 @@ class VarSet(object):
             self.neg.add(v)
     def __iter__(self): return iter(self.vars)
 
-def formula_for_model(model_index, assignment, prefix, collapsed, vars):
+def formula_for_model(model_index, assignment, prefix_i, prefix, collapsed, vars):
     m = collapsed.models[model_index]
-    if len(prefix) == 0:
+    if prefix_i == len(prefix):
+        for i, (_, sort) in enumerate(prefix):
+            assert(collapsed.models[model_index].sorts[assignment[i]] == sort)
         x = collapsed.get(model_index, assignment)
         v = z3.Bool("M"+str(x))
         polarity = m.label.startswith("+")
         vars.add(x, polarity)
         return v if polarity else z3.Not(v)
     else:
-        (is_forall, sort) = prefix[0]
-        rest = prefix[1:]
+        (is_forall, sort) = prefix[prefix_i]
         formulas = []
         for elem in m.elems_of_sort[sort]:
-            f = formula_for_model(model_index, assignment + [elem], rest, collapsed, vars)
+            f = formula_for_model(model_index, assignment + [elem], prefix_i+1, prefix, collapsed, vars)
             formulas.append(f)
         if is_forall == m.label.startswith("+"):
             return z3.And(formulas)
@@ -139,7 +141,22 @@ def formula_for_model(model_index, assignment, prefix, collapsed, vars):
 def check_prefix(models, prefix, sig, collapsed, solver):
     solver.push()
     vars = VarSet()
-    sat_formula = z3.And([formula_for_model(m_index, [], prefix, collapsed, vars) for m_index in range(len(models))])
+    sat_formula = z3.And([formula_for_model(m_index, [], 0, prefix, collapsed, vars) for m_index in range(len(models))])
+    solver.add(sat_formula)
+    result = solver.check()
+    solver.pop()
+    if result == z3.unsat:
+        return False
+    elif result == z3.sat:
+        return True
+    else:
+        assert False and "Error, z3 returned unknown"
+
+
+def check_prefix_build_matrix(models, prefix, sig, collapsed, solver):
+    solver.push()
+    vars = VarSet()
+    sat_formula = z3.And([formula_for_model(m_index, [], 0, prefix, collapsed, vars) for m_index in range(len(models))])
     # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
     solver.add(sat_formula)
     result = solver.check()
@@ -147,13 +164,15 @@ def check_prefix(models, prefix, sig, collapsed, solver):
     if result == z3.unsat:
         return None
     elif result == z3.sat:
-        models = {}
-        for x in vars:
-            models[x] = collapsed.get_concrete(x)
         sig_with_bv = copy.deepcopy(sig)
         for i,(_, sort) in enumerate(prefix):
             assert "x_"+str(i) not in sig_with_bv.constants
             sig_with_bv.constants["x_"+str(i)] = sort
+        
+        models = {}
+        for x in vars:
+            models[x] = collapsed.get_concrete(x)
+            
         matrix = infer_matrix(models, sig_with_bv, sat_formula)
         checker = z3.Solver()
         checker.add(sat_formula)
@@ -246,7 +265,7 @@ class Separator(object):
             p = self.prefixes[self.prefix_index]
             if not prefix_is_redundant(p):
                 if not self.quiet: print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
-                c = check_prefix(self.models, p, self.sig, self.collapsed, solver)
+                c = check_prefix_build_matrix(self.models, p, self.sig, self.collapsed, solver)
                 if c is not None:
                     return c
             self.prefix_index += 1
