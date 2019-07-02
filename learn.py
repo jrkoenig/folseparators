@@ -131,7 +131,7 @@ def learn(sig, axioms, formula):
     while True:
         if not args.quiet:
             print ("Checking formula")
-        result = find_model_or_equivalence(current, formula, env, s)        
+        result = find_model_or_equivalence(current, formula, env, s)
         if result is None:
             if not args.quiet:
                 print ("formula matches!")

@@ -201,6 +201,8 @@ class Model(object):
             r += c + " = " + self.names[e] + "\n"
         r += "\n".join([rel + "(" + ", ".join([self.names[i] for i in e]) + ")" for rel, es in self.relations.items() for e in es])
         return r
+    def __str__(self):
+        return print_model(self)
 
 def model_complete_wrt_sig(model, sig):
     for sort in sig.sorts:
