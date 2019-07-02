@@ -1,7 +1,8 @@
 
 import json, os, sys
-from interpret import interpret
-from parse import parse
+sys.path.append(".")
+from interpret import interpret, SemanticError
+from parse import parse, SyntaxError
 from logic import *
 
 def count_quantifiers(f):
@@ -67,17 +68,21 @@ def main():
         original_file = os.path.splitext(os.path.basename(f))[0]
         base = "-".join(original_file.split("-")[:-1])
         conj = original_file.split("-")[-1]
-        (sig, axioms, conjectures, models) = interpret(parse(open(f).read()))
-        assert len(conjectures) == 1
-        descs.append({'base': base,
-                      'conjecture': conj,
-                      'file': f,
-                      'quantifiers': count_quantifiers(conjectures[0]),
-                      'max_quantifier_depth': max_quantifier_depth(conjectures[0]),
-                      'existentials': count_existentials(conjectures[0]),
-                      'max_term_depth': max_term_depth(conjectures[0]),
-                      'golden_formula': str(conjectures[0])
-                     })
+        print(f)
+        try:
+            (sig, axioms, conjectures, models) = interpret(parse(open(f).read()))
+            assert len(conjectures) == 1
+            descs.append({'base': base,
+                        'conjecture': conj,
+                        'file': f,
+                        'quantifiers': count_quantifiers(conjectures[0]),
+                        'max_quantifier_depth': max_quantifier_depth(conjectures[0]),
+                        'existentials': count_existentials(conjectures[0]),
+                        'max_term_depth': max_term_depth(conjectures[0]),
+                        'golden_formula': str(conjectures[0])
+                        })
+        except (SyntaxError, SemanticError) as e:
+            print("File ", f, "was not valid", str(e))
     json.dump(descs, o, indent=1)
     o.close()
 

@@ -51,17 +51,21 @@ def main():
     
     s = Counter()
     f = Counter()
+    k = Counter()
     for r in results:
         if r['success']:
             s[r['base']] += 1
+        elif r['killed']:
+            k[r['base']] += 1
         else:
             f[r['base']] += 1
 
     ax = plt.axes()
-    labels = list(sorted(set(s.keys()) | set(f.keys())))
+    labels = list(sorted(set(s.keys()) | set(f.keys()) | set(k.keys())))
     labels.reverse()
-    plt.barh(range(len(labels)), list(1 for l in labels))
-    plt.barh(range(len(labels)), list(f[l]/float(s[l]+f[l]) for l in labels))
+    plt.barh(range(len(labels)), list(1 for l in labels), color='#319b7c', linewidth=0)
+    plt.barh(range(len(labels)), list(((k[l]+f[l])/float(s[l]+f[l]+k[l]) for l in labels)), color='#fdce4b', linewidth=0)
+    plt.barh(range(len(labels)), list((k[l]/float(s[l]+f[l]+k[l]) for l in labels)), color='#e44033', linewidth=0)
     plt.yticks(range(len(labels)), labels)
     plt.xlim(0,1)
     ax.spines['top'].set_visible(False)
@@ -73,27 +77,31 @@ def main():
 
 
 
-    print (len(results))
+    print ("Results count: ", len(results), "{}/{}/{} succ/kill/fail".format(sum(s.values()),sum(k.values()), sum(f.values())))
+    print ("\nProb Succ Killed Failed")
     for l in labels:
-        print(l, s[l], f[l])
+        print(l, s[l], k[l], f[l])
+    print("")
 
     fig = plt.figure(figsize=(8,6))
     
     s = Counter()
     f = Counter()
+    k = Counter()
     for r in results:
         golden_quant_count = desc_by_id[r['base'], r['conjecture']]['quantifiers']
         if r['success']:
             s[golden_quant_count] += 1
+        elif r['killed']:
+            k[golden_quant_count] += 1
         else:
             f[golden_quant_count] += 1
-            if golden_quant_count == 0:
-                print(r['base'], r['conjecture'])
 
     ax = plt.axes()
-    labels = list(sorted(set(s.keys()) | set(f.keys())))
-    plt.bar(range(len(labels)), list(s[l]+f[l] for l in labels))
-    plt.bar(range(len(labels)), list(f[l] for l in labels))
+    labels = list(sorted(set(s.keys()) | set(k.keys()) | set(f.keys())))
+    plt.bar(range(len(labels)), list(k[l]+f[l]+s[l] for l in labels), color='#319b7c', linewidth=0)
+    plt.bar(range(len(labels)), list(k[l]+f[l] for l in labels), color='#fdce4b', linewidth=0)
+    plt.bar(range(len(labels)), list(k[l] for l in labels), color='#e44033', linewidth=0)
     plt.xticks(range(len(labels)), labels)
     plt.ylim(0,None)
     plt.xlabel("Number of quantifiers in golden formula")
@@ -123,6 +131,20 @@ def main():
     plt.xlabel("Conjecture (ordinal)")
     fig.suptitle("Ordinal chart of time to learn conjuncts")
     plt.savefig("out/ordinal_learning_times"+SUFFIX+".png")
+
+
+    errors = []
+    for r in results:
+        d = desc_by_id[r['base'], r['conjecture']]
+        if r['killed'] and d['max_term_depth'] <= 1:
+            qc = d['quantifiers']
+            gold = desc_by_id[r['base'], r['conjecture']]['golden_formula']
+            errors.append((qc, gold, r['base'] + "-" + r['conjecture']))
+    errors.sort()
+    print("\nKilled Conjuncts:")
+    for (q, gold, name) in errors:
+        print(name, q, gold)
+            
 
 if __name__ == "__main__":
     main()

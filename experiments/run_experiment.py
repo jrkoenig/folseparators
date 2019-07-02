@@ -25,7 +25,7 @@ class ResultsLogger(object):
 
 def run(r, logger):
     try:
-        ret = subprocess.run(r['args'], capture_output = True, encoding = 'utf-8', timeout = r['timeout'])
+        ret = subprocess.run(r['args'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding = 'utf-8', timeout = r['timeout'])
         if ret.returncode == 0:
             last_line = ret.stdout.strip().split("\n")[-1]
             stats = json.loads(last_line)
@@ -43,9 +43,9 @@ def run(r, logger):
 
 def main():
     descs = json.load(open("out/extracted.json"))
-    flags = ['--not-incremental']
+    flags = ['--logic=fol']
     N = 1
-    logger = ResultsLogger("out/results.baseline.json")
+    logger = ResultsLogger("out/results.json")
 
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         for d in descs:
