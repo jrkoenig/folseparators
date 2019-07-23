@@ -1,5 +1,4 @@
-import argparse
-import json
+import argparse, random, json
 import numpy as np
 import pandas as pd
 import matplotlib
@@ -29,6 +28,18 @@ def main():
         desc_by_id[(d['base'], d['conjecture'])] = d
 
     results = json.load(args.results)
+
+    blacklist = ['tlb100', 'tlb101', 'tlb102', 'tlb103', 'tlb104', 'tlb105', 'tlb106', 'tlb107', 'tlb108', 'tlb109', 'tlb110', 'tlb111', 'tlb112', 'tlb113', 'tlb114', 'tlb115', 'tlb116', 'tlb117', 'tlb118', 'tlb119', 'tlb120', 'tlb121', 'tlb122', 'tlb123', 'tlb124', 'tlb125', 'tlb126', 'tlb127', 'tlb128', 'tlb129', 'tlb130', 'tlb131', 'tlb132', 'tlb133', 'tlb134', 'tlb135', 'tlb136', 'tlb137', 'tlb138', 'tlb139', 'tlb140', 'tlb141', 'tlb142', 'tlb143', 'tlb144', 'tlb145', 'tlb146', 'tlb147', 'tlb148', 'tlb149', 'tlb150', 'tlb151', 'tlb152', 'tlb153', 'tlb154', 'tlb155', 'tlb156', 'tlb157', 'tlb158', 'tlb159', 'tlb160', 'tlb161', 'tlb162', 'tlb163', 'tlb164', 'tlb165', 'tlb166', 'tlb167', 'tlb168', 'tlb169', 'tlb170', 'tlb171', 'tlb172', 'tlb173', 'tlb174', 'tlb175', 'tlb176', 'tlb177', 'tlb178', 'tlb179', 'tlb180', 'tlb181', 'tlb182', 'tlb183', 'tlb184', 'tlb185', 'tlb186', 'tlb187', 'tlb188', 'tlb189', 'tlb190', 'tlb191', 'tlb192', 'tlb193', 'tlb194', 'tlb195', 'tlb196', 'tlb197', 'tlb198', 'tlb199', 'tlb200', 'tlb201', 'tlb202', 'tlb203', 'tlb204', 'tlb205', 'tlb206', 'tlb207', 'tlb208', 'tlb209', 'tlb210', 'tlb211', 'tlb212', 'tlb213', 'tlb214', 'tlb215', 'tlb216', 'tlb217', 'tlb218', 'tlb219', 'tlb220', 'tlb221', 'tlb222', 'tlb223', 'tlb224', 'tlb225', 'tlb226', 'tlb227', 'tlb228', 'tlb229', 'tlb230', 'tlb231', 'tlb232', 'tlb233', 'tlb234', 'tlb235', 'tlb236', 'tlb237', 'tlb238', 'tlb239', 'tlb240', 'tlb241', 'tlb242', 'tlb243', 'tlb244', 'tlb245', 'tlb246', 'tlb247', 'tlb248', 'tlb249', 'tlb25', 'tlb250', 'tlb251', 'tlb252', 'tlb253', 'tlb254', 'tlb255', 'tlb256', 'tlb257', 'tlb258', 'tlb259', 'tlb26', 'tlb260', 'tlb261', 'tlb262', 'tlb263', 'tlb264', 'tlb265', 'tlb266', 'tlb267', 'tlb268', 'tlb269', 'tlb27', 'tlb270', 'tlb271', 'tlb272', 'tlb273', 'tlb274', 'tlb275', 'tlb276', 'tlb277', 'tlb278', 'tlb279', 'tlb28', 'tlb280', 'tlb281', 'tlb282', 'tlb283', 'tlb284', 'tlb285', 'tlb286', 'tlb287', 'tlb288', 'tlb289', 'tlb29', 'tlb290', 'tlb291', 'tlb292', 'tlb293', 'tlb294', 'tlb295', 'tlb296', 'tlb297', 'tlb298', 'tlb299', 'tlb30', 'tlb300', 'tlb31', 'tlb32', 'tlb33', 'tlb34', 'tlb35', 'tlb36', 'tlb37', 'tlb38', 'tlb39', 'tlb40', 'tlb41', 'tlb42', 'tlb43', 'tlb44', 'tlb45', 'tlb46', 'tlb47', 'tlb48', 'tlb49', 'tlb50', 'tlb51', 'tlb52', 'tlb53', 'tlb54', 'tlb55', 'tlb56', 'tlb57', 'tlb58', 'tlb59', 'tlb60', 'tlb61', 'tlb62', 'tlb63', 'tlb64', 'tlb65', 'tlb66', 'tlb67', 'tlb68', 'tlb69', 'tlb70', 'tlb71', 'tlb72', 'tlb73', 'tlb74', 'tlb75', 'tlb76', 'tlb77', 'tlb78', 'tlb79', 'tlb80', 'tlb81', 'tlb82', 'tlb83', 'tlb84', 'tlb85', 'tlb86', 'tlb87', 'tlb88', 'tlb89', 'tlb90', 'tlb91', 'tlb92', 'tlb93', 'tlb94', 'tlb95', 'tlb96', 'tlb97', 'tlb98', 'tlb99']
+    results = [r for r in results if not (r['base'] == 'tlb_pcrel' and r['conjecture'] in blacklist)]
+    
+    print("Random Formula:")
+    sample = random.sample(results, 5)
+    for r in sample:
+        print(desc_by_id[(r['base'], r['conjecture'])]['golden_formula'])
+    print("")
+
+    print("There are {} protocols".format(len(set([r['base'] for r in results]))))
+
 
     SUFFIX = args.suffix
     if SUFFIX != "" and not SUFFIX.startswith("-"):
@@ -83,7 +94,7 @@ def main():
         print(l, s[l], k[l], f[l])
     print("")
 
-    fig = plt.figure(figsize=(8,6))
+    fig = plt.figure(figsize=(6,4))
     
     s = Counter()
     f = Counter()
@@ -99,9 +110,9 @@ def main():
 
     ax = plt.axes()
     labels = list(sorted(set(s.keys()) | set(k.keys()) | set(f.keys())))
-    plt.bar(range(len(labels)), list(k[l]+f[l]+s[l] for l in labels), color='#319b7c', linewidth=0)
-    plt.bar(range(len(labels)), list(k[l]+f[l] for l in labels), color='#fdce4b', linewidth=0)
-    plt.bar(range(len(labels)), list(k[l] for l in labels), color='#e44033', linewidth=0)
+    plt.bar(range(len(labels)), list(k[l]+f[l]+s[l] for l in labels), edgecolor='0', color='#FFFFFF', linewidth=0.5, clip_on=False)
+    plt.bar(range(len(labels)), list(k[l]+f[l] for l in labels), color='#444444',edgecolor='#444444', linewidth=0.5)
+    #plt.bar(range(len(labels)), list(k[l] for l in labels), color='#e44033', linewidth=0)
     plt.xticks(range(len(labels)), labels)
     plt.ylim(0,None)
     plt.xlabel("Number of quantifiers in golden formula")
@@ -109,12 +120,15 @@ def main():
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
-    fig.suptitle("Quantifier conjunct distribution with success rate")
-    plt.savefig("out/success_by_quantifier_count"+SUFFIX+".png")
+    #fig.suptitle("Quantifier conjunct distribution with success rate")
+    plt.savefig("out/success_by_quantifier_count"+SUFFIX+".eps", bbox_inches='tight')
 
+    print("\nQuant. @ success @ killed @ failed")
+    for l in labels:
+        print (l, "@", s[l],"@", k[l],"@", f[l])
+    print("\n")
 
-
-    fig = plt.figure()
+    fig = plt.figure(figsize=(6,4))
     times = []
     for r in results:
         if r['success']:
@@ -123,14 +137,14 @@ def main():
             times.append(float('Inf'))
     times.sort()
     ax = plt.axes()
-    plt.plot([x+0.5 for x in range(len(times))], times)
+    plt.plot([x+0.5 for x in range(len(times))], times, color='black')
     plt.yscale("log")
     plt.xlim(0,len(times))
-    plt.ylim(0.01,10)
+    plt.ylim(0.01,60)
     plt.ylabel("Time to learn (minutes)")
     plt.xlabel("Conjecture (ordinal)")
-    fig.suptitle("Ordinal chart of time to learn conjuncts")
-    plt.savefig("out/ordinal_learning_times"+SUFFIX+".png")
+    #fig.suptitle("Ordinal chart of time to learn conjuncts")
+    plt.savefig("out/ordinal_learning_times"+SUFFIX+".eps", bbox_inches='tight')
 
 
     errors = []
@@ -144,6 +158,18 @@ def main():
     print("\nKilled Conjuncts:")
     for (q, gold, name) in errors:
         print(name, q, gold)
+            
+    errors = []
+    for r in results:
+        d = desc_by_id[r['base'], r['conjecture']]
+        if not r['killed'] and not r['success']:
+            qc = d['quantifiers']
+            gold = desc_by_id[r['base'], r['conjecture']]['golden_formula']
+            errors.append((qc, gold, r['base'] + "-" + r['conjecture']))
+    errors.sort()
+    print("\nFailed Conjuncts:")
+    for (q, gold, name) in errors:
+        print(name,"@", q, "@", gold)
             
 
 if __name__ == "__main__":
