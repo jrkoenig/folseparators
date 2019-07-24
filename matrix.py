@@ -13,13 +13,13 @@ K_function_unrolling = 1
 # uses the variables Mi, and should be made true by the resulting formula.
 # sat_formula must be satisfiable, but may potentially have many satisfying
 # assignments that must be explored to find a good generalizable matrix formula.
-def infer_matrix(models, sig, sat_formula):
+def infer_matrix(models, sig, sat_formula, quiet, timer):
 
     trivial = trivial_check(sat_formula, models.keys())
     if trivial is not None:
         return trivial
 
-    print ("Computing atom-model matrix")
+    if not quiet: print ("Computing atom-model matrix")
     model_positions = dict((model_id, i) for (i, model_id) in enumerate(models.keys()))
     atom_model_matrix = [(array('b', (check(a, m) for m in models.values())), a) for a in atoms(sig)]
     atom_model_matrix_reduced = [(row, atom) for (row, atom) in atom_model_matrix if not (all(row) or all(not x for x in row))]
@@ -29,14 +29,14 @@ def infer_matrix(models, sig, sat_formula):
         if r1 == r2:
             del atom_model_matrix_reduced[i]
 
-    print ("Retained", len(atom_model_matrix_reduced), "of", len(atom_model_matrix), "atoms")
-    print ("Have", len(models), "distinct FO-types/models")
-
+    if not quiet: print ("Retained", len(atom_model_matrix_reduced), "of", len(atom_model_matrix), "atoms")
+    if not quiet: print ("Have", len(models), "distinct FO-types/models")
+    timer.check_time()
     # print("\n".join(["".join('1' if x else '0' for x in row) + " " + str(atom) for (row, atom) in atom_model_matrix_reduced]))
     # print (sat_formula)
     # print (models.keys())
 
-    m = compute_minimal_with_z3_maxsat(atom_model_matrix_reduced, model_positions, sat_formula)
+    m = compute_minimal_with_z3_maxsat(atom_model_matrix_reduced, model_positions, sat_formula, quiet, timer)
     return trivial_simplify(m)
 
 def trivial_check(sat_formula, vars):
@@ -52,7 +52,7 @@ def trivial_check(sat_formula, vars):
         return Or([])
     return None
 
-def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
+def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer):
     N_clauses = 10
 
     solver = z3.Optimize()
@@ -60,26 +60,28 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
     solver.add(z3.simplify(sat_formula))
     p_terms = [[B("xp{}_{}".format(i,j)) for j in range(len(M))] for i in range(N_clauses)]
     n_terms = [[B("xn{}_{}".format(i,j)) for j in range(len(M))] for i in range(N_clauses)]
-    print("Encoding model constraints")
+    if not quiet: print("Encoding model constraints")
     for x, m_index in model_positions.items():
         definition = []
         for i in range(N_clauses):
             clause = [(p_terms[i][j] if row[m_index] else n_terms[i][j]) for j, (row, _) in enumerate(M)]
             definition.append(z3.Or(clause))
         solver.add(B("M"+str(x)) == z3.And(definition))
+        timer.check_time()
     # A clause may not have both positive and negative instances of an atom
-    print("Adding disjunction exclusions")
+    if not quiet: print("Adding disjunction exclusions")
     for i in range(N_clauses):
         for j in range(len(M)):
             solver.add(z3.Or(z3.Not(B("xp{}_{}".format(i,j))),
                              z3.Not(B("xn{}_{}".format(i,j)))))
+        timer.check_time()
     
     for j in range(len(M)):
         solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format(p, i, j)) for i in range(N_clauses) for p in ["xp", "xn"]])))
-    print("Constructed minimization problem")
-    r = solver.check()
+    if not quiet: print("Constructed minimization problem")
+    r = timer.solver_check(solver)
     if r == z3.sat:
-        print("Found a formula")
+        if not quiet: print("Found a formula")
         assignment = solver.model()
         f = []
         used = set()
@@ -94,7 +96,7 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula):
                     used.add(j)
             cl.sort()
             f.append(Or(cl))
-        print("Used", len(used), "distinct atoms")
+        if not quiet: print("Used", len(used), "distinct atoms")
         f.sort()
         f_minimal = []
         for clause in f:

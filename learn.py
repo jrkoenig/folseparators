@@ -7,7 +7,7 @@ from parse import parse
 from logic import *
 from check import check
 from separate import Separator
-
+from timer import Timer, TimeoutException
 
 sorts_to_z3 = {}
 z3_rel_func = {}
@@ -65,14 +65,12 @@ def extract_model(m, sig, label = ""):
             M.add_function(func, [str(x) for x in t], str(ev))
     return M
 
-def fm(a, b, env, solver):
+def fm(a, b, env, solver, timer):
     solver.push()
     solver.add(toZ3(a, env))
     solver.add(z3.Not(toZ3(b, env)))
-    r = solver.check()
-    m = None
-    if r == z3.sat:
-        m = solver.model()
+    r = timer.solver_check(solver)
+    m = solver.model() if r == z3.sat else None
     solver.pop()
     return (r, m)
 
@@ -82,23 +80,23 @@ def bound_sort_counts(solver, bounds):
         bv = z3.Const("elem_{}".format(sort), S)
         solver.add(z3.ForAll(bv, z3.Or([z3.Const("elem_{}_{}".format(sort, i), S) == bv for i in range(K)])))            
 
-def find_model_or_equivalence(current, formula, env, s):
-    (r1, m) = fm(current, formula, env, s)
+def find_model_or_equivalence(current, formula, env, s, t):
+    (r1, m) = fm(current, formula, env, s, t)
     if m is not None:
         for k in range(1, 100000):
             s.push()
             bound_sort_counts(s, dict((s,k) for s in env.sig.sorts))
-            (_, m) = fm(current, formula, env, s)
+            (_, m) = fm(current, formula, env, s, t)
             s.pop()
             if m is not None:
                 return extract_model(m, env.sig, "-")
         assert False
-    (r2, m) = fm(formula, current, env, s)
+    (r2, m) = fm(formula, current, env, s, t)
     if m is not None:
         for k in range(1, 100000):
             s.push()
             bound_sort_counts(s, dict((s,k) for s in env.sig.sorts))
-            (_, m) = fm(formula, current, env, s)
+            (_, m) = fm(formula, current, env, s, t)
             s.pop()
             if m is not None:
                 return extract_model(m, env.sig, "+")
@@ -107,49 +105,64 @@ def find_model_or_equivalence(current, formula, env, s):
         return None
     
     # TODO: try bounded model checking up to some limit
+    # test = Timer(1000000)
+    # with test:
+    #     r = fm(current, formula, env, s, test)
+    #     if repr(r) != "unknown":
+    #         print("Inconsistency in timeouts")
+
     raise RuntimeError("Z3 did not produce equivalence or model")
 
-def learn(sig, axioms, formula):
-    # ask z3 if the current formula and the ot
-    s = z3.Solver()
-    for sort in sig.sorts:
-        sorts_to_z3[sort] = z3.DeclareSort(sort, ctx=s.ctx)
-    for const, sort in sig.constants.items():
-        z3.Const(const, sorts_to_z3[sort])
-    for rel, sorts in sig.relations.items():
-        z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
-    for fun, (sorts, ret) in sig.functions.items():
-        z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
-
+def learn(sig, axioms, formula, timeout):
+    counterexample_timer = Timer(timeout)
+    separation_timer = Timer(timeout)
+    
+    separator = Separator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
     env = Environment(sig)
     current = Or([])
-    separator = Separator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
 
-    for ax in axioms:
-        s.add(toZ3(ax, env))
+    try:
+        with counterexample_timer:
+            s = z3.Solver()
+            for sort in sig.sorts:
+                sorts_to_z3[sort] = z3.DeclareSort(sort, ctx=s.ctx)
+            for const, sort in sig.constants.items():
+                z3.Const(const, sorts_to_z3[sort])
+            for rel, sorts in sig.relations.items():
+                z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
+            for fun, (sorts, ret) in sig.functions.items():
+                z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
 
-    while True:
-        if not args.quiet:
-            print ("Checking formula")
-        result = find_model_or_equivalence(current, formula, env, s)
-        if result is None:
-            if not args.quiet:
-                print ("formula matches!")
-                print (current)
-            return (current, separator.models)
-        else:
-            separator.add_model(result)
-            if not args.quiet:
-                print (print_model(result))
-                print ("Have new model, now have", len(separator.models), "models total")
-            if args.not_incremental:
-                separator.forget_learned_facts()
-            current = separator.separate()
-            if current is None:
-                raise RuntimeError("couldn't separate models")
+            for ax in axioms:
+                s.add(toZ3(ax, env))
+
+        while True:
+            with counterexample_timer:
+                if not args.quiet:
+                    print ("Checking formula")
+                result = find_model_or_equivalence(current, formula, env, s, counterexample_timer)
+                counterexample_timer.check_time()
+                if result is None:
+                    if not args.quiet:
+                        print ("formula matches!")
+                        print (current)
+                    return (True, current, separator.models, counterexample_timer, separation_timer)
             
-            if not args.quiet:
-                print("Learned new possible formula: ", current)
+            with separation_timer:
+                separator.add_model(result)
+                if not args.quiet:
+                    print (print_model(result))
+                    print ("Have new model, now have", len(separator.models), "models total")
+                if args.not_incremental:
+                    separator.forget_learned_facts()
+                current = separator.separate(timer = separation_timer)
+                if current is None:
+                    raise RuntimeError("couldn't separate models")
+                if not args.quiet:
+                    print("Learned new possible formula: ", current)
+    except (TimeoutException, RuntimeError):
+        return (False, current, separator.models, counterexample_timer, separation_timer)
+
 
 def count_quantifier_prenex(f):
     if isinstance(f, (Exists, Forall)):
@@ -164,6 +177,7 @@ def main():
     parser.add_argument("--expand-partial", action="store_true", help="expand partial counterexample models")
     parser.add_argument("--skip-pure-prenex", action="store_true", help="skip pure variables during prenex search")
     parser.add_argument("--skip-pure-matrix", action="store_true", help="skip pure variables during matrix inference")
+    parser.add_argument("--timeout", metavar='T', type=float, default = 1000000, help="timeout for each of learning and separation (seconds)")
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
@@ -171,15 +185,16 @@ def main():
     (sig, axioms, conjectures, models) = interpret(parse(open(args.filename).read()))
 
     seed = random.randrange(0, 2**31)
-    z3.set_param("sat.random_seed", seed, "smt.random_seed", seed, "sls.random_seed", seed, "fp.spacer.random_seed", seed, "nlsat.seed", seed)
-    start = time.time()
-    formula, models = learn(sig, axioms, conjectures[0])
-    end = time.time()
+    z3.set_param("sat.random_seed", seed, "smt.random_seed", seed, "sls.random_seed", seed, "fp.spacer.random_seed", seed, "nlsat.seed", seed)    
+    success, formula, models, ctimer, stimer = learn(sig, axioms, conjectures[0], timeout = args.timeout)
     if not args.quiet:
         for m in models:
             print(print_model(m))
     result = {
-        'total_time': end-start,
+        'success': success,
+        'total_time': ctimer.elapsed() + stimer.elapsed(),
+        'separation_time': stimer.elapsed(),
+        'counterexample_time': ctimer.elapsed(),
         'model_count': len(models),
         'formula': str(formula),
         'formula_quantifiers': count_quantifier_prenex(formula)

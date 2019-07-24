@@ -7,6 +7,7 @@ from matrix import infer_matrix, K_function_unrolling
 import itertools, copy
 import sys
 from collections import defaultdict
+from timer import Timer, UnlimitedTimer
 
 def collapse(model, sig, assignment):
     mapping = {}
@@ -153,36 +154,6 @@ def check_prefix(models, prefix, sig, collapsed, solver):
         assert False and "Error, z3 returned unknown"
 
 
-def check_prefix_build_matrix(models, prefix, sig, collapsed, solver):
-    solver.push()
-    vars = VarSet()
-    sat_formula = z3.And([formula_for_model(m_index, [], 0, prefix, collapsed, vars) for m_index in range(len(models))])
-    # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
-    solver.add(sat_formula)
-    result = solver.check()
-    solver.pop()
-    if result == z3.unsat:
-        return None
-    elif result == z3.sat:
-        sig_with_bv = copy.deepcopy(sig)
-        for i,(_, sort) in enumerate(prefix):
-            assert "x_"+str(i) not in sig_with_bv.constants
-            sig_with_bv.constants["x_"+str(i)] = sort
-        
-        models = {}
-        for x in vars:
-            models[x] = collapsed.get_concrete(x)
-            
-        matrix = infer_matrix(models, sig_with_bv, sat_formula)
-        checker = z3.Solver()
-        checker.add(sat_formula)
-        for x, m in models.items():
-            checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
-        if checker.check() != z3.sat:
-            raise RuntimeError("Incorrect matrix!")
-        return build_prefix_formula(prefix, matrix)
-    else:
-        assert False and "Error, z3 returned unknown"
 
 def ae_edges_of(sig):
     ae = {sort: set() for sort in sig.sorts}
@@ -252,7 +223,8 @@ class Separator(object):
         """Forgets all inferred facts (about prenex, etc) but keeps models"""
         self.prefixes = [[]]
         self.prefix_index = 0
-    def separate(self):
+    def separate(self, timer = UnlimitedTimer()):
+        self.timer = timer
         solver = z3.Solver()
         while True:
             if self.prefix_index == len(self.prefixes):
@@ -265,7 +237,7 @@ class Separator(object):
             p = self.prefixes[self.prefix_index]
             if not prefix_is_redundant(p):
                 if not self.quiet: print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
-                c = check_prefix_build_matrix(self.models, p, self.sig, self.collapsed, solver)
+                c = self.check_prefix_build_matrix(p, solver)
                 if c is not None:
                     return c
             self.prefix_index += 1
@@ -282,6 +254,41 @@ class Separator(object):
         if self.logic == "existential":
             return all(not is_forall for (is_forall, _) in p)
         return True
+    def check_prefix_build_matrix(self, prefix, solver):
+        solver.push()
+        vars = VarSet()
+        formulas = []
+        for m_index in range(len(self.models)):
+            formulas.append(formula_for_model(m_index, [], 0, prefix, self.collapsed, vars))
+            self.timer.check_time()
+        sat_formula = z3.And(formulas)
+        # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
+        solver.add(sat_formula)
+        result = self.timer.solver_check(solver)
+        solver.pop()
+        if result == z3.unsat:
+            return None
+        elif result == z3.sat:
+            sig_with_bv = copy.deepcopy(self.sig)
+            for i,(_, sort) in enumerate(prefix):
+                assert "x_"+str(i) not in sig_with_bv.constants
+                sig_with_bv.constants["x_"+str(i)] = sort
+            
+            concrete_models = {}
+            for x in vars:
+                concrete_models[x] = self.collapsed.get_concrete(x)
+                
+            matrix = infer_matrix(concrete_models, sig_with_bv, sat_formula, self.quiet, self.timer)
+            checker = z3.Solver()
+            checker.add(sat_formula)
+            for x, m in concrete_models.items():
+                checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
+            if checker.check() != z3.sat:
+                raise RuntimeError("Incorrect matrix!")
+            return build_prefix_formula(prefix, matrix)
+        else:
+            assert False and "Error, z3 returned unknown"
+
 
 if __name__ == "__main__":
     from interpret import interpret

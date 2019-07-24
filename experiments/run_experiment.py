@@ -1,5 +1,4 @@
 
-
 import subprocess, os, sys, json, threading, time
 from concurrent.futures import ThreadPoolExecutor
 
@@ -25,12 +24,14 @@ class ResultsLogger(object):
 
 def run(r, logger):
     try:
-        ret = subprocess.run(r['args'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding = 'utf-8', timeout = r['timeout'])
+        # add 60 seconds for hard cutoff to account for timing errors
+        ret = subprocess.run(r['args'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                             encoding = 'utf-8', timeout = r['timeout'] + 60)
         if ret.returncode == 0:
             last_line = ret.stdout.strip().split("\n")[-1]
             stats = json.loads(last_line)
             r['stats'] = stats
-            r['success'] = True
+            r['success'] = stats['success']
         else:
             r['success'] = False
             r['stderr'] = ret.stderr
@@ -38,14 +39,16 @@ def run(r, logger):
     except subprocess.TimeoutExpired:
         r['killed'] = True
         r['success'] = False
-
+    except Exception as e:
+        print(e)
     logger.add_result(r)
 
 def main():
     descs = json.load(open("out/extracted.json"))
     flags = ['--logic=fol']
     N = 1
-    logger = ResultsLogger("out/results.json")
+    timeout = 10*60
+    logger = ResultsLogger("out/results.split.json")
 
     with ThreadPoolExecutor(max_workers=os.cpu_count()) as executor:
         for d in descs:
@@ -53,8 +56,8 @@ def main():
                 r = {"base": d['base'],
                      "conjecture": d['conjecture'],
                      "index": i,
-                     "timeout": 10*60,
-                     "args": ['python3', 'learn.py'] + flags + [d['file']]}
+                     "timeout": timeout,
+                     "args": ['python3', 'learn.py'] + flags + ["--timeout", str(timeout), d['file']]}
                 executor.submit(run, r, logger)
     logger.close()
 
