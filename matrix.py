@@ -105,8 +105,7 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer
             f_minimal.append(clause)
         return And(f_minimal)
     else:
-        print("Error, z3 could not solve max-SAT problem")
-        assert False
+        raise RuntimeError("Z3 could not solve max-SAT problem")
 
 def atoms(sig):
     terms_by_sort = dict([(s,[]) for s in sig.sorts])

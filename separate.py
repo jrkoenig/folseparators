@@ -4,10 +4,10 @@ import z3
 from logic import Forall, Exists, Equal, Relation, And, Or, Not
 from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
-import itertools, copy
-import sys
+import itertools, copy, time, sys
 from collections import defaultdict
 from timer import Timer, UnlimitedTimer
+from typing import List, Dict, Iterator, Set
 
 def collapse(model, sig, assignment):
     mapping = {}
@@ -85,6 +85,8 @@ class CollapseCache(object):
         for var_i, element in enumerate(assignment):
             M.add_constant("x_"+str(var_i), M.names[element])
         return M
+    def fo_type_count(self):
+        return len(self.collapsed)
     def __len__(self):
         return len(self.assignments)
 
@@ -200,13 +202,12 @@ def digraph_is_acyclic(edges):
 
 
 class Separator(object):
-    def __init__(self, sig, quiet=False, logic="fol", max_depth = 100000, epr_wrt_formulas = []):
+    def __init__(self, sig, quiet=False, logic="fol", epr_wrt_formulas = []):
         self.sig = sig
         self.collapsed = CollapseCache(sig)
         self.models = []
         self.quiet = quiet
         self.logic = logic
-        self.max_depth = max_depth
         self.ae_edges = None
         if logic == "epr":
             self.ae_edges = ae_edges_of(sig)
@@ -223,20 +224,22 @@ class Separator(object):
         """Forgets all inferred facts (about prenex, etc) but keeps models"""
         self.prefixes = [[]]
         self.prefix_index = 0
-    def separate(self, timer = UnlimitedTimer()):
+    def separate(self, max_depth = 1000000, timer = UnlimitedTimer(), matrix_timer = UnlimitedTimer()):
         self.timer = timer
         solver = z3.Solver()
         while True:
             if self.prefix_index == len(self.prefixes):
-                # We have reached our maximum depth
-                if len(self.prefixes[0]) == self.max_depth:
+                # We have reached our maximum depth, don't generate larger prefixes
+                if len(self.prefixes[0]) == max_depth:
                     return None
-                self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False] for p in self.prefixes for s in sorted(self.sig.sorts)]
+                self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
+                                 for p in self.prefixes for s in sorted(self.sig.sorts)]
                 self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
                 self.prefix_index = 0
             p = self.prefixes[self.prefix_index]
             if not prefix_is_redundant(p):
-                if not self.quiet: print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
+                if not self.quiet:
+                    print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
                 c = self.check_prefix_build_matrix(p, solver)
                 if c is not None:
                     return c
@@ -289,21 +292,467 @@ class Separator(object):
         else:
             assert False and "Error, z3 returned unknown"
 
+class SeparatorReductionV1(object):
+    def __init__(self, sig, quiet=False, logic="fol", epr_wrt_formulas = []):
+        self.sig = sig
+        self.sort_indices = {}
+        for sort in sorted(sig.sorts):
+            self.sort_indices[sort] = len(self.sort_indices)
+        self.collapsed = CollapseCache(sig)
+        self.models = []
+        self.quiet = quiet
+        self.logic = logic
+        self.ae_edges = None
+        if logic == "epr":
+            self.ae_edges = ae_edges_of(sig)
+            for f in epr_wrt_formulas:
+                update_ae_edges(self.ae_edges, f)
+            if not digraph_is_acyclic(self.ae_edges):
+                raise RuntimeError("EPR logic requires background formulas to be already in EPR")
+        self.forget_learned_facts()
+        self.cached_solver_depth = -1
+        self._setup_solver_for_depth()
 
-if __name__ == "__main__":
-    from interpret import interpret
-    from parse import parse
-    import sys
+    def add_model(self, model):
+        model_i = len(self.models)
+        self.models.append(model)
+        self.collapsed.add_model(model)
 
-    if len(sys.argv) not in [1,2]:
-        print("Usage: python3 separate.py [file.fol]")
-        exit(1)
+        v = self._construct_instantiation(model, model_i, [], self.cached_solver_depth, self.cached_solver)
+        self.cached_solver.add(v if model.label.startswith("+") else z3.Not(v))
+    def forget_learned_facts(self):
+        """Forgets all inferred facts (about prenex, etc) but keeps models"""
+        self.prefixes = [[]]
+        self.prefix_index = 0
+        self.cached_solver_depth = -1
 
-    file = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
-    (sig, axioms, conjectures, models) = interpret(parse(open(file).read()))
+    def _all_quantifiers(self):
+        return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
+    def _var_for_quantifier(self, quant, depth):
+        (is_forall, sort) = quant
+        return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
-    f = separate(models, sig, 6)
-    if f is not None:
-        print("Formula is:", f)
-    else:
-        print("No formula found.")
+    def _construct_instantiation(self, model, model_i, instantiation, depth, solver):
+        current_depth = len(instantiation)
+        if current_depth == depth:
+            return z3.Bool(f"M{self.collapsed.get(model_i, instantiation)}")
+        else:
+            var = z3.Bool(f"v{self.next_var}")
+            self.next_var += 1            
+            for sort in sorted(self.sort_indices.keys()):
+                subvars = [self._construct_instantiation(model, model_i, instantiation + [elem], depth, solver)
+                            for elem in model.elems_of_sort[sort]]
+                for is_forall in [True, False]:
+                    solver.add(z3.Implies(self._var_for_quantifier((is_forall, sort), current_depth),
+                                      var == (z3.And(subvars) if is_forall else z3.Or(subvars))))
+            return var
+
+    def _setup_solver_for_depth(self):
+        depth = len(self.prefixes[0])
+        if self.cached_solver_depth != depth:
+            print(f"rebuilding solver for depth {depth}")
+            self.cached_solver = z3.Solver()
+            self.next_var = 0
+            for model_i, model in enumerate(self.models):
+                v = self._construct_instantiation(model, model_i, [], depth, self.cached_solver)
+                self.cached_solver.add(v if model.label.startswith("+") else z3.Not(v))
+                print(f"finished model {model_i}")
+                self.timer.check_time()
+            for d in range(depth):
+                self.cached_solver.add(
+                           z3.PbEq([(self._var_for_quantifier(q, d), 1) for q in self._all_quantifiers()], 1))
+            self.cached_solver_depth = depth
+
+            print(f"built solver using {self.next_var} variables")
+
+    def separate(self, max_depth = 1000000, timer = UnlimitedTimer(), matrix_timer = UnlimitedTimer()):
+        self.timer = timer
+        self._setup_solver_for_depth()
+        while True:
+            if self.prefix_index == len(self.prefixes):
+                # We have reached our maximum depth, don't generate larger prefixes
+                if len(self.prefixes[0]) == max_depth:
+                    return None
+                self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
+                                 for p in self.prefixes for s in sorted(self.sig.sorts)]
+                self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
+                self.prefix_index = 0
+                self._setup_solver_for_depth()
+            p = self.prefixes[self.prefix_index]
+            if not prefix_is_redundant(p):
+                if not self.quiet:
+                    print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
+                c = self._check_prefix_build_matrix(p, matrix_timer)
+                if c is not None:
+                    return c
+            self.prefix_index += 1
+    def _filter_prefix(self, p):
+        if prefix_is_redundant(p):
+            return False
+        if self.logic == "epr":
+            ae_edges = copy.deepcopy(self.ae_edges)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), False)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), True)
+            return digraph_is_acyclic(ae_edges)
+        if self.logic == "universal":
+            return all(is_forall for (is_forall, _) in p)
+        if self.logic == "existential":
+            return all(not is_forall for (is_forall, _) in p)
+        return True
+
+    def _check_prefix_build_matrix(self, prefix, matrix_timer):
+        start = time.time()
+        self.cached_solver.push()
+        self.cached_solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+        result = self.timer.solver_check(self.cached_solver)
+        # print(self.cached_solver)
+        self.cached_solver.pop()
+        print(result, f"{time.time() - start:0.3f}")
+        # print("(result == z3.sat)", (result == z3.sat))
+        # print("check_prefix", check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
+        # assert ((result == z3.sat) == check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
+
+        if result == z3.unsat:
+            return None
+        elif result == z3.sat:
+            with matrix_timer:
+                vars = VarSet()
+                formulas = []
+                for m_index in range(len(self.models)):
+                    formulas.append(formula_for_model(m_index, [], 0, prefix, self.collapsed, vars))
+                    self.timer.check_time()
+                sat_formula = z3.And(formulas)
+                # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
+                
+                sig_with_bv = copy.deepcopy(self.sig)
+                for i,(_, sort) in enumerate(prefix):
+                    assert "x_"+str(i) not in sig_with_bv.constants
+                    sig_with_bv.constants["x_"+str(i)] = sort
+                
+                concrete_models = {}
+                for x in vars:
+                    concrete_models[x] = self.collapsed.get_concrete(x)
+                    
+                matrix = infer_matrix(concrete_models, sig_with_bv, sat_formula, self.quiet, self.timer)
+                checker = z3.Solver()
+                checker.add(sat_formula)
+                for x, m in concrete_models.items():
+                    checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
+                if checker.check() != z3.sat:
+                    raise RuntimeError("Incorrect matrix!")
+                return build_prefix_formula(prefix, matrix)
+        else:
+            assert False and "Error, z3 returned unknown"
+
+class InstantiationNode(object):
+    index: int
+    instantiation: List[int]
+    children: List['InstantiationNode']
+    fo_type: int
+    model_i: int
+    def __init__(self, index, instantiation, fo_type, model_i):
+        self.index = index
+        self.instantiation = instantiation
+        self.children = []
+        self.fo_type = fo_type
+        self.model_i = model_i
+
+class SortNode(object):
+    children: Dict[str, 'SortNode']
+    fo_types: Set[int]
+    def __init__(self):
+        self.children = {}
+        self.fo_types = set()
+    def get_child(self, sort):
+        if sort not in self.children:
+            self.children[sort] = SortNode()
+        return self.children[sort]
+    def types_for(self, sorts, sorts_i = 0): 
+        if len(sorts) == sorts_i:
+            return self.fo_types
+        else:
+            if sorts[sorts_i] not in self.children:
+                return self.fo_types
+            return self.fo_types | self.get_child(sorts[sorts_i]).types_for(sorts, sorts_i + 1)
+    def add_type(self, sorts, fo_type, sorts_i = 0):
+        if len(sorts) == sorts_i:
+            self.fo_types.add(fo_type)
+        else:
+            self.get_child(sorts[sorts_i]).add_type(sorts, fo_type, sorts_i + 1)
+
+class SeparatorReductionV2(object):
+    def __init__(self, sig, quiet=False, logic="fol", epr_wrt_formulas = []):
+        self.sig = sig
+        self.sort_indices = {}
+        for sort in sorted(sig.sorts):
+            self.sort_indices[sort] = len(self.sort_indices)
+        self.collapsed = CollapseCache(sig)
+        self.models = []
+        self.quiet = quiet
+        self.logic = logic
+        self.ae_edges = None
+        if logic == "epr":
+            self.ae_edges = ae_edges_of(sig)
+            for f in epr_wrt_formulas:
+                update_ae_edges(self.ae_edges, f)
+            if not digraph_is_acyclic(self.ae_edges):
+                raise RuntimeError("EPR logic requires background formulas to be already in EPR")
+        self.solver = None
+        self.model_nodes = []
+        self.expanded_fo_types = set()
+        self.fo_type_depths = {}
+        self.nodes_by_index = {}
+        self.next_node_index = 0
+        self.prefixes = [[]]
+        self.prefix_index = 0
+        self.nodes_by_type = defaultdict(list)
+        self.sort_root = SortNode()
+        self._rebuild_solver()
+
+    def _new_node_index(self):
+        v = self.next_node_index
+        self.next_node_index += 1
+        return v
+    def add_model(self, model):
+        model_i = len(self.models)
+        self.models.append(model)
+        self.collapsed.add_model(model)
+        
+        new_root = InstantiationNode(self._new_node_index(), [], self.collapsed.get(model_i, []), model_i)
+        self._register_node(new_root)
+        self.model_nodes.append(new_root)
+        self._expand_existing_fo_types(new_root)
+        v = z3.Bool(f"v{new_root.index}")
+        self.solver.add(v if model.label.startswith("+") else z3.Not(v))
+
+    def _all_quantifiers(self):
+        return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
+    def _var_for_quantifier(self, quant, depth):
+        (is_forall, sort) = quant
+        return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
+    
+    def _expand_node(self, node):
+        model = self.models[node.model_i]
+        for elem in range(len(model.elems)):
+            es = node.instantiation + [elem]
+            # print(es)
+            fo_type = self.collapsed.get(node.model_i, es)
+            child = InstantiationNode(self._new_node_index(), es, fo_type, node.model_i)
+            node.children.append(child)
+            self._register_node(child)
+    
+    def _register_node(self, node):
+        self.nodes_by_type[node.fo_type].append(node)
+        self.nodes_by_index[node.index] = node
+        if node.fo_type not in self.fo_type_depths:
+            self.fo_type_depths[node.fo_type] = len(node.instantiation)
+            m = self.models[node.model_i]
+            self.sort_root.add_type([m.sorts[x] for x in node.instantiation], node.fo_type)
+
+        
+    def _define_node(self, node):
+        model = self.models[node.model_i]
+        var = z3.Bool(f"v{node.index}")
+        for sort in sorted(self.sort_indices.keys()):
+            subvars = [z3.Bool(f"v{c.index}") for c in node.children if model.sorts[c.instantiation[-1]] == sort]
+            for is_forall in [True, False]:
+                self.solver.add(z3.Implies(self._var_for_quantifier((is_forall, sort), len(node.instantiation)),
+                                      var == (z3.And(subvars) if is_forall else z3.Or(subvars))))
+
+    def _expand_existing_fo_types(self, node):
+        if node.fo_type not in self.expanded_fo_types:
+            return
+        assert len(node.children) == 0
+        self._expand_node(node)
+        self._define_node(node)
+
+        for c in node.children:
+            self._expand_existing_fo_types(c)
+    def _expand_nodes_for_fo_type(self, fo_type):
+        for node in self.nodes_by_type[fo_type]:
+            self._expand_node(node)
+            self._define_node(node)
+        self.expanded_fo_types.add(fo_type)
+
+    def _rebuild_solver(self):
+        self.solver = z3.Solver()
+        self.solver.set("unsat_core", True, "core.minimize", False)
+        self.solver_depth_assertions = 0
+
+    def _ensure_quantifier_definitions(self, max_depth):
+        for d in range(self.solver_depth_assertions, max_depth):
+            self.solver.add(z3.PbEq([(self._var_for_quantifier(q, d), 1) for q in self._all_quantifiers()], 1))
+        self.solver_depth_assertions = max(self.solver_depth_assertions, max_depth)
+    
+    def separate(self, max_depth = 1000000, timer = UnlimitedTimer(), matrix_timer = UnlimitedTimer()):
+        self.timer = timer
+        self._ensure_quantifier_definitions(len(self.prefixes[0]))
+        self._begin_equalities()
+
+        try:
+            while True:
+                if self.prefix_index == len(self.prefixes):
+                    # We have reached our maximum depth, don't generate larger prefixes
+                    if len(self.prefixes[0]) == max_depth:
+                        return None
+                    self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
+                                    for p in self.prefixes for s in sorted(self.sig.sorts)]
+                    self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
+                    self.prefix_index = 0
+                    # reset equalities, because depth increase means that the lowest depth ones
+                    # must be reasserted so they are in the UNSAT core. Also take this opportunity
+                    # to make sure the right definitions for quantifiers are there
+                    self._end_equalities()
+                    self._ensure_quantifier_definitions(len(self.prefixes[0]))
+                    self._begin_equalities()
+
+                p = self.prefixes[self.prefix_index]
+                if not prefix_is_redundant(p):
+                    if not self.quiet:
+                        print("Prefix:", " ".join([("∀" if is_forall else "∃")+f"{sort}." for (is_forall, sort) in p]), f"{self.prefix_index+1}/{len(self.prefixes)}")
+                    c = self._check_prefix_build_matrix(p, matrix_timer)
+                    if c is not None:
+                        return c
+                self.prefix_index += 1
+        finally:
+            self._end_equalities()
+    def _filter_prefix(self, p):
+        if prefix_is_redundant(p):
+            return False
+        if self.logic == "epr":
+            ae_edges = copy.deepcopy(self.ae_edges)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), False)
+            update_ae_edges(ae_edges, build_prefix_formula(p, And([])), True)
+            return digraph_is_acyclic(ae_edges)
+        if self.logic == "universal":
+            return all(is_forall for (is_forall, _) in p)
+        if self.logic == "existential":
+            return all(not is_forall for (is_forall, _) in p)
+        return True
+
+    def _begin_equalities(self):
+        self.solver.push()
+        self.asserted_equality_fo_types = set()
+
+    def _end_equalities(self):
+        self.solver.pop()
+        self.asserted_equality_fo_types = set()
+
+    def _assert_equalities(self, sorts): 
+        current_depth = len(sorts)
+        for fo_type in self.sort_root.types_for(sorts):
+            if fo_type in self.expanded_fo_types or fo_type in self.asserted_equality_fo_types:
+                continue
+            nodes = self.nodes_by_type[fo_type]
+            if self.fo_type_depths[fo_type] < current_depth:
+                self.solver.assert_and_track(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
+                                                    for n in nodes]), f"T{fo_type}")
+            else:
+                self.solver.add(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
+                                                    for n in nodes]))
+            self.asserted_equality_fo_types.add(fo_type)
+
+    def _print(self, *args):
+        if not self.quiet:
+            print(*args)
+    def _check_prefix_build_matrix(self, prefix, matrix_timer):
+        start = time.time()
+        sorts_of_prefix = [s for (is_forall, s) in prefix]
+
+        while True:
+            # print("Attempting")
+            self._assert_equalities(sorts_of_prefix)
+            self.solver.push()
+            self.solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+            # print(self.solver)
+            self._print("checking...")
+            result = self.timer.solver_check(self.solver)
+            if result == z3.unsat:
+                self._print("constructing unsat core...")
+                core = self.solver.unsat_core()
+
+            self.solver.pop()
+            
+            if result == z3.sat:
+                break
+            elif result == z3.unsat:
+                # if all FO types in the unsat core are at max depth, it is unsat
+                # print("core:", core)
+                possible_expansions = set()
+                for a in core:
+                    var = a.decl().name()
+                    assert var.startswith("T")
+                    fo_type = int(var[1:])
+                    if fo_type not in self.expanded_fo_types and self.fo_type_depths[fo_type] < len(prefix):
+                        possible_expansions.add(fo_type)
+                if len(possible_expansions) == 0:
+                    break
+                else:
+                    c = len(possible_expansions)
+                    self._print("expanding", c, "fo-types")
+                    self._end_equalities()
+                    for t in possible_expansions:
+                        if t not in self.expanded_fo_types:
+                            self._expand_nodes_for_fo_type(t)
+                    self._begin_equalities()
+                    self._assert_equalities(sorts_of_prefix)
+            else:
+                assert False
+        
+        self._print(result, f"{time.time() - start:0.3f}",
+                    f"nodes: {self.next_node_index}, fo_types: {self.collapsed.fo_type_count()}, expanded: {len(self.expanded_fo_types)}")
+        # print("(result == z3.sat)", (result == z3.sat))
+        # print("check_prefix", check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
+        # assert ((result == z3.sat) == check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
+
+        if result == z3.unsat:
+            return None
+        elif result == z3.sat:
+            with matrix_timer:
+                vars = VarSet()
+                formulas = []
+                for m_index in range(len(self.models)):
+                    formulas.append(formula_for_model(m_index, [], 0, prefix, self.collapsed, vars))
+                    self.timer.check_time()
+                sat_formula = z3.And(formulas)
+                # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
+                
+                sig_with_bv = copy.deepcopy(self.sig)
+                for i,(_, sort) in enumerate(prefix):
+                    assert "x_"+str(i) not in sig_with_bv.constants
+                    sig_with_bv.constants["x_"+str(i)] = sort
+                
+                concrete_models = {}
+                for x in vars:
+                    concrete_models[x] = self.collapsed.get_concrete(x)
+                    
+                matrix = infer_matrix(concrete_models, sig_with_bv, sat_formula, self.quiet, self.timer)
+                checker = z3.Solver()
+                checker.add(sat_formula)
+                for x, m in concrete_models.items():
+                    checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
+                if checker.check() != z3.sat:
+                    raise RuntimeError("Incorrect matrix!")
+                return build_prefix_formula(prefix, matrix)
+        else:
+            assert False and "Error, z3 returned unknown"
+
+
+# This has not been updated for the new interface
+# if __name__ == "__main__":
+#     from interpret import interpret
+#     from parse import parse
+#     import sys
+
+#     if len(sys.argv) not in [1,2]:
+#         print("Usage: python3 separate.py [file.fol]")
+#         exit(1)
+
+#     file = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
+#     (sig, axioms, conjectures, models) = interpret(parse(open(file).read()))
+
+#     f = separate(models, sig, 6)
+#     if f is not None:
+#         print("Formula is:", f)
+#     else:
+#         print("No formula found.")

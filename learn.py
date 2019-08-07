@@ -6,8 +6,8 @@ from interpret import interpret
 from parse import parse
 from logic import *
 from check import check
-from separate import Separator
-from timer import Timer, TimeoutException
+from separate import Separator, SeparatorReductionV1, SeparatorReductionV2
+from timer import Timer, UnlimitedTimer, TimeoutException
 
 sorts_to_z3 = {}
 z3_rel_func = {}
@@ -116,8 +116,13 @@ def find_model_or_equivalence(current, formula, env, s, t):
 def learn(sig, axioms, formula, timeout):
     counterexample_timer = Timer(timeout)
     separation_timer = Timer(timeout)
+    matrix_timer = UnlimitedTimer()
     
-    separator = Separator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
+    S = SeparatorReductionV1 if args.separator == 'v1' else\
+        SeparatorReductionV2 if args.separator == 'v2' else\
+        Separator
+        
+    separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
     env = Environment(sig)
     current = Or([])
 
@@ -146,7 +151,7 @@ def learn(sig, axioms, formula, timeout):
                     if not args.quiet:
                         print ("formula matches!")
                         print (current)
-                    return (True, current, separator.models, counterexample_timer, separation_timer)
+                    return (True, current, separator.models, counterexample_timer, separation_timer, matrix_timer, "(none)")
             
             with separation_timer:
                 separator.add_model(result)
@@ -155,13 +160,16 @@ def learn(sig, axioms, formula, timeout):
                     print ("Have new model, now have", len(separator.models), "models total")
                 if args.not_incremental:
                     separator.forget_learned_facts()
-                current = separator.separate(timer = separation_timer)
+                current = separator.separate(timer = separation_timer, matrix_timer = matrix_timer)
                 if current is None:
                     raise RuntimeError("couldn't separate models")
                 if not args.quiet:
                     print("Learned new possible formula: ", current)
-    except (TimeoutException, RuntimeError):
-        return (False, current, separator.models, counterexample_timer, separation_timer)
+    except TimeoutException:
+        return (False, current, separator.models, counterexample_timer, separation_timer, matrix_timer, "timeout")
+    except RuntimeError as e:
+        print("Error:", e)
+        return (False, current, separator.models, counterexample_timer, separation_timer, matrix_timer, str(e))
 
 
 def count_quantifier_prenex(f):
@@ -179,6 +187,7 @@ def main():
     parser.add_argument("--skip-pure-matrix", action="store_true", help="skip pure variables during matrix inference")
     parser.add_argument("--timeout", metavar='T', type=float, default = 1000000, help="timeout for each of learning and separation (seconds)")
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
+    parser.add_argument("--separator", choices=('naive', 'v1', 'v2'), default='naive', help="separator algorithm to use")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
     
@@ -186,7 +195,7 @@ def main():
 
     seed = random.randrange(0, 2**31)
     z3.set_param("sat.random_seed", seed, "smt.random_seed", seed, "sls.random_seed", seed, "fp.spacer.random_seed", seed, "nlsat.seed", seed)    
-    success, formula, models, ctimer, stimer = learn(sig, axioms, conjectures[0], timeout = args.timeout)
+    success, formula, models, ctimer, stimer, mtimer, error = learn(sig, axioms, conjectures[0], timeout = args.timeout)
     if not args.quiet:
         for m in models:
             print(print_model(m))
@@ -195,9 +204,11 @@ def main():
         'total_time': ctimer.elapsed() + stimer.elapsed(),
         'separation_time': stimer.elapsed(),
         'counterexample_time': ctimer.elapsed(),
+        'matrix_time': mtimer.elapsed(),
         'model_count': len(models),
         'formula': str(formula),
-        'formula_quantifiers': count_quantifier_prenex(formula)
+        'formula_quantifiers': count_quantifier_prenex(formula),
+        'error': error
     }
     
     print(json.dumps(result, separators=(',',':'), indent=None))
