@@ -40,7 +40,7 @@ class Timer(object):
         if self.remaining() < 0:
             raise TimeoutException()
     
-    def solver_check(self, solver):
+    def solver_check(self, solver, *args, **kwargs):
         assert self.running # only allow sat while this timer is active
         
         remaining = self.remaining()
@@ -48,7 +48,7 @@ class Timer(object):
             raise TimeoutException()
         
         solver.set(timeout = int(remaining * 1000)) # solver timeout is in ms
-        result = solver.check()
+        result = solver.check(*args, **kwargs)
         solver.set(timeout = 0)
         
         if self.remaining() < 0.1: # within 100ms of timeout
