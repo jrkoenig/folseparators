@@ -4,10 +4,11 @@ import z3
 from logic import Forall, Exists, Equal, Relation, And, Or, Not
 from check import check, resolve_term
 from matrix import infer_matrix, K_function_unrolling
-import itertools, copy, time, sys
+import itertools, copy, time, sys, re
 from collections import defaultdict
 from timer import Timer, UnlimitedTimer
 from typing import List, Dict, Iterator, Set
+
 
 def collapse(model, sig, assignment):
     mapping = {}
@@ -200,6 +201,46 @@ def digraph_is_acyclic(edges):
                 return False
     return True
 
+class PrefixSolver(object):
+    def __init__(self, depth, sort_indices):
+        self.depth = depth
+        self.sort_indices = sort_indices
+        self.solver = z3.Optimize()
+        for d in range(self.depth):
+            self.solver.add(z3.PbEq([(self._var_for_quantifier(q, d), 1) for q in self._all_quantifiers()], 1))
+            if d + 1 < self.depth:
+                for i in self.sort_indices.keys():
+                    for j in self.sort_indices.keys():
+                        if self.sort_indices[i] < self.sort_indices[j]:
+                            A_i_dp1 = self._var_for_quantifier((True, i), d+1)
+                            A_j_d = self._var_for_quantifier((True, j), d)
+                            E_i_dp1 = self._var_for_quantifier((False, i), d+1)
+                            E_j_d = self._var_for_quantifier((False, j), d)
+                            self.solver.add(z3.Not(z3.And(A_j_d, A_i_dp1)))
+                            self.solver.add(z3.Not(z3.And(E_j_d, E_i_dp1)))
+        for d in range(self.depth):
+            self.solver.add_soft(z3.Not(z3.Or([self._var_for_quantifier(q, d)
+                                                      for q in self._all_quantifiers() if not q[0]])), 2**(depth-d))
+    def get(self):
+        r = self.solver.check()
+        if r == z3.unsat:
+            return None
+        m = self.solver.model()
+        prefix = []
+        for d in range(self.depth):
+            for q in self._all_quantifiers():
+                if m[self._var_for_quantifier(q, d)]:
+                    prefix.append(q)
+                    break
+        assert len(prefix) == self.depth
+        return prefix
+    def add(self, unsat_core_vars):
+        self.solver.add(z3.Not(z3.And(unsat_core_vars)))
+    def _all_quantifiers(self):
+        return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
+    def _var_for_quantifier(self, quant, depth):
+        (is_forall, sort) = quant
+        return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
 class Separator(object):
     def __init__(self, sig, quiet=False, logic="fol", epr_wrt_formulas = []):
@@ -309,7 +350,7 @@ class SeparatorReductionV1(object):
                 update_ae_edges(self.ae_edges, f)
             if not digraph_is_acyclic(self.ae_edges):
                 raise RuntimeError("EPR logic requires background formulas to be already in EPR")
-        self.forget_learned_facts()
+        self.prefixes = PrefixSolver(0, self.sort_indices)
         self.cached_solver_depth = -1
         self._setup_solver_for_depth()
 
@@ -320,11 +361,11 @@ class SeparatorReductionV1(object):
 
         v = self._construct_instantiation(model, model_i, [], self.cached_solver_depth, self.cached_solver)
         self.cached_solver.add(v if model.label.startswith("+") else z3.Not(v))
-    def forget_learned_facts(self):
-        """Forgets all inferred facts (about prenex, etc) but keeps models"""
-        self.prefixes = [[]]
-        self.prefix_index = 0
-        self.cached_solver_depth = -1
+    # def forget_learned_facts(self):
+    #     """Forgets all inferred facts (about prenex, etc) but keeps models"""
+    #     self.prefixes = [[]]
+    #     self.prefix_index = 0
+    #     self.cached_solver_depth = -1
 
     def _all_quantifiers(self):
         return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
@@ -348,10 +389,11 @@ class SeparatorReductionV1(object):
             return var
 
     def _setup_solver_for_depth(self):
-        depth = len(self.prefixes[0])
+        depth = self.prefixes.depth
         if self.cached_solver_depth != depth:
             print(f"rebuilding solver for depth {depth}")
             self.cached_solver = z3.Solver()
+            self.cached_solver.set("unsat_core", True, "core.minimize", False)
             self.next_var = 0
             for model_i, model in enumerate(self.models):
                 v = self._construct_instantiation(model, model_i, [], depth, self.cached_solver)
@@ -369,23 +411,29 @@ class SeparatorReductionV1(object):
         self.timer = timer
         self._setup_solver_for_depth()
         while True:
-            if self.prefix_index == len(self.prefixes):
-                # We have reached our maximum depth, don't generate larger prefixes
-                if len(self.prefixes[0]) == max_depth:
-                    return None
-                self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
-                                 for p in self.prefixes for s in sorted(self.sig.sorts)]
-                self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
-                self.prefix_index = 0
+            p = self.prefixes.get()
+            if p is None:
+                if self.prefixes.depth == max_depth:
+                    return None 
+                self.prefixes = PrefixSolver(self.prefixes.depth+1, self.sort_indices)
                 self._setup_solver_for_depth()
-            p = self.prefixes[self.prefix_index]
-            if not prefix_is_redundant(p):
+                p = self.prefixes.get()
+            # if self.prefix_index == len(self.prefixes):
+            #     # We have reached our maximum depth, don't generate larger prefixes
+            #     if len(self.prefixes[0]) == max_depth:
+            #         return None
+            #     self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
+            #                      for p in self.prefixes for s in sorted(self.sig.sorts)]
+            #     self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
+            #     self.prefix_index = 0
+            #     self._setup_solver_for_depth()
+            # p = self.prefixes[self.prefix_index]
+            if True or not prefix_is_redundant(p): # TODO: put redundant constraints in the prefix searcher
                 if not self.quiet:
                     print ("Prefix:", " ".join([("∀" if is_forall else "∃") + sort + "." for (is_forall, sort) in p]))
                 c = self._check_prefix_build_matrix(p, matrix_timer)
                 if c is not None:
                     return c
-            self.prefix_index += 1
     def _filter_prefix(self, p):
         if prefix_is_redundant(p):
             return False
@@ -402,19 +450,31 @@ class SeparatorReductionV1(object):
 
     def _check_prefix_build_matrix(self, prefix, matrix_timer):
         start = time.time()
-        self.cached_solver.push()
-        self.cached_solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
-        result = self.timer.solver_check(self.cached_solver)
+        # self.cached_solver.push()
+        # self.cached_solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+        result = self.timer.solver_check(self.cached_solver, [self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
         # print(self.cached_solver)
-        self.cached_solver.pop()
-        print(result, f"{time.time() - start:0.3f}")
+        # self.cached_solver.pop()
+        # print(result, f"{time.time() - start:0.3f}")
         # print("(result == z3.sat)", (result == z3.sat))
         # print("check_prefix", check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
         # assert ((result == z3.sat) == check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
 
         if result == z3.unsat:
+            print("unsat core")
+            core = self.cached_solver.unsat_core()
+            print(result, f"{time.time() - start:0.3f}")
+            prefix_core_vars = []
+            for a in core: 
+                name = a.decl().name()
+                match = re.match("^([AE])_(\d+)_(\d+)$", name)
+                if match:
+                    prefix_core_vars.append(z3.Bool(name))
+            print(f"Core size {len(prefix)}-{len(prefix_core_vars)}")
+            self.prefixes.add(prefix_core_vars)
             return None
         elif result == z3.sat:
+            print(result, f"{time.time() - start:0.3f}")
             with matrix_timer:
                 vars = VarSet()
                 formulas = []
@@ -471,6 +531,8 @@ class SortNode(object):
         if len(sorts) == sorts_i:
             return self.fo_types
         else:
+            if sorts[sorts_i] is None:
+                return self.fo_types.union(*[c.types_for(sorts, sorts_i + 1) for c in self.children.values()])
             if sorts[sorts_i] not in self.children:
                 return self.fo_types
             return self.fo_types | self.get_child(sorts[sorts_i]).types_for(sorts, sorts_i + 1)
@@ -500,11 +562,12 @@ class SeparatorReductionV2(object):
         self.solver = None
         self.model_nodes = []
         self.expanded_fo_types = set()
+        self.asserted_depth_fo_types = set()
         self.fo_type_depths = {}
         self.nodes_by_index = {}
         self.next_node_index = 0
-        self.prefixes = [[]]
-        self.prefix_index = 0
+        self.prefixes = PrefixSolver(0, self.sort_indices)
+        # self.prefix_index = 0
         self.nodes_by_type = defaultdict(list)
         self.sort_root = SortNode()
         self._rebuild_solver()
@@ -544,10 +607,13 @@ class SeparatorReductionV2(object):
     def _register_node(self, node):
         self.nodes_by_type[node.fo_type].append(node)
         self.nodes_by_index[node.index] = node
+        self.solver.add(z3.Implies(z3.Bool(f"T{node.fo_type}"), z3.Bool(f"M{node.fo_type}") == z3.Bool(f"v{node.index}")))
         if node.fo_type not in self.fo_type_depths:
             self.fo_type_depths[node.fo_type] = len(node.instantiation)
             m = self.models[node.model_i]
             self.sort_root.add_type([m.sorts[x] for x in node.instantiation], node.fo_type)
+            self.solver.add(z3.Implies(z3.Bool(f"D{len(node.instantiation)}"), z3.Bool(f"T{node.fo_type}")))
+            
 
         
     def _define_node(self, node):
@@ -586,34 +652,46 @@ class SeparatorReductionV2(object):
     
     def separate(self, max_depth = 1000000, timer = UnlimitedTimer(), matrix_timer = UnlimitedTimer()):
         self.timer = timer
-        self._ensure_quantifier_definitions(len(self.prefixes[0]))
+        self._ensure_quantifier_definitions(self.prefixes.depth)
         self._begin_equalities()
 
         try:
             while True:
-                if self.prefix_index == len(self.prefixes):
-                    # We have reached our maximum depth, don't generate larger prefixes
-                    if len(self.prefixes[0]) == max_depth:
-                        return None
-                    self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
-                                    for p in self.prefixes for s in sorted(self.sig.sorts)]
-                    self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
-                    self.prefix_index = 0
-                    # reset equalities, because depth increase means that the lowest depth ones
-                    # must be reasserted so they are in the UNSAT core. Also take this opportunity
-                    # to make sure the right definitions for quantifiers are there
-                    self._end_equalities()
-                    self._ensure_quantifier_definitions(len(self.prefixes[0]))
-                    self._begin_equalities()
+                p = self.prefixes.get()
 
-                p = self.prefixes[self.prefix_index]
-                if not prefix_is_redundant(p):
+                if p is None:
+                    if self.prefixes.depth == max_depth:
+                        return None
+                    self.prefixes = PrefixSolver(self.prefixes.depth + 1, self.sort_indices)
+                    self._end_equalities()
+                    self._ensure_quantifier_definitions(self.prefixes.depth)
+                    self._begin_equalities()
+                    p = self.prefixes.get()
+
+                # if self.prefix_index == len(self.prefixes):
+                #     # We have reached our maximum depth, don't generate larger prefixes
+                #     if len(self.prefixes[0]) == max_depth:
+                #         return None
+                #     self.prefixes = [[(is_forall, s)]+p for is_forall in [True, False]
+                #                     for p in self.prefixes for s in sorted(self.sig.sorts)]
+                #     self.prefixes = [p for p in self.prefixes if self._filter_prefix(p)]
+                #     self.prefix_index = 0
+                #     # reset equalities, because depth increase means that the lowest depth ones
+                #     # must be reasserted so they are in the UNSAT core. Also take this opportunity
+                #     # to make sure the right definitions for quantifiers are there
+                #     self._end_equalities()
+                #     self._ensure_quantifier_definitions(len(self.prefixes[0]))
+                #     self._begin_equalities()
+                # p = self.prefixes[self.prefix_index]
+
+                if True or not prefix_is_redundant(p):
                     if not self.quiet:
-                        print("Prefix:", " ".join([("∀" if is_forall else "∃")+f"{sort}." for (is_forall, sort) in p]), f"{self.prefix_index+1}/{len(self.prefixes)}")
+                        # print("Prefix:", " ".join([("∀" if is_forall else "∃")+f"{sort}." for (is_forall, sort) in p]), f"{self.prefix_index+1}/{len(self.prefixes)}")
+                        print("Prefix:", " ".join([("∀" if is_forall else "∃")+f"{sort}." for (is_forall, sort) in p]))
                     c = self._check_prefix_build_matrix(p, matrix_timer)
                     if c is not None:
                         return c
-                self.prefix_index += 1
+                # self.prefix_index += 1
         finally:
             self._end_equalities()
     def _filter_prefix(self, p):
@@ -631,26 +709,39 @@ class SeparatorReductionV2(object):
         return True
 
     def _begin_equalities(self):
+        return
         self.solver.push()
         self.asserted_equality_fo_types = set()
 
     def _end_equalities(self):
+        return
         self.solver.pop()
         self.asserted_equality_fo_types = set()
 
+    # def _assert_equalities(self, sorts): 
+    #     current_depth = len(sorts)
+    #     x = 0
+    #     for fo_type in self.sort_root.types_for([s if i < current_depth/2 else None for i,s in enumerate(sorts)]):
+    #         if fo_type in self.expanded_fo_types or fo_type in self.asserted_equality_fo_types:
+    #             continue
+    #         nodes = self.nodes_by_type[fo_type]
+    #         if self.fo_type_depths[fo_type] < current_depth:
+    #             self.solver.assert_and_track(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
+    #                                                 for n in nodes]), f"T{fo_type}")
+    #         else:
+    #             self.solver.add(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
+    #                                                 for n in nodes]))
+    #         self.asserted_equality_fo_types.add(fo_type)
+    #         x += 1
+    #     print("Added", x, "fo type assertions")
+    
     def _assert_equalities(self, sorts): 
         current_depth = len(sorts)
+        a = []
         for fo_type in self.sort_root.types_for(sorts):
-            if fo_type in self.expanded_fo_types or fo_type in self.asserted_equality_fo_types:
-                continue
-            nodes = self.nodes_by_type[fo_type]
-            if self.fo_type_depths[fo_type] < current_depth:
-                self.solver.assert_and_track(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
-                                                    for n in nodes]), f"T{fo_type}")
-            else:
-                self.solver.add(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
-                                                    for n in nodes]))
-            self.asserted_equality_fo_types.add(fo_type)
+            if fo_type not in self.expanded_fo_types and self.fo_type_depths[fo_type] < current_depth:  
+                a.append(z3.Bool(f"T{fo_type}"))
+        return a
 
     def _print(self, *args):
         if not self.quiet:
@@ -661,17 +752,25 @@ class SeparatorReductionV2(object):
 
         while True:
             # print("Attempting")
-            self._assert_equalities(sorts_of_prefix)
-            self.solver.push()
-            self.solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+            assumptions = self._assert_equalities(sorts_of_prefix)
+            assumptions.append(z3.Bool(f"D{len(prefix)}"))
+            assumptions.extend([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+
+            # self.solver.push()
+            # self.solver.add(z3.Bool(f"D{len(prefix)}"))
+            # self.solver.push()
+            # self.solver.add([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
             # print(self.solver)
             self._print("checking...")
-            result = self.timer.solver_check(self.solver)
+            print(f"Used {len(assumptions)} assumptions")
+            #print(self.solver)
+            result = self.timer.solver_check(self.solver, assumptions)
+            
             if result == z3.unsat:
                 self._print("constructing unsat core...")
                 core = self.solver.unsat_core()
 
-            self.solver.pop()
+            # self.solver.pop()
             
             if result == z3.sat:
                 break
@@ -679,13 +778,41 @@ class SeparatorReductionV2(object):
                 # if all FO types in the unsat core are at max depth, it is unsat
                 # print("core:", core)
                 possible_expansions = set()
+                prefix_core_vars = []
                 for a in core:
                     var = a.decl().name()
-                    assert var.startswith("T")
-                    fo_type = int(var[1:])
-                    if fo_type not in self.expanded_fo_types and self.fo_type_depths[fo_type] < len(prefix):
-                        possible_expansions.add(fo_type)
+                    if var.startswith("T"):
+                        fo_type = int(var[1:])
+                        if fo_type not in self.expanded_fo_types and self.fo_type_depths[fo_type] < len(prefix):
+                            possible_expansions.add(fo_type)
+                    elif re.match("^([AE])_(\d+)_(\d+)$", var):
+                        prefix_core_vars.append(z3.Bool(var))
                 if len(possible_expansions) == 0:
+                    print("Generalizing prefix...")
+                    assumptions = self._assert_equalities(sorts_of_prefix)
+                    #assumptions = self._assert_equalities([None] * len(prefix))
+                    assumptions.append(z3.Bool(f"D{len(prefix)}"))
+                    
+                    final_core = []
+                    initial_core = list(reversed(prefix_core_vars))
+                    #initial_core = list(prefix_core_vars)
+                    while len(initial_core) > 0:
+                        print(final_core, [initial_core[0]], initial_core[1:])
+                        #assumptions = self._assert_equalities([s if False else None for i, s in enumerate(sorts_of_prefix)]) + [z3.Bool(f"D{len(prefix)}")]
+                        print(len(assumptions))
+                        r = self.timer.solver_check(self.solver, assumptions + final_core + initial_core[1:])
+                        if r == z3.sat:
+                            final_core.append(initial_core[0])
+                            #final_core.extend(initial_core)
+                            #break
+                        initial_core = initial_core[1:]
+                    #print("Final core is", self.solver.unsat_core())
+                    #for a in self.solver.assertions():
+                    #    print(a)
+                    print(f"Core size {len(prefix)} {len(final_core)} {len(prefix_core_vars)}")
+                    print(f"Core depths {'+'.join(x.decl().name()[-1] for x in final_core)}")
+                    print(final_core)
+                    self.prefixes.add(final_core)
                     break
                 else:
                     c = len(possible_expansions)
@@ -701,6 +828,7 @@ class SeparatorReductionV2(object):
         
         self._print(result, f"{time.time() - start:0.3f}",
                     f"nodes: {self.next_node_index}, fo_types: {self.collapsed.fo_type_count()}, expanded: {len(self.expanded_fo_types)}")
+        self._print(f"|C| {len(self.sort_root.types_for([None]*len(prefix)))} {len(self.sort_root.types_for([None] * (max(0, len(prefix)-1))))}")
         # print("(result == z3.sat)", (result == z3.sat))
         # print("check_prefix", check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
         # assert ((result == z3.sat) == check_prefix(self.models, prefix, self.sig, self.collapsed, z3.Solver()))
