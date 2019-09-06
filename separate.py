@@ -789,23 +789,40 @@ class SeparatorReductionV2(object):
                         prefix_core_vars.append(z3.Bool(var))
                 if len(possible_expansions) == 0:
                     print("Generalizing prefix...")
-                    assumptions = self._assert_equalities(sorts_of_prefix)
-                    #assumptions = self._assert_equalities([None] * len(prefix))
-                    assumptions.append(z3.Bool(f"D{len(prefix)}"))
+                    #assumptions = self._assert_equalities(sorts_of_prefix)
+                    # assumptions = self._assert_equalities([None] * len(prefix))
+                    # assumptions.append(z3.Bool(f"D{len(prefix)}"))
                     
                     final_core = []
                     initial_core = list(reversed(prefix_core_vars))
                     #initial_core = list(prefix_core_vars)
                     while len(initial_core) > 0:
                         print(final_core, [initial_core[0]], initial_core[1:])
-                        #assumptions = self._assert_equalities([s if False else None for i, s in enumerate(sorts_of_prefix)]) + [z3.Bool(f"D{len(prefix)}")]
+                        assumptions = self._assert_equalities([s if False else None for i, s in enumerate(sorts_of_prefix)]) + [z3.Bool(f"D{len(prefix)}")]
                         print(len(assumptions))
                         r = self.timer.solver_check(self.solver, assumptions + final_core + initial_core[1:])
                         if r == z3.sat:
                             final_core.append(initial_core[0])
                             #final_core.extend(initial_core)
                             #break
-                        initial_core = initial_core[1:]
+                            initial_core = initial_core[1:]
+                        elif r == z3.unsat:
+                            c = self.solver.unsat_core()
+                            core_t_vars = [x.decl().name() for x in c if x.decl().name().startswith("T") ]
+                            if len(core_t_vars) == 0:
+                                # actual unsat result, we can drop the given term
+                                initial_core = initial_core[1:]
+                            if len(core_t_vars) < 10:
+                                # one of the assumptions needs to have its node expanded.
+                                # few enough to do this right now
+                                for x in core_t_vars:
+                                    self._expand_nodes_for_fo_type(int(x[1:]))
+                            else:
+                                print("couldn't generalize due to", len(core_t_vars), "unexpanded nodes")
+                                final_core.extend(initial_core)
+                                break
+                                
+                                
                     #print("Final core is", self.solver.unsat_core())
                     #for a in self.solver.assertions():
                     #    print(a)
