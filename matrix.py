@@ -1,10 +1,11 @@
 
 import itertools, copy, sys
-import z3
 from array import array
 
-from logic import And, Or, Not, Func, Var, Relation, Equal
-from check import check, resolve_term
+import z3
+
+from .logic import And, Or, Not, Func, Var, Relation, Equal
+from .check import check, resolve_term
 
 K_function_unrolling = 1
 
@@ -105,7 +106,7 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer
             f_minimal.append(clause)
         return And(f_minimal)
     else:
-        raise RuntimeError("Z3 could not solve max-SAT problem")
+        raise RuntimeError(f"Z3 could not solve max-SAT problem ({r})")
 
 def atoms(sig):
     terms_by_sort = dict([(s,[]) for s in sig.sorts])

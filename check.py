@@ -1,5 +1,5 @@
 
-from logic import *
+from .logic import *
 
 def resolve_term(term, model):
     if isinstance(term, Var):

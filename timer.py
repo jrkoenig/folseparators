@@ -57,4 +57,4 @@ class Timer(object):
 
 class UnlimitedTimer(Timer):
     def __init__(self):
-        Timer.__init__(self, float("+inf"))
+        Timer.__init__(self, float(10000000))
