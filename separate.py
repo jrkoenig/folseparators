@@ -911,6 +911,10 @@ class SeparatorReductionV3(object):
         # self.prefix_index = 0
         self.nodes_by_type = defaultdict(list)
         self.sort_root = SortNode()
+        self._cached_pos = {}
+        self._cached_neg = {}
+        self._cached_imp = {}
+        
         self._rebuild_solver()
 
     def _new_node_index(self):
@@ -1010,25 +1014,39 @@ class SeparatorReductionV3(object):
         self._ensure_quantifier_definitions(self.prefixes.depth)
 
         # add constraints
+        constraints = []
         for po in pos:
-            self.solver.add(z3.Bool(f"v{po}"))
+            if po not in self._cached_pos:
+                i = len(self._cached_pos)
+                self.solver.add(z3.Implies(z3.Bool(f"CP{i}"), z3.Bool(f"v{po}")))
+                self._cached_pos[po] = i
+            constraints.append(z3.Bool(f"CP{self._cached_pos[po]}"))
         for n in neg:
-            self.solver.add(z3.Not(z3.Bool(f"v{n}")))
+            if n not in self._cached_neg:
+                i = len(self._cached_neg)
+                self.solver.add(z3.Implies(z3.Bool(f"CN{i}"), z3.Not(z3.Bool(f"v{n}"))))
+                self._cached_neg[n] = i
+            constraints.append(z3.Bool(f"CN{self._cached_neg[n]}"))
         for (a,b) in imp:
-            self.solver.add(z3.Implies(z3.Bool(f"v{a}"), z3.Bool(f"v{b}")))
+            if (a,b) not in self._cached_imp:
+                i = len(self._cached_imp)
+                self.solver.add(z3.Implies(z3.Bool(f"CI{i}"), z3.Implies(z3.Bool(f"v{a}"), z3.Bool(f"v{b}"))))
+                self._cached_imp[(a,b)] = i
+            constraints.append(z3.Bool(f"CI{self._cached_imp[(a,b)]}"))
 
+        # we do not support soft constraints
+        assert len(soft_pos + soft_neg + soft_imp) == 0
         # add soft constraints
-        for po in soft_pos:
-            self.solver.add_soft(z3.Bool(f"v{po}"))
-        for n in soft_neg:
-            self.solver.add_soft(z3.Not(z3.Bool(f"v{n}")))
-        for (a,b) in soft_imp:
-            self.solver.add_soft(z3.Implies(z3.Bool(f"v{a}"), z3.Bool(f"v{b}")))
+        # for po in soft_pos:
+        #     self.solver.add_soft(z3.Bool(f"v{po}"))
+        # for n in soft_neg:
+        #     self.solver.add_soft(z3.Not(z3.Bool(f"v{n}")))
+        # for (a,b) in soft_imp:
+        #     self.solver.add_soft(z3.Implies(z3.Bool(f"v{a}"), z3.Bool(f"v{b}")))
 
         try:
             while True:
                 p = self.prefixes.get()
-
                 if p is None:
                     if self.prefixes.depth == max_depth:
                         return None
@@ -1038,10 +1056,10 @@ class SeparatorReductionV3(object):
                 if True or not prefix_is_redundant(p):
                     if not self.quiet:
                         print("Prefix:", " ".join([("∀" if is_forall else "∃")+f"{sort}." for (is_forall, sort) in p]))
-                    c = self._check_prefix_build_matrix(p, matrix_timer, pos, neg, imp)
+                    c = self._check_prefix_build_matrix(p, matrix_timer, constraints, pos, neg, imp)
                     if c is not None:
-                        print(self.solver)
-                        print("Solution is",c)
+                        # print(self.solver)
+                        # print("Solution is",c)
                         return c
         finally:
             pass
@@ -1061,23 +1079,6 @@ class SeparatorReductionV3(object):
             return all(not is_forall for (is_forall, _) in p)
         return True
 
-    # def _assert_equalities(self, sorts):
-    #     current_depth = len(sorts)
-    #     x = 0
-    #     for fo_type in self.sort_root.types_for([s if i < current_depth/2 else None for i,s in enumerate(sorts)]):
-    #         if fo_type in self.expanded_fo_types or fo_type in self.asserted_equality_fo_types:
-    #             continue
-    #         nodes = self.nodes_by_type[fo_type]
-    #         if self.fo_type_depths[fo_type] < current_depth:
-    #             self.solver.assert_and_track(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
-    #                                                 for n in nodes]), f"T{fo_type}")
-    #         else:
-    #             self.solver.add(z3.And([z3.Bool(f"M{fo_type}") == z3.Bool(f"v{n.index}")
-    #                                                 for n in nodes]))
-    #         self.asserted_equality_fo_types.add(fo_type)
-    #         x += 1
-    #     print("Added", x, "fo type assertions")
-
     def _assert_equalities(self, sorts):
         current_depth = len(sorts)
         a = []
@@ -1089,7 +1090,7 @@ class SeparatorReductionV3(object):
     def _print(self, *args):
         if not self.quiet:
             print(*args)
-    def _check_prefix_build_matrix(self, prefix, matrix_timer, pos, neg, imp):
+    def _check_prefix_build_matrix(self, prefix, matrix_timer, constraints, pos, neg, imp):
         start = time.time()
         sorts_of_prefix = [s for (is_forall, s) in prefix]
 
@@ -1098,6 +1099,7 @@ class SeparatorReductionV3(object):
             assumptions = self._assert_equalities(sorts_of_prefix)
             assumptions.append(z3.Bool(f"D{len(prefix)}"))
             assumptions.extend([self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
+            assumptions.extend(constraints)
 
             # self.solver.push()
             # self.solver.add(z3.Bool(f"D{len(prefix)}"))
@@ -1116,8 +1118,8 @@ class SeparatorReductionV3(object):
             # self.solver.pop()
 
             if result == z3.sat:
-                print("Problem (main solver):", self.solver)
-                print(self.solver.model())
+                # print("Problem (main solver):", self.solver)
+                # print(self.solver.model())
                 break
             elif result == z3.unsat:
                 # if all FO types in the unsat core are at max depth, it is unsat
@@ -1143,8 +1145,7 @@ class SeparatorReductionV3(object):
                     #initial_core = list(prefix_core_vars)
                     while len(initial_core) > 0:
                         print(final_core, [initial_core[0]], initial_core[1:])
-                        assumptions = self._assert_equalities([s if False else None for i, s in enumerate(sorts_of_prefix)]) + [z3.Bool(f"D{len(prefix)}")]
-                        print(len(assumptions))
+                        assumptions = self._assert_equalities([s if False else None for i, s in enumerate(sorts_of_prefix)]) + [z3.Bool(f"D{len(prefix)}")] + constraints
                         r = self.timer.solver_check(self.solver, assumptions + final_core + initial_core[1:])
                         if r == z3.sat:
                             final_core.append(initial_core[0])
@@ -1172,7 +1173,7 @@ class SeparatorReductionV3(object):
                     #for a in self.solver.assertions():
                     #    print(a)
                     print(f"Core size {len(prefix)} {len(final_core)} {len(prefix_core_vars)}")
-                    print(f"Core depths {'+'.join(x.decl().name()[-1] for x in final_core)}")
+                    # print(f"Core depths {'+'.join(x.decl().name()[-1] for x in final_core)}")
                     print(final_core)
                     self.prefixes.add(final_core)
                     break
@@ -1211,7 +1212,7 @@ class SeparatorReductionV3(object):
                     formulas.append(z3.Implies(z3.Bool(f"v{a}"), z3.Bool(f"v{b}")))
 
                 sat_formula = z3.And(formulas)
-                print("SAT Formula", sat_formula)
+                # print("SAT Formula", sat_formula)
                 # print("There are ", len(vars.pos.symmetric_difference(vars.neg)), "pure variables of", len(vars.vars))
 
                 sig_with_bv = copy.deepcopy(self.sig)
@@ -1230,8 +1231,8 @@ class SeparatorReductionV3(object):
                     checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
                 if checker.check() != z3.sat:
                     raise RuntimeError("Incorrect matrix!")
-                print("Checker model", checker.model())
-                print("Sat formula was", sat_formula)
+                # print("Checker model", checker.model())
+                # print("Sat formula was", sat_formula)
                 return build_prefix_formula(prefix, matrix)
         else:
             assert False and "Error, z3 returned unknown"
