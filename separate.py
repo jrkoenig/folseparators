@@ -203,24 +203,31 @@ def digraph_is_acyclic(edges):
     return True
 
 class PrefixSolver(object):
-    def __init__(self, depth, sort_indices):
+    def __init__(self, depth, sort_indices, logic="fol"):
         self.depth = depth
         self.sort_indices = sort_indices
         self.solver = z3.Optimize()
         for d in range(self.depth):
-            self.solver.add(z3.PbEq([(self._var_for_quantifier(q, d), 1) for q in self._all_quantifiers()], 1))
+            self.solver.add(z3.PbEq([(self._V(q, d), 1) for q in self._all_quantifiers()], 1))
+            if logic == "universal":
+                self.solver.add(z3.And([z3.Not(self._V((False, i), d)) for i in sort_indices.keys()]))
+            elif logic == "existential":
+                self.solver.add(z3.And([z3.Not(self._V((True, i), d)) for i in sort_indices.keys()]))
+            else:
+                assert logic == "fol"
+
             if d + 1 < self.depth:
                 for i in self.sort_indices.keys():
                     for j in self.sort_indices.keys():
                         if self.sort_indices[i] < self.sort_indices[j]:
-                            A_i_dp1 = self._var_for_quantifier((True, i), d+1)
-                            A_j_d = self._var_for_quantifier((True, j), d)
-                            E_i_dp1 = self._var_for_quantifier((False, i), d+1)
-                            E_j_d = self._var_for_quantifier((False, j), d)
+                            A_i_dp1 = self._V((True, i), d+1)
+                            A_j_d = self._V((True, j), d)
+                            E_i_dp1 = self._V((False, i), d+1)
+                            E_j_d = self._V((False, j), d)
                             self.solver.add(z3.Not(z3.And(A_j_d, A_i_dp1)))
                             self.solver.add(z3.Not(z3.And(E_j_d, E_i_dp1)))
         for d in range(self.depth):
-            self.solver.add_soft(z3.Not(z3.Or([self._var_for_quantifier(q, d)
+            self.solver.add_soft(z3.Not(z3.Or([self._V(q, d)
                                                       for q in self._all_quantifiers() if not q[0]])), 2**(depth-d))
     def get(self):
         r = self.solver.check()
@@ -230,7 +237,7 @@ class PrefixSolver(object):
         prefix = []
         for d in range(self.depth):
             for q in self._all_quantifiers():
-                if m[self._var_for_quantifier(q, d)]:
+                if m[self._V(q, d)]:
                     prefix.append(q)
                     break
         assert len(prefix) == self.depth
@@ -239,7 +246,7 @@ class PrefixSolver(object):
         self.solver.add(z3.Not(z3.And(unsat_core_vars)))
     def _all_quantifiers(self):
         return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
-    def _var_for_quantifier(self, quant, depth):
+    def _V(self, quant, depth):
         (is_forall, sort) = quant
         return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
@@ -883,7 +890,7 @@ class SeparatorReductionV2(object):
         else:
             assert False and "Error, z3 returned unknown"
 
-class SeparatorReductionV3(object):
+class GeneralizedSeparator(object):
     def __init__(self, sig, quiet=False, logic="fol", epr_wrt_formulas = []):
         self.sig = sig
         self.sort_indices = {}
@@ -895,11 +902,7 @@ class SeparatorReductionV3(object):
         self.logic = logic
         self.ae_edges = None
         if logic == "epr":
-            self.ae_edges = ae_edges_of(sig)
-            for f in epr_wrt_formulas:
-                update_ae_edges(self.ae_edges, f)
-            if not digraph_is_acyclic(self.ae_edges):
-                raise RuntimeError("EPR logic requires background formulas to be already in EPR")
+            assert False # EPR unsupported
         self.solver = None
         self.model_nodes = []
         self.expanded_fo_types = set()
@@ -907,7 +910,7 @@ class SeparatorReductionV3(object):
         self.fo_type_depths = {}
         self.nodes_by_index = {}
         self.next_node_index = 0
-        self.prefixes = PrefixSolver(0, self.sort_indices)
+        self.prefixes = PrefixSolver(0, self.sort_indices, logic=self.logic)
         # self.prefix_index = 0
         self.nodes_by_type = defaultdict(list)
         self.sort_root = SortNode()
@@ -1005,7 +1008,7 @@ class SeparatorReductionV3(object):
                  timer = UnlimitedTimer(),
                  matrix_timer = UnlimitedTimer(),
     ):
-        self.prefixes = PrefixSolver(0, self.sort_indices)
+        self.prefixes = PrefixSolver(0, self.sort_indices, logic=self.logic)
 
         self.timer = timer
         #self.solver.push()
@@ -1050,7 +1053,7 @@ class SeparatorReductionV3(object):
                 if p is None:
                     if self.prefixes.depth == max_depth:
                         return None
-                    self.prefixes = PrefixSolver(self.prefixes.depth + 1, self.sort_indices)
+                    self.prefixes = PrefixSolver(self.prefixes.depth + 1, self.sort_indices, logic=self.logic)
                     self._ensure_quantifier_definitions(self.prefixes.depth)
                     p = self.prefixes.get()
                 if True or not prefix_is_redundant(p):
