@@ -1,24 +1,26 @@
 
-from parse import parse, Atom, List
-from logic import *
+
+from typing import Optional, List, Tuple, NoReturn
+
+from .parse import parse, Atom, Parens, AstNode, SrcLoc
+from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, model_complete_wrt_sig
 
 class SemanticError(Exception):
-    def __init__(self, desc = "?"):
+    def __init__(self, desc:str = "?"):
         self.desc = desc
-    def __str__(self):
+    def __str__(self) -> str:
         return "Semantic Error: " + self.desc
 
-def error_at(desc, node):
+def error_at(desc: str, node: AstNode) -> NoReturn:
     raise SemanticError(desc + " at " + str(node.loc[0]) + ":" + str(node.loc[1]))
 
-
-def term(env, token):
+def term(env: Environment, token: AstNode) -> Tuple[Term, str]:
     if isinstance(token, Atom):
         sort = env.lookup_var(token.name())
         if sort is None:
             error_at("Symbol not bound", token)
         return (Var(token.name()), sort)
-    else:
+    elif isinstance(token, Parens):
         if len(token) == 0: error_at("Term must not be empty", token)
         f = token[0]
         if isinstance(f, Atom) and f.name() in env.sig.functions:
@@ -32,9 +34,9 @@ def term(env, token):
             return (Func(f.name(), [a[0] for a in args]), ret_sort)
         else:
             error_at("Expected a function symbol", f)
+    else: assert False
 
-
-def formula(env, token):
+def formula(env: Environment, token: AstNode) -> Formula:
     if isinstance(token, Atom) or len(token) == 0 or not isinstance(token[0], Atom):
         error_at("Invalid formula", token)
     head = token[0]
@@ -90,11 +92,11 @@ def formula(env, token):
 
 # From the List of commands, intepret the definitions to construct a representation
 # of the signature, axioms and models
-def interpret(commands):
+def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[Formula], List[Model]]:
     sig = Signature()
 
     # Helper to turn a list of Atoms into a list of sort names, checking that each is defined
-    def sort_list(l):
+    def sort_list(l: List[AstNode]) -> List[str]:
         resolved_sorts = []
         for s in l:
             if isinstance(s, Atom) and s.name() in sig.sorts:
@@ -102,46 +104,46 @@ def interpret(commands):
             else:
                 error_at("Must be sort", s)
         return resolved_sorts
-    def is_free_name(token):
-        return isinstance(token, Atom) and sig.is_free_name(token.name())
+    def free_name(t: AstNode) -> Optional[str]:
+        return t.name() if isinstance(t, Atom) and sig.is_free_name(t.name()) else None
     axioms = []
     conjectures = []
     models = []
 
     in_sig = True
     for c in commands:
-        if isinstance(c, List) and isinstance(c[0], Atom):
+        if isinstance(c, Parens) and isinstance(c[0], Atom):
             command = c[0].name()
 
             if command == "sort":
                 if not in_sig: error_at("Signature must come before axioms and models", c)
-                if len(c) == 2 and is_free_name(c[1]):
-                    sig.sorts.add(c[1].name())
-                else:
-                    error_at("Sort must define one non-reserved name", c)
+                if len(c) != 2: error_at("Sort must define one non-reserved name", c)
+                n = free_name(c[1])
+                if n is None: error_at("Sort must define one non-reserved name", c)
+                sig.sorts.add(n)
 
             elif command == "relation":
                 if not in_sig: error_at("Signature must come before axioms and models", c)
-                if len(c) >= 2 and is_free_name(c[1]):
-                    sig.relations[c[1].name()] = sort_list(c[2:])
-                else:
-                    error_at("Invalid relation definition", c)
+                if len(c) < 2: error_at("Invalid relation definition", c)
+                n = free_name(c[1])
+                if n is None: error_at("Invalid relation definition", c)
+                sig.relations[n] = sort_list(c[2:])                
 
             elif command == "constant":
                 if not in_sig: error_at("Signature must come before axioms and models", c)
-                if len(c) == 3 and is_free_name(c[1]):
-                    sig.constants[c[1].name()] = sort_list(c[2:])[0]
-                else:
-                    error_at("Invalid constant definition", c)
+                if len(c) != 3: error_at("Invalid constant definition", c)
+                n = free_name(c[1])
+                if n is None: error_at("Invalid constant definition", c)
+                sig.constants[n] = sort_list(c[2:])[0]
 
             elif command == "function":
                 if not in_sig: error_at("Signature must come before axioms and models", c)
-                if len(c) >= 4 and is_free_name(c[1]):
-                    function_sort = sort_list(c[2:])
-                    sig.functions[c[1].name()] = (function_sort[:-1], function_sort[-1])
-                else:
-                    error_at("Invalid function definition", c)
-
+                if len(c) < 4: error_at("Invalid function definition", c)
+                n = free_name(c[1])
+                if n is None: error_at("Invalid function definition", c)
+                function_sort = sort_list(c[2:])
+                sig.functions[n] = (function_sort[:-1], function_sort[-1])
+                
             elif command == "axiom":
                 if len(c) != 2:
                     error_at("Invalid axiom definition", c)
@@ -161,14 +163,23 @@ def interpret(commands):
                 if len(c) < 2 or not isinstance(c[1], Atom):
                     error_at("Model must have label", c[1])
                 m.label = c[1].name()
-                if len(c) < 3 or not isinstance(c[2], List):
+                if len(c) < 3:
                     error_at("Model must have list of elements/sorts",c)
-                for pair in c[2]:
-                    if not isinstance(pair, List) or len(pair) != 2 or not is_free_name(pair[0]) or not (isinstance(pair[1], Atom) and pair[1].name() in sig.sorts):
+                elements = c[2]
+                if not isinstance(elements, Parens):
+                    error_at("Model must have list of elements/sorts",c)
+                for pair in elements[:]:
+                    if not isinstance(pair, Parens) or len(pair) != 2:
                         error_at("Elements must be (name SORT)", pair)
-                    if m.add_elem(pair[0].name(), pair[1].name()) is None:
+                    (elem,sort) = pair[0], pair[1]
+                    n = free_name(elem)
+                    if n is None: error_at("Elements must be (name SORT)", pair)
+                    s = sort_list([sort])[0]
+                    if not m.add_elem(n, s):
                         error_at("Element names must be unique", pair[0])
                 for fact in c[3:]:
+                    if not isinstance(fact, Parens):
+                        error_at("Invalid model fact", fact)
                     if len(fact) == 0 or not isinstance(fact[0], Atom):
                         error_at("Invalid model fact", fact)
                     fact_root = fact[0].name()
@@ -176,10 +187,12 @@ def interpret(commands):
                         expected_sorts = sig.relations[fact_root]
                         if len(fact) != len(expected_sorts) + 1:
                             error_at("Wrong relation arity", fact)
+                        args = []
                         for arg, e_s in zip(fact[1:], expected_sorts):
                             if not isinstance(arg, Atom) or m.sort_of(arg.name()) != e_s:
                                 error_at("Incorrect sort", arg)
-                        m.add_relation(fact_root, [arg.name() for arg in fact[1:]])
+                            args.append(arg.name())
+                        m.add_relation(fact_root, args)
                     elif fact_root == "=":
                         if len(fact) != 3:
                             error_at("Equality is binary", fact)
@@ -215,20 +228,3 @@ def interpret(commands):
             error_at("Unexpected Command", c)
 
     return (sig, axioms, conjectures, models)
-
-if __name__=="__main__":
-    import sys
-    if len(sys.argv) not in [1,2]:
-        print("Usage: python3 interpret.py [file.fol]")
-        exit(1)
-    file = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
-    (sig, axioms, conjectures, models) = interpret(parse(open(file).read()))
-
-
-    print(sig)
-    for ax in axioms:
-        print("Axiom:", ax)
-    for ax in conjectures:
-        print("Conjecture:", ax)
-    for m in models:
-        print(m)

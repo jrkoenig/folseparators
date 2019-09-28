@@ -1,14 +1,14 @@
 
 from .logic import *
 
-def resolve_term(term, model):
+def resolve_term(term: Term, model: Model) -> int:
     if isinstance(term, Var):
         return model.constants[term.var]
     elif isinstance(term, Func):
         return model.functions[term.f][tuple([resolve_term(a, model) for a in term.args])]
     else: assert False
 
-def check(formula, model):
+def check(formula: Formula, model: Model) -> bool:
     if isinstance(formula, And):
         for f in formula.c:
             if not check(f, model):
@@ -48,28 +48,3 @@ def check(formula, model):
         return False
     else:
         raise RuntimeError("Formula is illformed")
-
-if __name__ == "__main__":
-    from interpret import interpret, SemanticError
-    from parse import parse, SyntaxError
-    import sys
-
-    if len(sys.argv) not in [1,2]:
-        print("Usage: python3 check.py [file.fol]")
-        exit(1)
-
-    filen = "problems/node_has_edge.fol" if len(sys.argv) == 1 else sys.argv[1]
-    print("Checking", filen)
-    try:
-
-        (sig, axioms, conjectures, models) = interpret(parse(open(filen).read()))
-        for model in models:
-            for axiom in axioms:
-                if not check(axiom, model):
-                    print("Model does not meet axiom!")
-                    print(axiom)
-                    print(model)
-    except SemanticError as e:
-        print(e)
-    except SyntaxError as e:
-        print(e)

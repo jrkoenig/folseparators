@@ -4,8 +4,10 @@ from array import array
 
 import z3
 
-from .logic import And, Or, Not, Func, Var, Relation, Equal
+from .logic import And, Or, Not, Func, Var, Relation, Equal, Formula, Term, Signature, Model
 from .check import check, resolve_term
+from .timer import Timer
+from typing import List, Dict, Optional, Sequence, Iterable, Tuple, Generator
 
 K_function_unrolling = 1
 
@@ -14,7 +16,7 @@ K_function_unrolling = 1
 # uses the variables Mi, and should be made true by the resulting formula.
 # sat_formula must be satisfiable, but may potentially have many satisfying
 # assignments that must be explored to find a good generalizable matrix formula.
-def infer_matrix(models, sig, sat_formula, quiet, timer):
+def infer_matrix(models: Dict[int, Model], sig: Signature, sat_formula: z3.ExprRef, quiet: bool, timer: Timer, N_clauses: int = 10) -> Optional[Formula]:
 
     trivial = trivial_check(sat_formula, models.keys())
     if trivial is not None:
@@ -37,28 +39,22 @@ def infer_matrix(models, sig, sat_formula, quiet, timer):
     # print (sat_formula)
     # print (models.keys())
 
-    m = compute_minimal_with_z3_maxsat(atom_model_matrix_reduced, model_positions, sat_formula, quiet, timer)
-    return trivial_simplify(m)
+    m = compute_minimal_with_z3_maxsat(atom_model_matrix_reduced, model_positions, sat_formula, quiet, timer, N_clauses)
+    return trivial_simplify(m) if m is not None else m
 
-def trivial_check(sat_formula, vars):
+def trivial_check(sat_formula: z3.ExprRef, vars: Iterable[int]) -> Optional[Formula]:
     s = z3.Solver()
     s.add(sat_formula)
-    s.push()
-    for x in vars: s.add(z3.Bool('M'+str(x)))
-    if s.check() == z3.sat:
+    if s.check(*[z3.Bool('M'+str(x)) for x in vars]) == z3.sat:
         return And([])
-    s.pop()
-    for x in vars: s.add(z3.Not(z3.Bool('M'+str(x))))
-    if s.check() == z3.sat:
+    if s.check(*[z3.Not(z3.Bool('M'+str(x))) for x in vars]) == z3.sat:
         return Or([])
     return None
 
-def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer):
-    N_clauses = 10
-
+def compute_minimal_with_z3_maxsat(M: List[Tuple[array, Formula]], model_positions: Dict[int,int], sat_formula: z3.ExprRef, quiet: bool, timer: Timer, N_clauses: int) -> Optional[Formula]:
     solver = z3.Optimize()
     B = z3.Bool
-    solver.add(z3.simplify(sat_formula))
+    solver.add(sat_formula)
     p_terms = [[B("xp{}_{}".format(i,j)) for j in range(len(M))] for i in range(N_clauses)]
     n_terms = [[B("xn{}_{}".format(i,j)) for j in range(len(M))] for i in range(N_clauses)]
     if not quiet: print("Encoding model constraints")
@@ -66,8 +62,8 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer
         definition = []
         for i in range(N_clauses):
             clause = [(p_terms[i][j] if row[m_index] else n_terms[i][j]) for j, (row, _) in enumerate(M)]
-            definition.append(z3.Or(clause))
-        solver.add(B("M"+str(x)) == z3.And(definition))
+            definition.append(z3.Or(*clause))
+        solver.add(B("M"+str(x)) == z3.And(*definition))
         timer.check_time()
     # A clause may not have both positive and negative instances of an atom
     if not quiet: print("Adding disjunction exclusions")
@@ -99,17 +95,18 @@ def compute_minimal_with_z3_maxsat(M, model_positions, sat_formula, quiet, timer
             f.append(Or(cl))
         if not quiet: print("Used", len(used), "distinct atoms")
         f.sort()
-        f_minimal = []
-        for clause in f:
-            if len(f_minimal) > 0 and f_minimal[-1] == clause:
+        f_minimal: List[Formula] = []
+        for clause2 in f:
+            if len(f_minimal) > 0 and f_minimal[-1] == clause2:
                 continue
-            f_minimal.append(clause)
+            f_minimal.append(clause2)
         return And(f_minimal)
     else:
-        raise RuntimeError(f"Z3 could not solve max-SAT problem ({r})")
+        print(f"Z3 could not solve max-SAT problem ({r})")
+        return None
 
-def atoms(sig):
-    terms_by_sort = dict([(s,[]) for s in sig.sorts])
+def atoms(sig: Signature) -> Iterable[Formula]:
+    terms_by_sort: Dict[str, List[Term]] = dict([(s,[]) for s in sig.sorts])
 
     for c, sort in sig.constants.items():
         terms_by_sort[sort].append(Var(c))
@@ -122,13 +119,13 @@ def atoms(sig):
 
     for r, sorts in sig.relations.items():
         for args in itertools.product(*[terms_by_sort[s] for s in sorts]):
-            yield Relation(r, args)
+            yield Relation(r, list(args))
 
     for sort in sig.sorts:
         for (a,b) in itertools.product(terms_by_sort[sort], terms_by_sort[sort]):
             yield (Equal(a, b))
 
-def trivial_simplify(f):
+def trivial_simplify(f: Formula) -> Formula:
     if isinstance(f, Not):
         sub_f = trivial_simplify(f.f)
         if isinstance(sub_f, Not):

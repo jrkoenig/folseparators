@@ -1,25 +1,26 @@
 
 
 import time, math, z3
+from typing import Any, Sequence, Union
 
 class TimeoutException(Exception):
     pass
 
 class Timer(object):
     # Limit is time in seconds
-    def __init__(self, limit):
-        self._elapsed = 0.0
-        self.limit = limit
-        self.start = 0.0
-        self.running = False
+    def __init__(self, limit:float):
+        self._elapsed: float = 0.0
+        self.limit: float = limit
+        self.start: float = 0.0
+        self.running: bool = False
         
-    def __enter__(self):
+    def __enter__(self) -> 'Timer':
         assert not self.running
         self.start = time.time()
         self.running = True
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type: Exception, value: Any, traceback: Any) -> None:
         if type is TimeoutException:
             return
         assert self.running
@@ -27,34 +28,34 @@ class Timer(object):
         self.running = False
         self.check_time()
 
-    def remaining(self):
+    def remaining(self) -> float:
         return self.limit - self.elapsed()
 
-    def elapsed(self):
+    def elapsed(self) -> float:
         if self.running:
             return self._elapsed + (time.time() - self.start)
         else:
             return self._elapsed
 
-    def check_time(self):
+    def check_time(self) -> None:
         if self.remaining() < 0:
             raise TimeoutException()
     
-    def solver_check(self, solver, *args, **kwargs):
+    def solver_check(self, solver: Union[z3.Solver, z3.Optimize], *args: z3.ExprRef) -> z3.CheckSatResult:
         assert self.running # only allow sat while this timer is active
         
         remaining = self.remaining()
         if remaining < 0.1: # within 100ms of timeout
             raise TimeoutException()
         
-        solver.set(timeout = int(remaining * 1000)) # solver timeout is in ms
-        result = solver.check(*args, **kwargs)
-        solver.set(timeout = 0)
+        solver.set('timeout', int(remaining * 1000)) # solver timeout is in ms
+        result = solver.check(*args)
+        solver.set('timeout', 0)
         
         if self.remaining() < 0.1: # within 100ms of timeout
             raise TimeoutException()
         return result
 
 class UnlimitedTimer(Timer):
-    def __init__(self):
+    def __init__(self) -> None:
         Timer.__init__(self, float(10000000))
