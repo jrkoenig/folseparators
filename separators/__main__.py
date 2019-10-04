@@ -18,6 +18,7 @@ def main() -> None:
     parser.add_argument("filename", metavar="FILE", help=".fol file to learn conjecture of")
 
     parser.add_argument("--max-clauses", metavar='N', type=int, default = 10, help="maximum clauses in matrix")
+    parser.add_argument("--max-depth", metavar='N', type=int, default = 10, help="maximum quantifiers")
     parser.add_argument("--timeout", metavar='T', type=float, default = 1000000, help="timeout for each of learning and separation (seconds)")
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("--separator", choices=('naive', 'v1', 'v2'), default='naive', help="separator algorithm to use")

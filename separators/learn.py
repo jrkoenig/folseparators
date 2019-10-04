@@ -170,7 +170,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                 if not args.quiet:
                     print (r)
                     print ("Have new model, now have", len(result.models), "models total")
-                c = separator.separate(max_clauses = args.max_clauses, timer = result.separation_timer, matrix_timer = result.matrix_timer)
+                c = separator.separate(max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)
                 if c is None:
                     raise RuntimeError("couldn't separate models")
                 if not args.quiet:
