@@ -226,5 +226,5 @@ def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[F
                 error_at("Unexpected Command", c)
         else:
             error_at("Unexpected Command", c)
-
+    sig.finalize_sorts()
     return (sig, axioms, conjectures, models)

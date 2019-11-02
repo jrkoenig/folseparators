@@ -74,7 +74,12 @@ def compute_minimal_with_z3_maxsat(M: List[Tuple[array, Formula]], model_positio
         timer.check_time()
     
     for j in range(len(M)):
-        solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format(p, i, j)) for i in range(N_clauses) for p in ["xp", "xn"]])))
+        # minimize number of atoms
+        #solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format(p, i, j)) for i in range(N_clauses) for p in ["xp", "xn"]])))
+        
+        # minimize number of literals
+        solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format('xp', i, j)) for i in range(N_clauses)])))
+        solver.add_soft(z3.Not(z3.Or(*[B("{}{}_{}".format('xn', i, j)) for i in range(N_clauses)])))
     if not quiet: print("Constructed minimization problem")
     r = timer.solver_check(solver)
     if r == z3.sat:

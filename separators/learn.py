@@ -6,7 +6,7 @@ from .interpret import interpret
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func
 from .check import check
-from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2
+from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, HybridSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from typing import *
 
@@ -135,7 +135,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
         SeparatorReductionV2 if args.separator == 'v2' else\
         SeparatorNaive
         
-    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
+    separator: Union[Separator, HybridSeparator] = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)]) if args.separator != 'hybrid' else HybridSeparator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
     env = Environment(sig)
     s = z3.Solver()
     for sort in sig.sorts:
@@ -170,9 +170,15 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                 if not args.quiet:
                     print (r)
                     print ("Have new model, now have", len(result.models), "models total")
-                c = separator.separate(max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)
+                if isinstance(separator, HybridSeparator):
+                    p_constraints = [i for i in range(len(result.models)) if result.models[i].label.startswith("+")]
+                    n_constraints = [i for i in range(len(result.models)) if not result.models[i].label.startswith("+")]
+                    c = separator.separate(pos=p_constraints, neg=n_constraints, imp=[], max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer)
+                else:
+                    c = separator.separate(max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)
                 if c is None:
-                    raise RuntimeError("couldn't separate models")
+                    result.reason = "couldn't separate models under given restrictions"
+                    break
                 if not args.quiet:
                     print("Learned new possible formula: ", c)
                 result.current = c
@@ -180,6 +186,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
         result.reason = "timeout"
     except RuntimeError as e:
         print("Error:", e)
+        raise e
         result.reason = str(e)
 
     return result

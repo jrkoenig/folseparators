@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 import itertools
-from typing import Optional, Set, Dict, List, Tuple, DefaultDict
+from typing import Optional, Set, Dict, List, Tuple, DefaultDict, Iterable
 
 reserved_names = ["", "sort", "relation", "constant", "function", "axiom", "model", "forall", "exists", "and", "or", "not", "implies", "="]
 
@@ -9,6 +9,8 @@ reserved_names = ["", "sort", "relation", "constant", "function", "axiom", "mode
 class Signature(object):
     def __init__(self) -> None:
         self.sorts: Set[str] = set()
+        self.sort_names: List[str] = []
+        self.sort_indices: Dict[str, int] = {}
         self.relations: Dict[str, List[str]] = {}
         self.constants: Dict[str, str] = {}
         self.functions: Dict[str, Tuple[List[str], str]] = {}
@@ -16,6 +18,14 @@ class Signature(object):
         if n in reserved_names or n in self.sorts or n in self.relations or n in self.constants or n in self.functions:
             return False
         return True
+    def all_names(self) -> Iterable[str]:
+        return itertools.chain(self.sort_names, self.constants.keys(), self.relations.keys(), self.functions.keys())
+    def finalize_sorts(self) -> None:
+        self.sort_indices = {}
+        self.sort_names = []
+        for s in sorted(self.sorts):
+            self.sort_indices[s] = len(self.sort_names)
+            self.sort_names.append(s)
     def __repr__(self) -> str:
         return "\n".join(["Signature:", repr(self.sorts), repr(self.relations), repr(self.constants), repr(self.functions)])
 
@@ -56,6 +66,8 @@ class Var(Term):
     def __repr__(self) -> str:
         return self.var
     def _unpack(self) -> Tuple: return ('0Var', self.var) # extra zero so vars before funcs
+    def __hash__(self) -> int: return hash(self._unpack())
+
 
 class Func(Term):
     def __init__(self, f: str, args: List[Term]):
@@ -64,6 +76,7 @@ class Func(Term):
     def __repr__(self) -> str:
         return self.f + "(" + ", ".join(map(repr, self.args)) + ")"
     def _unpack(self) -> Tuple: return ('1Func', self.f, self.args)
+    def __hash__(self) -> int: return hash(('1Func', self.f, tuple(map(hash, self.args))))
 
 
 # Formula types: And, Or, Not, Exists, Forall, Equal, Relation
@@ -82,6 +95,8 @@ class And(Formula):
     def __repr__(self) -> str:
         if len(self.c) == 0:
             return "true"
+        if len(self.c) == 1:
+            return repr(self.c[0])
         return "(" + " & ".join(map(repr, self.c)) + ")"
     def _unpack(self) -> Tuple: return ("And", self.c)
 
@@ -91,6 +106,8 @@ class Or(Formula):
     def __repr__(self) -> str:
         if len(self.c) == 0:
             return "false"
+        if len(self.c) == 1:
+            return repr(self.c[0])
         return "(" + " | ".join(map(repr, self.c)) + ")"
     def _unpack(self) -> Tuple: return ("Or", self.c)
 
@@ -98,6 +115,10 @@ class Not(Formula):
     def __init__(self, formula: Formula):
         self.f = formula
     def __repr__(self) -> str:
+        if isinstance(self.f, (Relation, Var)):
+            return "~" + repr(self.f)
+        if isinstance(self.f, Equal):
+            return repr(self.f.args[0]) + " ~= " + repr(self.f.args[1])
         return "~(" + repr(self.f) + ")"
     def _unpack(self) -> Tuple: return ("Not", self.f)
 
@@ -125,6 +146,7 @@ class Equal(Formula):
     def __repr__(self) -> str:
         return " = ".join(map(repr, self.args))
     def _unpack(self) -> Tuple: return ("Equal", self.args)
+    def __hash__(self) -> int: return hash(('Equal', tuple(map(hash, self.args))))
 
 class Relation(Formula):
     def __init__(self, r:str, args: List[Term]):
@@ -133,6 +155,7 @@ class Relation(Formula):
     def __repr__(self) -> str:
         return self.rel + "(" + ", ".join(map(repr, self.args)) + ")"
     def _unpack(self) -> Tuple: return ("Relation", self.rel, self.args)
+    def __hash__(self) -> int: return hash(('Relation', self.rel, tuple(map(hash, self.args))))
 
 
 class Model(object):
