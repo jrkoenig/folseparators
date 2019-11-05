@@ -3,7 +3,7 @@
 from typing import Optional, List, Tuple, NoReturn
 
 from .parse import parse, Atom, Parens, AstNode, SrcLoc
-from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, model_complete_wrt_sig
+from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, model_is_complete_wrt_sig
 
 class SemanticError(Exception):
     def __init__(self, desc:str = "?"):
@@ -243,7 +243,7 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                             error_at("Equality not of correct form", fact)
                     else:
                         error_at("Unrecognized fact in model", fact)
-                if not model_complete_wrt_sig(m, sig):
+                if not model_is_complete_wrt_sig(m, sig):
                     error_at("Model is not complete with respect to signature (missing constant/function definitions?)", c)
                 models.append(m)
             else:

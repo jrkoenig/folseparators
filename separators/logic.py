@@ -171,14 +171,18 @@ class Model(object):
         self.elems: Dict[str, int] = {}
         self.sorts: List[str] = []
         self.elems_of_sort: DefaultDict[str, List[int]] = defaultdict(list)
+        self.elems_of_sort_index: List[List[int]] = [[] for i in range(len(sig.sort_names))]
         self.constants: Dict[str, int] = {}
         self.relations: Dict[str, Set[Tuple]] = dict([(r, set()) for r in sig.relations])
         self.functions: Dict[str, Dict[Tuple, int]] = dict([(f, dict()) for f in sig.functions])
+        self.sig = sig
     def add_elem(self, name: str, sort: str) -> bool:
         if name in self.elems:
             return False
-        self.elems[name] = len(self.names)
-        self.elems_of_sort[sort].append(len(self.names))
+        elem_id = len(self.names)
+        self.elems[name] = elem_id
+        self.elems_of_sort[sort].append(elem_id)
+        self.elems_of_sort_index[self.sig.sort_indices[sort]].append(elem_id)        
         self.sorts.append(sort)
         self.names.append(name)
         return True
@@ -199,7 +203,7 @@ class Model(object):
     def __str__(self) -> str:
         return print_model(self)
 
-def model_complete_wrt_sig(model: Model, sig: Signature) -> bool:
+def model_is_complete_wrt_sig(model: Model, sig: Signature) -> bool:
     for sort in sig.sorts:
         if len(model.elems_of_sort[sort]) == 0:
             return False
