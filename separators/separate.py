@@ -532,14 +532,13 @@ class SeparatorReductionV1(Separator):
             assert False and "Error, z3 returned unknown"
 
 class InstantiationNode(object):
-    __slots__ = ['index', 'instantiation', 'children', 'fo_type', 'model_i', 'expanded_sorts']
+    __slots__ = ['index', 'instantiation', 'children', 'fo_type', 'model_i']
     def __init__(self, index: int, instantiation: List[int], fo_type: int, model_i: int):
         self.index = index
         self.instantiation = instantiation
         self.children: List[InstantiationNode] = []
         self.fo_type = fo_type
         self.model_i = model_i
-        self.expanded_sorts = 0
 
 class SortNode(object):
     def __init__(self) -> None:
@@ -1174,7 +1173,23 @@ def prefix_var_names(sig: Signature, prefix: Iterable[int]) -> Sequence[str]:
         ret.append(f"{var_prefix}{sort}_{n}")
     return ret
 
+def vars_of(t: Union[Term,Formula]) -> Iterator[str]:
+    if isinstance(t, Var):
+        yield t.var
+    elif isinstance(t, Func):
+        for c in t.args:
+            yield from vars_of(c)
+    elif isinstance(t, Not):
+        yield from vars_of(t.f)
+    elif isinstance(t, Relation):
+        for c in t.args:
+            yield from vars_of(c)
+    elif isinstance(t, Equal):
+        for c in t.args:
+            yield from vars_of(c)
+
 class Constraint(object):
+    """A separation constraint, one of `Pos(i)`, `Neg(i)`, or `Imp(i,j)`"""
     pass
 class Pos(Constraint):
     def __init__(self, i: int):
@@ -1187,6 +1202,15 @@ class Imp(Constraint):
         self.i = i
         self.j = j
         
+class InstNode(object):
+    """Represents an instantiated node in the tree of a particular model"""
+    __slots__ = ['index', 'instantiation', 'children', 'fo_type', 'model_i']
+    def __init__(self, index: int, instantiation: List[int], fo_type: int, model_i: int, n_sorts: int):
+        self.index = index
+        self.instantiation = instantiation
+        self.children: List[List[InstNode]] = [[] for i in range(n_sorts)]
+        self.fo_type = fo_type
+        self.model_i = model_i
 
 class HybridSeparator(Separator):
     def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
@@ -1197,8 +1221,7 @@ class HybridSeparator(Separator):
         self._highest_prefix: DefaultDict[int, int] = defaultdict(int)
 
         self._models: List[Model] = []
-        self._node_roots: Dict[Tuple[int,int], InstantiationNode] = {}
-        self._nodes_by_index: Dict[int, InstantiationNode] = {}
+        self._node_roots: Dict[Tuple[int,int], InstNode] = {}
         self._next_node_index = 0
 
         self._collapse_cache = CollapseCache(sig)
@@ -1233,6 +1256,10 @@ class HybridSeparator(Separator):
         return z3.Bool(f"Q_{conjunct}_{sort}_{depth}")
     def _prefix_quant_var(self, conjunct: int, depth: int) -> z3.ExprRef:
         return z3.Bool(f"AE_{conjunct}_{depth}")
+    def _prefix_vars(self, conjunct: int, is_forall: bool, sort: int, depth: int) -> z3.ExprRef:
+        return z3.And(self._prefix_sort_var(conjunct, sort, depth), 
+                        self._prefix_quant_var(conjunct, depth) if is_forall else
+                        z3.Not(self._prefix_quant_var(conjunct, depth)))
 
     def _prefix_var_definition(self, conjunct: int, depth: int) -> None:
         n_sorts = len(self._sig.sort_names)
@@ -1240,69 +1267,55 @@ class HybridSeparator(Separator):
             self.solver.add(z3.PbEq([(self._prefix_sort_var(conjunct, q, d), 1) for q in range(n_sorts)], 1))
             if 0 < d:
                 for i,j in itertools.combinations(reversed(range(n_sorts)), 2):
-                    A_i_dm1 = z3.And(self._prefix_sort_var(conjunct, i, d-1),  self._prefix_quant_var(conjunct, d-1))
-                    A_j_d = z3.And(self._prefix_sort_var(conjunct, j, d), self._prefix_quant_var(conjunct, d))
-                    E_i_dm1 = z3.And(self._prefix_sort_var(conjunct, i, d-1), z3.Not(self._prefix_quant_var(conjunct, d-1)))
-                    E_j_d = z3.And(self._prefix_sort_var(conjunct, j, d), z3.Not(self._prefix_quant_var(conjunct, d)))
-                    self.solver.add(z3.Not(z3.And(A_j_d, A_i_dm1)))
-                    self.solver.add(z3.Not(z3.And(E_j_d, E_i_dm1)))
+                    # Prevent adjacent universals unless their sorts are in non-strict increasing order
+                    A_i_dm1 = self._prefix_vars(conjunct, True, i, d-1)
+                    A_j_d = self._prefix_vars(conjunct, True, j, d)
+                    self.solver.add(z3.Not(z3.And(A_i_dm1, A_j_d)))
+                    # Same for existentials
+                    E_i_dm1 = self._prefix_vars(conjunct, False, i, d-1)
+                    E_j_d = self._prefix_vars(conjunct, False, j, d)
+                    self.solver.add(z3.Not(z3.And(E_i_dm1, E_j_d)))
             if self._logic == "universal":
                 self.solver.add(self._prefix_quant_var(conjunct, d))
-                
-            # for sort in range(len(self._sig.sort_names)):
-                # self.solver.add_soft(z3.Not(self._prefix_var(conjunct, (False, sort), d)))
-                # TODO: add other logic restrictions
+            # TODO: add other logic restrictions
         self._highest_prefix[conjunct] = max(self._highest_prefix[conjunct], depth)
 
-    def _new_node_index(self) -> int:
-        r = self._next_node_index
+    def _make_node(self, model_i: int, inst: List[int]) -> InstNode:
+        fo_type = self._collapse_cache.get(model_i, inst)
+        c = InstNode(self._next_node_index, inst, fo_type, model_i, len(self._sig.sort_names))
         self._next_node_index += 1
-        return r
+        var = z3.Bool(f"v_{c.index}")
+        d = len(c.instantiation)
+        self.solver.add(z3.Implies(self._depth_var(0, d), var == self._fo_type_var(c.fo_type)))
+        self.solver.add(z3.Implies(self._depth_greater_var(0, d),
+                                    z3.Implies(self._fo_type_var(c.fo_type), var)))
+        return c
+
     def _root_var(self, model: int, conjunct: int) -> z3.ExprRef:
         if (model, conjunct) not in self._node_roots:
-            new_root = InstantiationNode(self._new_node_index(), [], self._collapse_cache.get(model, []), model)
-            self._nodes_by_index[new_root.index] = new_root
-            var = z3.Bool(f"v_{new_root.index}")
-            self.solver.add(z3.Implies(self._depth_var(conjunct, 0), var == self._fo_type_var(new_root.fo_type)))
-            self.solver.add(z3.Implies(self._depth_greater_var(conjunct, 0),
-                                       z3.Implies(self._fo_type_var(new_root.fo_type), var)))
-            self._node_roots[(model, conjunct)] = new_root
+            self._node_roots[(model, conjunct)] = self._make_node(model, [])
         return z3.Bool(f"v_{self._node_roots[(model, conjunct)].index}")
-    def _expand_node(self, conjunct:int, node: InstantiationNode, sort: str) -> None:
-        m_i = node.model_i
-        model = self._models[m_i]
-        if any(model.sorts[c.instantiation[-1]] == sort for c in node.children):
+
+    def _expand_node(self, conjunct:int, node: InstNode, sort: int) -> None:
+        if len(node.children[sort]) > 0:
             return # don't expand twice
-        new_children = []
-        for e in model.elems_of_sort[sort]:
+        m_i = node.model_i
+        for e in self._models[m_i].elems_of_sort_index[sort]:
             ins = node.instantiation + [e]
-            c = InstantiationNode(self._new_node_index(), ins, self._collapse_cache.get(m_i, ins), m_i)
-            # print(f"made new node v_{c.index}. fo-type is {c.fo_type}")
-            self._nodes_by_index[c.index] = c
-            var = z3.Bool(f"v_{c.index}")
-            d = len(c.instantiation)
-            self.solver.add(z3.Implies(self._depth_var(conjunct, d), var == self._fo_type_var(c.fo_type)))
-            self.solver.add(z3.Implies(self._depth_greater_var(conjunct, d),
-                                       z3.Implies(self._fo_type_var(c.fo_type), var)))
-            new_children.append(c)
-            node.children.append(c)
+            node.children[sort].append(self._make_node(node.model_i, node.instantiation + [e]))
         d = len(node.instantiation)
         var = z3.Bool(f"v_{node.index}")
-        sort_index = self._sig.sort_indices[sort]
-        self.solver.add(
-            z3.Implies(z3.And(self._depth_greater_var(conjunct, d), self._prefix_quant_var(conjunct, d), self._prefix_sort_var(conjunct, sort_index, d)),
-                       var == z3.And([z3.Bool(f"v_{c.index}") for c in new_children])))
-        self.solver.add(
-            z3.Implies(z3.And(self._depth_greater_var(conjunct, d), z3.Not(self._prefix_quant_var(conjunct, d)), self._prefix_sort_var(conjunct, sort_index, d)),
-                       var == z3.Or([z3.Bool(f"v_{c.index}") for c in new_children])))
+        child_vars = [z3.Bool(f"v_{c.index}") for c in node.children[sort]]
+        Dg_and_forall = z3.And(self._depth_greater_var(conjunct, d), self._prefix_vars(conjunct, True, sort, d))
+        Dg_and_exists = z3.And(self._depth_greater_var(conjunct, d), self._prefix_vars(conjunct, False, sort, d))
+        self.solver.add(z3.Implies(Dg_and_forall, var == z3.And(child_vars)))
+        self.solver.add(z3.Implies(Dg_and_exists, var == z3.Or(child_vars)))
 
     def _literal_var(self, conjunct: int, clause: int, atom: int, polarity: bool) -> z3.ExprRef:
         i = (conjunct, clause, atom)
         if i not in self._atoms_defined:
             self.solver.add(z3.Or(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")),
                                   z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
-            # self.solver.add_soft(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")))
-            # self.solver.add_soft(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}")))
             self._atoms_defined.add(i)
         return z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1 if polarity else 0}")
     
@@ -1346,328 +1359,184 @@ class HybridSeparator(Separator):
                  max_clauses: int = 1,
                  max_conjuncts: int = 1,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        constraints: List[Constraint] = [Pos(x) for x in pos]
+        constraints.extend(Neg(y) for y in neg)
+        constraints.extend(Imp(a,b) for (a,b) in imp)
         for depth in range(max_depth+1):
             for clauses in range(1, max_clauses+1):
-                r = self.separate_exact(pos, neg, imp, depth, clauses, conjuncts = 1, timer = timer)
+                r = self.separate_exact(constraints, depth, clauses, conjuncts = 1, timer = timer)
                 if r is not None:
                     return r
         return None
+
+    def _extract_cnf_formula(self, m: z3.ModelRef, conjunct: int, depth: int, clauses: int) \
+                               -> Tuple[List[Tuple[bool, int]], List[List[Formula]]]:
+        prefix = []
+        for d in range(depth):
+            for q in range(len(self._sig.sort_names)):
+                if z3.is_true(m[self._prefix_sort_var(conjunct, q, d)]):
+                    is_forall = z3.is_true(m[self._prefix_quant_var(conjunct, d)])
+                    prefix.append((is_forall, q))
+                    break
+        assert(len(prefix) == depth) # This holds because each depth has exactly one prefix_sort_var true
+        atom_possiblities = self._all_atoms([q[1] for q in prefix])
+        matrix_list: List[List[Formula]] = []
+        for cl in range(clauses):
+            matrix_list.append([])
+            for a in atom_possiblities:
+                if z3.is_true(m[self._literal_var(conjunct, cl, a, True)]):
+                    matrix_list[-1].append(self._atoms[a])
+                elif z3.is_true(m[self._literal_var(conjunct, cl, a, False)]):
+                    matrix_list[-1].append(Not(self._atoms[a]))
+                # else atom doesn't appear either positively or negatively so do nothing
+        return (prefix, matrix_list)
+
+    def _constraint_vars(self, constraints: List[Constraint]) -> Iterator[z3.ExprRef]:
+         for const in constraints:
+            if isinstance(const, Pos):
+                yield self._root_var(const.i, 0)
+            if isinstance(const, Neg):
+                yield z3.Not(self._root_var(const.i, 0))
+            if isinstance(const, Imp):
+                yield z3.Implies(self._root_var(const.i, 0), self._root_var(const.j, 0))
+        
+    def _cnf_matrix_value(self, matrix_list: List[List[Formula]], model: Model, mapping: Dict[str, int] = {}) \
+                            -> Optional[bool]:
+        """Returns `True`/`False` if the matrix's value is determined on model, or `None` if it is not determined"""
+        all_clause_true, any_clause_unk = True, False
+        for clause in matrix_list:
+            cl_true, cl_unk = False, False
+            for atom in clause:
+                if all((v in mapping or v in model.constants) for v in vars_of(atom)):
+                    if check(atom, model, mapping):
+                        cl_true = True # atom is defined and is true
+                        break # clause is true, we don't need to keep looking
+                    else:
+                        pass # atom was defined but false so we can't conclude anything
+                else:
+                    cl_unk = True # atom was unknown
+            all_clause_true = all_clause_true and cl_true
+            any_clause_unk = any_clause_unk or (cl_unk and not cl_true)
+        if all_clause_true:
+            return True
+        elif not any_clause_unk:
+            return False
+        else:
+            return None
+
+    def _check_formula_validity(self, prefix: List[Tuple[bool,int]], matrix_list: List[List[Formula]],
+                                constraints: List[Constraint]) -> bool:
+        depth = len(prefix)
+        matrix = And([Or(cl) for cl in matrix_list])
+        prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
+
+        _matrix_value_cache: Dict[int, Optional[bool]] = {}
+        def matrix_value_fo_type(fo_type: int) -> Optional[bool]:
+            if fo_type not in _matrix_value_cache:
+                (model_i, assignment) = self._collapse_cache.get_example(fo_type)
+                mapping = {v: e for v,e in zip(prefix_vars, assignment)}
+                _matrix_value_cache[fo_type] = self._cnf_matrix_value(matrix_list, self._models[model_i], mapping)
+            return _matrix_value_cache[fo_type]
+
+        def check_assignment(asgn: List[int], model: Model) -> bool:
+            if len(asgn) == depth:
+                return check(matrix, model, {v: e for v,e in zip(prefix_vars, asgn)})
+            else:
+                (is_forall, sort) = prefix[len(asgn)]
+                univ = model.elems_of_sort[self._sig.sort_names[sort]]
+                return (all if is_forall else any)(check_assignment(asgn + [e], model) for e in univ)
+
+        def expand_to_prove(n: InstNode, expected: bool) -> bool:
+            matrix_value = matrix_value_fo_type(n.fo_type)
+            # Early out because the solver knows that M_i => v_j, so if we know M_i is True, so does the solver
+            if not expected and matrix_value is True:
+                return False            
+            if len(n.instantiation) == depth:
+                assert matrix_value is not None
+                return expected is matrix_value
+            # we aren't at the base, but check the rest of the quantifiers and return if they match
+            if matrix_value is expected or check_assignment(n.instantiation, self._models[n.model_i]) == expected:
+                return True
+
+            is_forall, sort = prefix[len(n.instantiation)]
+            self._expand_node(0, n, sort)
+            for c in n.children[sort]:
+                expand_to_prove(c, expected)
+            return False
+
+        _root_node_cache: Dict[int, bool] = {}
+        def root_node_value(n: int) -> bool:
+            if n not in _root_node_cache:
+                _root_node_cache[n] = check_assignment([], self._models[n])
+            return _root_node_cache[n]
+
+        def swap_to_front(c: int) -> None:
+            constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+        
+        for c_i in range(len(constraints)):
+            c = constraints[c_i]
+            if isinstance(c, Pos):
+                if not root_node_value(c.i):
+                    print(check_assignment([], self._models[c.i]))
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[(c.i, 0)], True)
+                    return False
+            elif isinstance(c, Neg):
+                if root_node_value(c.i):
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[(c.i,0)], False)
+                    return False
+            elif isinstance(c, Imp):
+                if root_node_value(c.i) and not root_node_value(c.j):
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[(c.i,0)], False)
+                    expand_to_prove(self._node_roots[(c.j,0)], True)
+                    return False
+        return True
+
     def separate_exact(self,
-                 pos: Collection[int],
-                 neg: Collection[int],
-                 imp: Collection[Tuple[int, int]],
+                 constraints: List[Constraint],
                  depth: int = 0,
                  clauses: int = 1,
                  conjuncts: int = 1,
                  timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         assert conjuncts == 1 # only support one formula for now
 
-        assumptions: List[z3.ExprRef] = []
-        assumptions.append(self._depth_var(0, depth))
+        constraints = list(constraints)
         self._prefix_var_definition(0, depth)
-        for positive_model in pos:
-            assumptions.append(self._root_var(positive_model, 0))
-        for negative_model in neg:
-            assumptions.append(z3.Not(self._root_var(negative_model, 0)))
-        for (a_model, b_model) in imp:
-            assumptions.append(z3.Implies(self._root_var(a_model, 0), self._root_var(b_model, 0)))
-
-        constraints: List[Constraint] = [Pos(x) for x in pos]
-        constraints.extend(Neg(y) for y in neg)
-        constraints.extend(Imp(a,b) for (a,b) in imp)
+        assumptions = list(self._constraint_vars(constraints)) + [self._depth_var(0, depth)]
 
         prefix_assumptions: List[z3.ExprRef] = []
-        
-        while True:
-            print(f"Separating depth {depth} clauses {clauses}")
-            # print(assumptions)
-            # print(self.solver.assertions())
 
+        print(f"Separating depth {depth} clauses {clauses}")
+        while True:
             res = timer.solver_check(self.solver, *(assumptions + prefix_assumptions))
             if res == z3.unsat:
-                if len(prefix_assumptions) == 0:
-                    print("UNSAT")
-                    # print("assumptions", z3.And(assumptions).to_smt2())
-                    # self.solver.push()
-                    # self.solver.add(z3.And(assumptions))
-                    # print("solver\n\n\n", self.solver.to_smt2())
-                    # self.solver.pop()
-                    # for a_i, atm in enumerate(self._atoms):
-                    #     print(";", self._literal_var(0, 0, a_i, True), atm)
-                    # if depth == 1:
-                    #     (model_i, inst) = self._collapse_cache.get_example(8)
-                    #     model = self._models[model_i]
-                    #     print(model)
-                    #     print(model.names[inst[0]])
-                        
-                    # because assumptions does not include any v_i, if we get unsat here we know there is no separator
-                    return None
-                else:
-                    print("Prefix assumption was not satisfiable")
+                if len(prefix_assumptions) > 0:
                     prefix_assumptions = []
-            elif res == z3.sat:
-                m = self.solver.model()
-                fix_formula_assumptions = []
-                prefix = []
-                all_quantifiers = [(f, sort) for f in [True, False] for sort in range(len(self._sig.sort_names))]
-                for d in range(depth):
-                    for q in range(len(self._sig.sort_names)):
-                        if z3.is_true(m[self._prefix_sort_var(0, q, d)]):
-                            is_forall = z3.is_true(m[self._prefix_quant_var(0, d)])
-                            prefix.append((is_forall, q))
-                            fix_formula_assumptions.append(self._prefix_sort_var(0, q, d))
-                            fix_formula_assumptions.append(self._prefix_quant_var(0, d) if is_forall \
-                                                           else z3.Not(self._prefix_quant_var(0, d)))
-                            break
-                assert(len(prefix) == depth)
-                sort_list = [q[1] for q in prefix]
-                prefix_quantifiers = [(f, self._sig.sort_names[s]) for (f,s) in prefix]
-                atom_possiblities = self._all_atoms(sort_list)
-                matrix_list: List[List[Formula]] = []
-                for cl in range(clauses):
-                    matrix_list.append([])
-                    for a in atom_possiblities:
-                        a_true, a_false = self._literal_var(0, cl, a, True), self._literal_var(0, cl, a, False)
-                        m_a_true, m_a_false = z3.is_true(m[a_true]), z3.is_true(m[a_false])
-                        fix_formula_assumptions.append(a_true if m_a_true else z3.Not(a_true))
-                        fix_formula_assumptions.append(a_false if m_a_false else z3.Not(a_false))
-                        if m_a_true:
-                            matrix_list[-1].append(self._atoms[a])
-                        elif m_a_false:
-                            matrix_list[-1].append(Not(self._atoms[a]))
-                matrix = And([Or(cl) for cl in matrix_list])
-                prefix_vars = prefix_var_names(self._sig, sort_list)
-                
-                print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{sort}" \
-                                           for name, (pol, sort) in zip(prefix_vars, prefix_quantifiers)]), "matrix", matrix)
-                # print(prefix_vars)
-
-                def check_node(n: InstantiationNode, model:Model) -> Tuple[bool, Set[Tuple[int, bool]]]:
-                    expected = z3.is_true(m[z3.Bool(f"v_{n.index}")]) # what the solver thinks the value is
-                    if len(n.instantiation) == len(prefix_quantifiers):
-                        truth = check_assignment(n.instantiation, model)
-                        # print(f"v_{n.index} and M_{n.fo_type}")
-                        assert truth == expected
-                        return (truth, set())
-                    else:
-                        (is_forall, relevant_sort) = prefix_quantifiers[len(n.instantiation)]
-                        children_of_sort = [c for c in n.children if model.sorts[c.instantiation[-1]] == relevant_sort]
-                        if len(children_of_sort) == 0:
-                            # node has not been expanded
-                            truth = check_assignment(n.instantiation, model)
-                            return (truth, set([(n.index, truth)]))
-                        else:
-                            # node has been expanded.
-                            results = [check_node(c, model) for c in children_of_sort]
-                            truth = all(r[0] for r in results) if is_forall else any(r[0] for r in results)
-                            sub_vars: Set[Tuple[int, bool]] = set()
-                            return (truth, sub_vars.union(*(r[1] for r in results)))
-                
-                def vars_of_t(t: Term) -> Iterator[str]:
-                    if isinstance(t, Var):
-                        yield t.var
-                    elif isinstance(f, Func):
-                        for c in f.args:
-                            yield from vars_of_t(c)
-                def vars_of(f: Formula) -> Iterator[str]:
-                    if isinstance(f, Not):
-                        yield from vars_of(f.f)
-                    elif isinstance(f, Relation):
-                        for t in f.args:
-                            yield from vars_of_t(t)
-                    elif isinstance(f, Equal):
-                        for t in f.args:
-                            yield from vars_of_t(t)
-                    
-                _matrix_value_cache: Dict[int, Optional[bool]] = {}
-                def matrix_value_fo_type(fo_type: int) -> Optional[bool]:
-                    """Returns `True` or `False` if the matrix's value is determined on the FO type, or `None`
-                    if it is not determined"""
-                    if fo_type not in _matrix_value_cache:
-                        (model_i, assignment) = self._collapse_cache.get_example(fo_type)
-                        model = self._models[model_i]
-                        mapping = {v: e for v,e in zip(prefix_vars, assignment)}
-                        all_clause_true = True
-                        any_clause_unk = False
-                        #print(mapping, matrix_list)
-                        for clause in matrix_list:
-                            cl_true = False
-                            cl_unk = False
-                            for atom in clause:
-                                if all((v in mapping or v in model.constants) for v in vars_of(atom)):
-                                    if check(atom, model, mapping):
-                                        cl_true = True # atom is defined and is true
-                                        break # clause is true, we don't need to keep looking
-                                    else:
-                                        pass # atom was defined but false so we can't conclude anything
-                                else:
-                                    cl_unk = True # atom was unknown
-                            all_clause_true = all_clause_true and cl_true
-                            any_clause_unk = any_clause_unk or cl_unk
-                        if all_clause_true:
-                            _matrix_value_cache[fo_type] = True
-                        elif not any_clause_unk:
-                            _matrix_value_cache[fo_type] = False
-                        else:
-                            _matrix_value_cache[fo_type] = None
-                    return _matrix_value_cache[fo_type]
-
-                def check_assignment(assignment: List[int], model: Model) -> bool:
-                    if len(assignment) == len(prefix_quantifiers):
-                        return check(matrix, model, {v: e for v,e in zip(prefix_vars, assignment)})
-                    else:
-                        (is_forall, sort) = prefix_quantifiers[len(assignment)]
-                        univ = model.elems_of_sort[sort]
-                        if is_forall:
-                            return all(check_assignment(assignment+[e], model) for e in univ)
-                        else:
-                            return any(check_assignment(assignment+[e], model) for e in univ)
-
-
-                def expand_to_prove(n: InstantiationNode, expected: bool) -> bool:
-                    matrix_value = matrix_value_fo_type(n.fo_type)
-                    if not expected and matrix_value is True:
-                        return False # early out when we need false and the matrix has been determined already
-                                     # this corresponds to the solver knowing that M_i => v_i.
-                                     # we don't need to keep expanding to show the solver that this thing is
-                                     # not true
-                    
-                    if len(n.instantiation) == depth:
-                        assert matrix_value is not None
-                        return expected is matrix_value
-
-                    # we aren't at the base, but check the rest of the quantifiers and return if they match
-                    if matrix_value is expected or check_assignment(n.instantiation, self._models[n.model_i]) == expected:
-                        return True
-
-                    # the value of the formula and what the solver thinks are not the same
-                    is_forall, sort = prefix[len(n.instantiation)]
-                    if 0 == n.expanded_sorts & (1 << sort):
-                        self._expand_node(0, n, self._sig.sort_names[sort])
-                        n.expanded_sorts |= 1 << sort
-                    for c in n.children:
-                        if self._models[n.model_i].sorts[c.instantiation[-1]] == self._sig.sort_names[sort]:
-                            expand_to_prove(c, expected)
-                    return False
-
-                if True:
-                    _root_node_cache: Dict[int, bool] = {}
-                    def root_node_value(n: int) -> bool:
-                        if n not in _root_node_cache:
-                            _root_node_cache[n] = check_assignment([], self._models[n])
-                        return _root_node_cache[n]
-                    def swap_to_front(c: int) -> None:
-                        nonlocal constraints
-                        x = constraints[c]
-                        constraints = [x] + constraints[:c] + constraints[c+1:]
-
-                    #print("checking constraints", constraints)
-                    for c_i in range(len(constraints)):
-                        c = constraints[c_i]
-                        if isinstance(c, Pos):
-                            if not root_node_value(c.i):
-                                swap_to_front(c_i)
-                                expand_to_prove(self._node_roots[(c.i, 0)], True)
-                                break
-                        elif isinstance(c, Neg):
-                            if root_node_value(c.i):
-                                swap_to_front(c_i)
-                                expand_to_prove(self._node_roots[(c.i,0)], False)
-                                break
-                        elif isinstance(c, Imp):
-                            if root_node_value(c.i) and not root_node_value(c.j):
-                                swap_to_front(c_i)
-                                expand_to_prove(self._node_roots[(c.i,0)], False)
-                                expand_to_prove(self._node_roots[(c.j,0)], True)
-                                break
-                    else:
-                        fff: Formula = matrix
-                        for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix_quantifiers))):
-                            fff = Forall(varname, sort, fff) if is_forall else Exists(varname, sort, fff)
-                        return fff
-                    print(f"expanded and now have {self._next_node_index} nodes of {sum(len(model.elems) ** d for model in self._models for d in range(depth+1))} possible")
-                    prefix_assumptions = [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
-                                            [(self._prefix_quant_var(0, d) if i else z3.Not(self._prefix_quant_var(0,d))) for (d,(i,q)) in enumerate(prefix)]
-                    continue
-
-                    root_nodes_agree = True
-                    for (model_i, conjunct), root in self._node_roots.items():
-                        expected = z3.is_true(m[z3.Bool(f"v_{root.index}")])
-                        if not expand_to_prove(root, expected):
-                            print(f"expanded in model {model_i}")
-                            root_nodes_agree = False
-                            break
-                    if root_nodes_agree:
-                        f: Formula = matrix
-                        for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix_quantifiers))):
-                            f = Forall(varname, sort, f) if is_forall else Exists(varname, sort, f)
-                        return f
-                    else:
-                        print(f"now have {self._next_node_index} nodes {sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
-                        prefix_assumptions = [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
-                                             [(self._prefix_quant_var(0, d) if i else z3.Not(self._prefix_quant_var(0,d))) for (d,(i,q)) in enumerate(prefix)]
-                        continue
-
-
-                root_nodes_agree = True
-                nodes_to_add: Set[Tuple[int, bool]] = set()
-                for (model_i, conjunct), root in self._node_roots.items():
-                    (truth, additional_assumptions) = check_node(root, self._models[model_i])
-                    nodes_to_add.update(additional_assumptions)
-                    if (truth != z3.is_true(m[self._root_var(model_i, conjunct)])):
-                        #print(f"!Failed in {model_i} {self._root_var(model_i, conjunct)}, {truth} != {z3.is_true(m[self._root_var(model_i, conjunct)])}")
-                        root_nodes_agree = False
-                
-                new_assumptions = []
-                for (v_i, polarity) in nodes_to_add:
-                    new_assumptions.append(z3.Bool(f"v_{v_i}") if polarity else z3.Not(z3.Bool(f"v_{v_i}")))
-                
-                res = timer.solver_check(self.solver, *(assumptions + fix_formula_assumptions + new_assumptions))
-                if res == z3.sat:
-                    print("Formula was correct")
-                    # if not root_nodes_agree: # this doesn't work with implication constraints
-                    #     print(self.solver)
-                    #     print("assumptions", assumptions)
-                    #     print("fix_formula_assumptions", fix_formula_assumptions)
-                    #     print("new_assumptions", new_assumptions)
-                    #     print("nodes_to_add", nodes_to_add)
-                    #     print("z3 model", m)
-                    #     print(matrix)
-                    #     assert False
-
-                    # after all that, if we are still SAT then the formula is actually correct
-                    ff: Formula = matrix
-                    for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix_quantifiers))):
-                        ff = Forall(varname, sort, ff) if is_forall else Exists(varname, sort, ff)
-                    return ff
-                elif res == z3.unsat:
-                    core = self.solver.unsat_core()
-                    print("Formula was incorrect")
-                    #print(core)
-                    def expand_expr(var: z3.ExprRef) -> None:
-                        if not z3.is_const(var): return
-                        varname = var.decl().name()
-                        match = re.match("v_(\d+)", varname)
-                        if match:
-                            i = int(match.group(1))
-                            node = self._nodes_by_index[i]
-                            #print(f"expanding v_{i}")
-                            self._expand_node(0, node, prefix_quantifiers[len(node.instantiation)][1])
-                    for term in core:
-                        if z3.is_not(term):
-                            expand_expr(term.children()[0])
-                        elif z3.is_implies(term):
-                            expand_expr(term.children()[0])
-                            expand_expr(term.children()[1])
-                        else:
-                            expand_expr(term)
-                    print(f"now have {self._next_node_index} nodes {sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
-                    prefix_assumptions = [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
-                                         [(self._prefix_quant_var(0, d) if i else z3.Not(self._prefix_quant_var(0,d))) for (d,(i,q)) in enumerate(prefix)]
                 else:
-                    print(self.solver)
-                    assert False # z3 should always return a result
+                    return None
+            elif res == z3.sat:
+                (prefix, matrix_list) = self._extract_cnf_formula(self.solver.model(), 0, depth, clauses)
+                matrix = And([Or(cl) for cl in matrix_list])
+                prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
+                
+                print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
+                                           for name, (pol, sort) in zip(prefix_vars, prefix)]), "matrix", matrix)
+
+                if self._check_formula_validity(prefix, matrix_list, constraints):
+                    fff: Formula = matrix
+                    for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix))):
+                        fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
+                    return fff
+                
+                # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
+                print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
+                # Assume the same prefix on the next iteration, to help by focusing the solver
+                prefix_assumptions = [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
+                                     [(self._prefix_quant_var(0, d) if i else z3.Not(self._prefix_quant_var(0,d))) for (d,(i,q)) in enumerate(prefix)]
+
             else:
                 print(self.solver)
-                assert False # z3 should always return a result
+                assert False # z3 should always return SAT/UNSAT on propositional formula
         
