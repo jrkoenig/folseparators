@@ -1,12 +1,13 @@
 
 import itertools, random, json, time, sys, argparse
+from collections import defaultdict
 import z3
 
-from .interpret import interpret
+from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func
 from .check import check
-from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, HybridSeparator
+from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, GeneralizedSeparator, HybridSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from typing import *
 
@@ -133,9 +134,12 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     
     S = SeparatorReductionV1 if args.separator == 'v1' else\
         SeparatorReductionV2 if args.separator == 'v2' else\
-        SeparatorNaive
+        GeneralizedSeparator if args.separator == 'generalized' else\
+        HybridSeparator if args.separator == 'hybrid' else\
+        SeparatorNaive 
         
-    separator: Union[Separator, HybridSeparator] = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)]) if args.separator != 'hybrid' else HybridSeparator(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)])
+    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)]) 
+
     env = Environment(sig)
     s = z3.Solver()
     for sort in sig.sorts:
@@ -150,6 +154,9 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     for ax in axioms:
         s.add(toZ3(ax, env))
 
+    p_constraints: List[int] = []
+    n_constraints: List[int] = []
+     
     try:
         while True:
             with result.counterexample_timer:
@@ -161,21 +168,27 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                     if not args.quiet:
                         print ("formula matches!")
                         print (result.current)
+                        f = open("/tmp/out.fol", "w")
+                        f.write(str(sig))
+                        for m in result.models:
+                            f.write(str(m))
+                        f.close()
                     result.success = True
                     return result
             
             with result.separation_timer:
-                separator.add_model(r)
+                ident = separator.add_model(r)
                 result.models.append(r)
+                if r.label.startswith("+"):
+                    p_constraints.append(ident)
+                else:
+                    n_constraints.append(ident)
+
                 if not args.quiet:
                     print (r)
                     print ("Have new model, now have", len(result.models), "models total")
-                if isinstance(separator, HybridSeparator):
-                    p_constraints = [i for i in range(len(result.models)) if result.models[i].label.startswith("+")]
-                    n_constraints = [i for i in range(len(result.models)) if not result.models[i].label.startswith("+")]
-                    c = separator.separate(pos=p_constraints, neg=n_constraints, imp=[], max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer)
-                else:
-                    c = separator.separate(max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)
+                if True:
+                    c = separator.separate(pos=p_constraints, neg=n_constraints, imp=[], max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)
                 if c is None:
                     result.reason = "couldn't separate models under given restrictions"
                     break
@@ -190,3 +203,42 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
         result.reason = str(e)
 
     return result
+
+
+def separate(f: FOLFile, timeout: float, args: Any) -> LearningResult:
+    result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
+    
+    S = SeparatorReductionV1 if args.separator == 'v1' else\
+        SeparatorReductionV2 if args.separator == 'v2' else\
+        GeneralizedSeparator if args.separator == 'generalized' else\
+        HybridSeparator if args.separator == 'hybrid' else\
+        SeparatorNaive 
+        
+    separator: Separator = S(f.sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=f.axioms)
+
+    result.models = f.models
+    mapping: DefaultDict[str, List[int]] = defaultdict(list)
+    for m in f.models:
+        mapping[m.label].append(separator.add_model(m))
+
+    try:
+        with result.separation_timer:
+            p_constraints = [x for a in f.constraint_pos for x in mapping[a]]
+            n_constraints = [x for a in f.constraint_neg for x in mapping[a]]
+            i_constraints = [(x, y) for a, b in f.constraint_imp for x in mapping[a] for y in mapping[b]]
+            print(p_constraints, n_constraints, i_constraints)
+            c = separator.separate(pos=p_constraints, neg=n_constraints, imp=i_constraints, \
+                                   max_clauses = args.max_clauses, max_depth= args.max_depth, \
+                                   timer = result.separation_timer, matrix_timer = result.matrix_timer)
+            if c is None:
+                result.reason = "couldn't separate models under given restrictions"
+            else:
+                result.current = c
+                result.success = True
+                for m in f.models:
+                    print(m.label, check(c, m))
+    except TimeoutException:
+        result.reason = "timeout"
+    
+    return result
+    

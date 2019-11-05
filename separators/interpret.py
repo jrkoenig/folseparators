@@ -90,10 +90,24 @@ def formula(env: Environment, token: AstNode) -> Formula:
         return Relation(head.name(), [a[0] for a in args])
     error_at("Invalid formula", token)
 
+class FOLFile(object):
+    def __init__(self, sig: Signature):
+        self.sig = sig
+        self.axioms: List[Formula] = []
+        self.conjectures: List[Formula] = []
+        self.models: List[Model] = []
+        self.constraint_pos: List[str] = []
+        self.constraint_neg: List[str] = []
+        self.constraint_imp: List[Tuple[str,str]] = []
+
 # From the List of commands, intepret the definitions to construct a representation
 # of the signature, axioms and models
-def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[Formula], List[Model]]:
-    sig = Signature()
+def interpret(commands: List[AstNode]) -> FOLFile:
+    result = FOLFile(Signature())
+    sig = result.sig
+    axioms = result.axioms
+    conjectures = result.conjectures
+    models = result.models
 
     # Helper to turn a list of Atoms into a list of sort names, checking that each is defined
     def sort_list(l: List[AstNode]) -> List[str]:
@@ -106,10 +120,8 @@ def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[F
         return resolved_sorts
     def free_name(t: AstNode) -> Optional[str]:
         return t.name() if isinstance(t, Atom) and sig.is_free_name(t.name()) else None
-    axioms = []
-    conjectures = []
-    models = []
-
+    
+    saw_any_constraint = False
     in_sig = True
     for c in commands:
         if isinstance(c, Parens) and isinstance(c[0], Atom):
@@ -145,18 +157,30 @@ def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[F
                 sig.functions[n] = (function_sort[:-1], function_sort[-1])
                 
             elif command == "axiom":
+                in_sig = False
                 if len(c) != 2:
                     error_at("Invalid axiom definition", c)
                 env = Environment(sig)
                 axioms.append(formula(env, c[1]))
-                in_sig = False
             elif command == "conjecture":
+                in_sig = False
                 if len(c) != 2:
                     error_at("Invalid conjecture definition", c)
                 env = Environment(sig)
                 conjectures.append(formula(env, c[1]))
-                in_sig = False
-
+            elif command == "constraint":
+                saw_any_constraint = True
+                for constraint in c[1:]:
+                    if isinstance(constraint, Atom):
+                        result.constraint_pos.append(constraint.name())
+                    else:
+                        head = constraint[0]
+                        if isinstance(head, Atom) and head.name() == "not" and len(constraint) == 2 and isinstance(constraint[1], Atom):
+                            result.constraint_neg.append(constraint[1].name())
+                        elif isinstance(head, Atom) and head.name() == "implies" and len(constraint) == 3 and isinstance(constraint[1], Atom) and isinstance(constraint[2], Atom):
+                            result.constraint_imp.append((constraint[1].name(), constraint[2].name()))
+                        else:
+                            error_at("constraint must be M, (not M), or (implies M1 M2)", constraint)
             elif command == "model":
                 in_sig = False
                 m = Model(sig)
@@ -200,7 +224,7 @@ def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[F
                             if not isinstance(fact[2], Atom) or m.sort_of(fact[2].name()) != sig.constants[fact[1].name()]:
                                 error_at("Constant must be assigned a model element with the right sort", fact[1])
                             m.add_constant(fact[1].name(), fact[2].name())
-                        elif isinstance(fact[1], List) and len(fact[1]) > 0 and fact[1][0].name() in sig.functions:
+                        elif isinstance(fact[1], Parens) and len(fact[1]) > 0 and isinstance(fact[1][0], Atom) and fact[1][0].name() in sig.functions:
                             func_name = fact[1][0].name()
                             (arg_sorts, expected_sort) = sig.functions[fact[1][0].name()]
                             arg_names = []
@@ -226,5 +250,11 @@ def interpret(commands: List[AstNode]) -> Tuple[Signature, List[Formula], List[F
                 error_at("Unexpected Command", c)
         else:
             error_at("Unexpected Command", c)
+    # if no constraints are given, assume models labeled + are positive and those labeled - are negative
+    # there is no implicit way to specify implication constraints
+    if not saw_any_constraint:
+        result.constraint_pos.append("+")
+        result.constraint_neg.append("-")
+        
     sig.finalize_sorts()
-    return (sig, axioms, conjectures, models)
+    return result

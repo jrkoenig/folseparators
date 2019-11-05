@@ -27,7 +27,13 @@ class Signature(object):
             self.sort_indices[s] = len(self.sort_names)
             self.sort_names.append(s)
     def __repr__(self) -> str:
-        return "\n".join(["Signature:", repr(self.sorts), repr(self.relations), repr(self.constants), repr(self.functions)])
+        return "; Sig\n" + "\n".join(
+            itertools.chain(
+              (f"(sort {s})" for s in self.sort_names),
+              (f"(constant {c} {s})" for (c, s) in sorted(self.constants.items())),
+              (f"(relation {r} {' '.join(ss)})" for (r, ss) in sorted(self.relations.items())),
+              (f"(function {f} {' '.join(ss)} {s})" for (f, (ss, s)) in sorted(self.functions.items()))
+            )) + "\n"
 
 class Environment(object):
     def __init__(self, sig: Signature):
@@ -223,4 +229,4 @@ def print_model(model: Model) -> str:
     for func, repr in model.functions.items():
         for args, result in repr.items():
             facts.append("(= ({} {}) {})".format(func, " ".join([model.names[i] for i in args]), model.names[result]))
-    return "(model {}\n  {}\n{}\n)".format(model.label, elems, "\n".join(["  "+f for f in facts]))
+    return "(model {}\n  {}\n{}\n)\n".format(model.label, elems, "\n".join(["  "+f for f in facts]))

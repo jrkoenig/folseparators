@@ -9,7 +9,7 @@
 (conjecture (= (f a) a))
 
 ; Models. After model, there must be a label, list of elements w/sorts, and then all facts
-(model + ((e0 A) (e1 A))
+(model 0 ((e0 A) (e1 A))
   ; Facts of model must be (predicate ELEMS), (= CONST ELEM), or (= (FUNC ELEMS) ELEM)
   ; Omitted predicates are false. All constant and function values for all arguments must be specified.
   (p e0)
@@ -18,9 +18,11 @@
   (= (f e1) e0)
 )
 
-(model - ((e0 A) (e1 A))
+(model 1 ((e0 A) (e1 A))
   (p e0)
   (= a e0)
   (= (f e0) e1)
   (= (f e1) e0)
 )
+
+(constraint 0 (not 1))
