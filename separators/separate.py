@@ -10,7 +10,7 @@ from .check import check, resolve_term
 from .matrix import infer_matrix, K_function_unrolling
 from .timer import Timer, UnlimitedTimer
 
-Quantifier = Tuple[bool, str]
+QuantifierStr = Tuple[bool, str]
 
 def collapse(model: Model, sig: Signature, assignment: Iterable[int]) -> str:
     mapping: Dict[int,int] = {}
@@ -96,7 +96,7 @@ class CollapseCache(object):
     def __len__(self) -> int:
         return len(self.assignments)
 
-def prefix_is_redundant(prefix: List[Quantifier]) -> bool:
+def prefix_is_redundant(prefix: List[QuantifierStr]) -> bool:
     if len(prefix) == 0: return False
     for i in range(len(prefix) - 1):
         a,b = prefix[i], prefix[i+1]
@@ -104,7 +104,7 @@ def prefix_is_redundant(prefix: List[Quantifier]) -> bool:
             return True
     return False
 
-def build_prefix_formula(prefix: List[Quantifier], f: Formula, n: int = 0) -> Formula:
+def build_prefix_formula(prefix: List[QuantifierStr], f: Formula, n: int = 0) -> Formula:
     if len(prefix) == 0:
         return f
     (is_forall, sort) = prefix[0]
@@ -126,7 +126,7 @@ class VarSet(object):
             self.neg.add(v)
     def __iter__(self) -> Iterator[int]: return iter(self.vars)
 
-def formula_for_model(model_index: int, assignment: List[int], prefix_i: int, prefix: List[Quantifier], collapsed: CollapseCache, vars: VarSet, ignore_label:bool = False) -> z3.ExprRef:
+def formula_for_model(model_index: int, assignment: List[int], prefix_i: int, prefix: List[QuantifierStr], collapsed: CollapseCache, vars: VarSet, ignore_label:bool = False) -> z3.ExprRef:
     m = collapsed.models[model_index]
     if prefix_i == len(prefix):
         for i, (_, sort) in enumerate(prefix):
@@ -218,7 +218,7 @@ class PrefixSolver(object):
         for d in range(self.depth):
             self.solver.add_soft(z3.Not(z3.Or([self._V(q, d)
                                                       for q in self._all_quantifiers() if not q[0]])), 2**(depth-d))
-    def get(self) -> Optional[List[Quantifier]]:
+    def get(self) -> Optional[List[QuantifierStr]]:
         r = self.solver.check()
         if r == z3.unsat:
             return None
@@ -233,9 +233,9 @@ class PrefixSolver(object):
         return prefix
     def add(self, unsat_core_vars: List[z3.ExprRef]) -> None:
         self.solver.add(z3.Not(z3.And(unsat_core_vars)))
-    def _all_quantifiers(self) -> List[Quantifier]:
+    def _all_quantifiers(self) -> List[QuantifierStr]:
         return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
-    def _V(self, quant: Quantifier, depth: int) -> z3.ExprRef:
+    def _V(self, quant: QuantifierStr, depth: int) -> z3.ExprRef:
         (is_forall, sort) = quant
         return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
@@ -265,7 +265,7 @@ class SeparatorNaive(Separator):
                 update_ae_edges(self.ae_edges, f)
             if not digraph_is_acyclic(self.ae_edges):
                 raise RuntimeError("EPR logic requires background formulas to be already in EPR")
-        self.prefixes: List[List[Quantifier]] = [[]]
+        self.prefixes: List[List[QuantifierStr]] = [[]]
         self.prefix_index = 0
 
     def add_model(self, model: Model) -> int:
@@ -301,7 +301,7 @@ class SeparatorNaive(Separator):
                 if c is not None:
                     return c
             self.prefix_index += 1
-    def _filter_prefix(self, p: List[Quantifier]) -> bool:
+    def _filter_prefix(self, p: List[QuantifierStr]) -> bool:
         if prefix_is_redundant(p):
             return False
         if self.logic == "epr":
@@ -316,7 +316,7 @@ class SeparatorNaive(Separator):
             return all(not is_forall for (is_forall, _) in p)
         return True
     def check_prefix_build_matrix(self, pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]],
-                                  prefix: List[Quantifier], solver: z3.Solver) -> Optional[Formula]:
+                                  prefix: List[QuantifierStr], solver: z3.Solver) -> Optional[Formula]:
         solver.push()
         vars = VarSet()
         formulas = []
@@ -404,9 +404,9 @@ class SeparatorReductionV1(Separator):
         self.cached_solver.add(v if model.label.startswith("+") else z3.Not(v))
         return model_i
 
-    def _all_quantifiers(self) -> List[Quantifier]:
+    def _all_quantifiers(self) -> List[QuantifierStr]:
         return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
-    def _var_for_quantifier(self, quant: Quantifier, depth: int) -> z3.ExprRef:
+    def _var_for_quantifier(self, quant: QuantifierStr, depth: int) -> z3.ExprRef:
         (is_forall, sort) = quant
         return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
@@ -467,7 +467,7 @@ class SeparatorReductionV1(Separator):
             if c is not None:
                 return c
 
-    def _filter_prefix(self, p: List[Quantifier]) -> bool:
+    def _filter_prefix(self, p: List[QuantifierStr]) -> bool:
         if prefix_is_redundant(p):
             return False
         if self.logic == "epr":
@@ -482,7 +482,7 @@ class SeparatorReductionV1(Separator):
             return all(not is_forall for (is_forall, _) in p)
         return True
 
-    def _check_prefix_build_matrix(self, prefix: List[Quantifier], matrix_timer: Timer) -> Optional[Formula]:
+    def _check_prefix_build_matrix(self, prefix: List[QuantifierStr], matrix_timer: Timer) -> Optional[Formula]:
         start = time.time()
         result = self.timer.solver_check(self.cached_solver, *[self._var_for_quantifier(q,i) for i,q in enumerate(prefix)])
 
@@ -611,9 +611,9 @@ class SeparatorReductionV2(Separator):
         self.solver.add(v if model.label.startswith("+") else z3.Not(v))
         return model_i
 
-    def _all_quantifiers(self) -> List[Quantifier]:
+    def _all_quantifiers(self) -> List[QuantifierStr]:
         return [(is_forall, sort) for is_forall in [True, False] for sort in sorted(self.sort_indices.keys())]
-    def _var_for_quantifier(self, quant: Quantifier, depth: int) -> z3.ExprRef:
+    def _var_for_quantifier(self, quant: QuantifierStr, depth: int) -> z3.ExprRef:
         (is_forall, sort) = quant
         return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
@@ -703,7 +703,7 @@ class SeparatorReductionV2(Separator):
     def _print(self, *args: Any) -> None:
         if not self.quiet:
             print(*args)
-    def _check_prefix_build_matrix(self, prefix: List[Quantifier], matrix_timer: Timer) -> Optional[Formula]:
+    def _check_prefix_build_matrix(self, prefix: List[QuantifierStr], matrix_timer: Timer) -> Optional[Formula]:
         start = time.time()
         sorts_of_prefix = [s for (is_forall, s) in prefix]
 
@@ -871,7 +871,7 @@ class GeneralizedSeparator(Separator):
         self._expand_existing_fo_types(new_root)
         return new_root.index
 
-    def _var_for_quantifier(self, quant: Quantifier, depth: int) -> z3.ExprRef:
+    def _var_for_quantifier(self, quant: QuantifierStr, depth: int) -> z3.ExprRef:
         (is_forall, sort) = quant
         return z3.Bool("{}_{}_{}".format("A" if is_forall else "E", self.sort_indices[sort], depth))
 
@@ -990,7 +990,7 @@ class GeneralizedSeparator(Separator):
     def _print(self, *args: Any) -> None:
         if not self.quiet:
             print(*args)
-    def _check_prefix_build_matrix(self, prefix: List[Quantifier], matrix_timer: Timer, constraints: List[z3.ExprRef], pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> Optional[Formula]:
+    def _check_prefix_build_matrix(self, prefix: List[QuantifierStr], matrix_timer: Timer, constraints: List[z3.ExprRef], pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> Optional[Formula]:
         start = time.time()
         sorts_of_prefix = [s for (is_forall, s) in prefix]
 
@@ -1187,6 +1187,9 @@ def vars_of(t: Union[Term,Formula]) -> Iterator[str]:
     elif isinstance(t, Equal):
         for c in t.args:
             yield from vars_of(c)
+
+
+Quantifier = Tuple[bool, int] # is_forall, sort_index
 
 class Constraint(object):
     """A separation constraint, one of `Pos(i)`, `Neg(i)`, or `Imp(i,j)`"""
@@ -1391,15 +1394,36 @@ class HybridSeparator(Separator):
                 # else atom doesn't appear either positively or negatively so do nothing
         return (prefix, matrix_list)
 
-    def _constraint_vars(self, constraints: List[Constraint]) -> Iterator[z3.ExprRef]:
-         for const in constraints:
+    def _constraint_assumptions(self, constraints: List[Constraint]) -> Iterator[z3.ExprRef]:
+        for const in constraints:
             if isinstance(const, Pos):
                 yield self._root_var(const.i, 0)
             if isinstance(const, Neg):
                 yield z3.Not(self._root_var(const.i, 0))
             if isinstance(const, Imp):
                 yield z3.Implies(self._root_var(const.i, 0), self._root_var(const.j, 0))
-        
+    def _prefix_assumptions(self, prefix: List[Quantifier]) -> List[z3.ExprRef]:
+        return [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
+               [((lambda x: x) if is_fa else z3.Not)(self._prefix_quant_var(0,d))
+                for (d,(is_fa,q)) in enumerate(prefix)]
+    def _cnf_matrix_assumptions(self, prefix: List[Quantifier], matrix: List[List[Formula]]) -> List[z3.ExprRef]:
+        atom_possiblities = self._all_atoms([q[1] for q in prefix])
+        assumptions = []
+        for i, cl in enumerate(matrix):
+            contained_atoms: Dict[int, bool] = {}
+            for literal in cl:
+                if isinstance(literal, Not):
+                    contained_atoms[self._atom_id(literal.f)] = False
+                else:
+                    contained_atoms[self._atom_id(literal)] = True
+            for a in atom_possiblities:
+                if a in contained_atoms:
+                    assumptions.append(self._literal_var(0, i, a, contained_atoms[a]))
+                else:
+                    assumptions.append(z3.Not(self._literal_var(0, i, a, True)))
+                    assumptions.append(z3.Not(self._literal_var(0, i, a, False)))
+        return assumptions
+
     def _cnf_matrix_value(self, matrix_list: List[List[Formula]], model: Model, mapping: Dict[str, int] = {}) \
                             -> Optional[bool]:
         """Returns `True`/`False` if the matrix's value is determined on model, or `None` if it is not determined"""
@@ -1424,7 +1448,7 @@ class HybridSeparator(Separator):
         else:
             return None
 
-    def _check_formula_validity(self, prefix: List[Tuple[bool,int]], matrix_list: List[List[Formula]],
+    def _check_formula_validity(self, prefix: List[Quantifier], matrix_list: List[List[Formula]],
                                 constraints: List[Constraint]) -> bool:
         depth = len(prefix)
         matrix = And([Or(cl) for cl in matrix_list])
@@ -1494,6 +1518,70 @@ class HybridSeparator(Separator):
                     return False
         return True
 
+    
+    def _local_optimize_matrix(self, prefix: List[Quantifier], matrix: List[List[Formula]],
+                         constraints: List[Constraint]) -> Tuple[List[Quantifier], List[List[Formula]]]:
+        assumptions = [self._depth_var(0, len(prefix))] + self._prefix_assumptions(prefix) + list(self._constraint_assumptions(constraints))
+        def opt(matrix: List[List[Formula]]) -> List[List[Formula]]:
+        
+            final_matrix: List[List[Formula]] = [[] for cl in matrix]
+            remaining_matrix = [list(cl) for cl in matrix] # shallow copy because we are going to mutate
+            while any(len(cl) != 0 for cl in remaining_matrix):
+                for i,cl in enumerate(remaining_matrix):
+                    a = cl.pop()
+                    a_clause = i
+                # candidate matrix is final and remaining, which now lacks `a`
+                candidate_matrix = [f+r for f,r in zip(final_matrix, remaining_matrix)]
+
+                # todo: thread timer here
+                if self.solver.check(*(assumptions + self._cnf_matrix_assumptions(prefix, candidate_matrix))) == z3.sat\
+                   and self._check_formula_validity(prefix, candidate_matrix, constraints):
+                    # candidate matrix is actually correct on the constraints
+                    matrix = candidate_matrix
+                else:
+                    final_matrix[a_clause].append(a)
+            return matrix
+        while True:
+            old_size = sum(len(cl) for cl in matrix)
+            matrix = opt(matrix)
+            if old_size == sum(len(cl) for cl in matrix):
+                break
+        return prefix, matrix
+
+    def _global_optimize_matrix(self, prefix: List[Quantifier], matrix: List[List[Formula]],
+                                constraints: List[Constraint]) -> Tuple[List[Quantifier], List[List[Formula]]]:
+        
+        assumptions = [self._depth_var(0, len(prefix))] + list(self._constraint_assumptions(constraints)) + self._prefix_assumptions(prefix)  
+        atoms = self._all_atoms([q[1] for q in prefix])
+        literal_vars = [(self._literal_var(0, cl, a, False), 1) for cl in range(len(matrix)) for a in atoms] +\
+                       [(self._literal_var(0, cl, a, True), 1) for cl in range(len(matrix)) for a in atoms]
+        upper = sum(len(cl) for cl in matrix)
+        lower = 0
+
+        while True:
+            assert lower <= upper
+            if lower == upper or upper == 1:
+                break
+            k = (upper+lower) // 2
+            bound = z3.PbLe(literal_vars, k)
+            print(f"Optimize checking if there is a formula of size <= {k} (lower {lower} upper {upper})")
+            res = self.solver.check(*assumptions, bound)
+            if res == z3.sat:
+                _, candidate_matrix = self._extract_cnf_formula(self.solver.model(), 0, len(prefix), len(matrix))
+                print("candidate", candidate_matrix)
+                if self._check_formula_validity(prefix, candidate_matrix, constraints):
+                    print("Found new matrix")
+                    matrix = candidate_matrix
+                    upper = k
+                else:
+                    print("Matrix wasn't valid")
+                    pass # do nothing, because now the solver knows more and won't give us the same matrix
+            else:
+                print("Couldn't solve problem")
+                lower = k + 1
+
+        return (prefix, matrix)
+        
     def separate_exact(self,
                  constraints: List[Constraint],
                  depth: int = 0,
@@ -1504,7 +1592,7 @@ class HybridSeparator(Separator):
 
         constraints = list(constraints)
         self._prefix_var_definition(0, depth)
-        assumptions = list(self._constraint_vars(constraints)) + [self._depth_var(0, depth)]
+        assumptions = list(self._constraint_assumptions(constraints)) + [self._depth_var(0, depth)]
 
         prefix_assumptions: List[z3.ExprRef] = []
 
@@ -1520,12 +1608,17 @@ class HybridSeparator(Separator):
                 (prefix, matrix_list) = self._extract_cnf_formula(self.solver.model(), 0, depth, clauses)
                 matrix = And([Or(cl) for cl in matrix_list])
                 prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
-                
                 print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
-                                           for name, (pol, sort) in zip(prefix_vars, prefix)]), "matrix", matrix)
+                       for name, (pol, sort) in zip(prefix_vars, prefix)]),
+                       "matrix", And([Or(cl) for cl in matrix_list]))
 
                 if self._check_formula_validity(prefix, matrix_list, constraints):
-                    fff: Formula = matrix
+                    if True:
+                        prefix, matrix_list = self._global_optimize_matrix(prefix, matrix_list, constraints)
+                    else:
+                        prefix, matrix_list = self._local_optimize_matrix(prefix, matrix_list, constraints)
+                    prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
+                    fff: Formula = And([Or(cl) for cl in matrix_list])
                     for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix))):
                         fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
                     return fff
@@ -1533,9 +1626,7 @@ class HybridSeparator(Separator):
                 # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
                 print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
                 # Assume the same prefix on the next iteration, to help by focusing the solver
-                prefix_assumptions = [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
-                                     [(self._prefix_quant_var(0, d) if i else z3.Not(self._prefix_quant_var(0,d))) for (d,(i,q)) in enumerate(prefix)]
-
+                prefix_assumptions = self._prefix_assumptions(prefix)
             else:
                 print(self.solver)
                 assert False # z3 should always return SAT/UNSAT on propositional formula
