@@ -1218,6 +1218,71 @@ class InstNode(object):
 class HybridSeparator(Separator):
     def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
         self._sig = sig
+        self._quiet = quiet
+        self._logic = logic
+        self._epr_wrt_formulas = epr_wrt_formulas
+        self._separators: Dict[int, FixedHybridSeparator] = {}
+        self._models: List[Model] = []
+
+    def add_model(self, model:Model) -> int:
+        l = len(self._models)
+        self._models.append(model)
+        for h in self._separators.values():
+            h_l = h.add_model(model)
+            assert h_l == l
+        return l
+
+    def _get_separator(self, clauses: int) -> 'FixedHybridSeparator':
+        assert clauses > 0
+        if clauses not in self._separators:
+            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas)
+            for m in self._models:
+                h.add_model(m)
+            self._separators[clauses] = h
+        return self._separators[clauses]
+    def separate(self,
+                 pos: Collection[int],
+                 neg: Collection[int],
+                 imp: Collection[Tuple[int, int]],
+                 max_depth: int = 0,
+                 max_clauses: int = 1,
+                 max_conjuncts: int = 1,
+                 timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        
+        constraints: List[Constraint] = [Pos(x) for x in pos]
+        constraints.extend(Neg(y) for y in neg)
+        constraints.extend(Imp(a,b) for (a,b) in imp)
+        
+        assert max_clauses > 0
+        assert max_conjuncts == 1
+
+        max_depths = [0]
+
+        while True:
+            for i in range(len(max_depths)):
+                # run clauses == i + 1 to depth max_depths[i]
+                if max_depths[i] > max_depth:
+                    continue
+                r = self._get_separator(i + 1).separate_exact(constraints, max_depths[i], timer = timer)
+                if r is not None:
+                    return r
+                max_depths[i] += 1
+            if len(max_depths) < max_clauses:
+                max_depths.append(0)
+            if all(d > max_depth for d in max_depths):
+                return None
+
+        # for depth in range(max_depth+1):
+        #     for clauses in range(1, max_clauses+1):
+        #         r = self._get_separator(clauses).separate_exact(constraints, depth, timer = timer)
+        #         if r is not None:
+        #             return r
+        # return None
+
+class FixedHybridSeparator(object):
+    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
+        self._sig = sig
+        self._clauses = clauses
         self._logic = logic
         self.solver = z3.Solver()
         self._highest_depth_var = 0
@@ -1349,28 +1414,12 @@ class HybridSeparator(Separator):
                 atoms_with_polarity.append((a, polarity))
             
             self.solver.add(z3.Bool(f"M_{fo_type}") ==
-                z3.And([z3.Or([self._literal_var(0, cl, a, p) for (a,p) in atoms_with_polarity]) for cl in range(1)]))
+                z3.And([z3.Or([self._literal_var(0, cl, a, p) for (a,p) in atoms_with_polarity]) for cl in range(self._clauses)]))
 
             self._fo_types_defined.add(fo_type)
         return z3.Bool(f"M_{fo_type}")
 
-    def separate(self,
-                 pos: Collection[int],
-                 neg: Collection[int],
-                 imp: Collection[Tuple[int, int]],
-                 max_depth: int = 0,
-                 max_clauses: int = 1,
-                 max_conjuncts: int = 1,
-                 timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
-        constraints: List[Constraint] = [Pos(x) for x in pos]
-        constraints.extend(Neg(y) for y in neg)
-        constraints.extend(Imp(a,b) for (a,b) in imp)
-        for depth in range(max_depth+1):
-            for clauses in range(1, max_clauses+1):
-                r = self.separate_exact(constraints, depth, clauses, conjuncts = 1, timer = timer)
-                if r is not None:
-                    return r
-        return None
+
 
     def _extract_cnf_formula(self, m: z3.ModelRef, conjunct: int, depth: int, clauses: int) \
                                -> Tuple[List[Tuple[bool, int]], List[List[Formula]]]:
@@ -1560,7 +1609,7 @@ class HybridSeparator(Separator):
 
         while True:
             assert lower <= upper
-            if lower == upper or upper == 1:
+            if lower == upper:
                 break
             k = (upper+lower) // 2
             bound = z3.PbLe(literal_vars, k)
@@ -1585,18 +1634,15 @@ class HybridSeparator(Separator):
     def separate_exact(self,
                  constraints: List[Constraint],
                  depth: int = 0,
-                 clauses: int = 1,
-                 conjuncts: int = 1,
                  timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
-        assert conjuncts == 1 # only support one formula for now
-
+        
         constraints = list(constraints)
         self._prefix_var_definition(0, depth)
         assumptions = list(self._constraint_assumptions(constraints)) + [self._depth_var(0, depth)]
 
         prefix_assumptions: List[z3.ExprRef] = []
 
-        print(f"Separating depth {depth} clauses {clauses}")
+        print(f"Separating depth {depth} clauses {self._clauses}")
         while True:
             res = timer.solver_check(self.solver, *(assumptions + prefix_assumptions))
             if res == z3.unsat:
@@ -1605,7 +1651,7 @@ class HybridSeparator(Separator):
                 else:
                     return None
             elif res == z3.sat:
-                (prefix, matrix_list) = self._extract_cnf_formula(self.solver.model(), 0, depth, clauses)
+                (prefix, matrix_list) = self._extract_cnf_formula(self.solver.model(), 0, depth, self._clauses)
                 matrix = And([Or(cl) for cl in matrix_list])
                 prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
                 print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
