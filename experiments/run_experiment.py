@@ -63,7 +63,7 @@ def main():
                      "conjecture": d['conjecture'],
                      "index": i,
                      "timeout": args.timeout,
-                     "args": ['python3', '-m', 'separators'] + a + ["--timeout", str(int(args.timeout)), d['file']]}
+                     "args": ['python3', '-m', 'separators'] + a + ["--max-depth", str(d['quantifiers']), "--timeout", str(int(args.timeout)), d['file']]}
                 executor.submit(run, r, logger)
     logger.close()
 
