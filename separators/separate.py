@@ -1,6 +1,6 @@
 
 from collections import defaultdict
-import itertools, copy, time, sys, re
+import itertools, copy, time, sys, re, random
 from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generator, Set, Optional, cast, Type, Collection, List, Dict, DefaultDict, Iterator, TypeVar, Any, Sequence
 
 import z3
@@ -367,7 +367,6 @@ class SeparatorNaive(Separator):
                 checker.add(sat_formula)
                 for x, m in concrete_models.items():
                     checker.add(z3.Bool('M'+str(x)) if check(matrix, m) else z3.Not(z3.Bool('M'+str(x))))
-                    print(f"M{x} == {check(matrix, m)}")
                 if checker.check() != z3.sat:
                     raise RuntimeError("Incorrect matrix!")
                 return build_prefix_formula(prefix, matrix)
@@ -1280,11 +1279,14 @@ class HybridSeparator(Separator):
         # return None
 
 class FixedHybridSeparator(object):
-    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
+    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None):
         self._sig = sig
         self._clauses = clauses
         self._logic = logic
         self.solver = z3.Solver()
+        if seed is None:
+            seed = random.randint(0, 2**32)
+        self.solver.set("seed", seed)
         self._highest_depth_var = 0
         self._highest_prefix: DefaultDict[int, int] = defaultdict(int)
 
@@ -1550,7 +1552,6 @@ class FixedHybridSeparator(object):
             c = constraints[c_i]
             if isinstance(c, Pos):
                 if not root_node_value(c.i):
-                    print(check_assignment([], self._models[c.i]))
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[(c.i, 0)], True)
                     return False
@@ -1569,7 +1570,7 @@ class FixedHybridSeparator(object):
 
     
     def _local_optimize_matrix(self, prefix: List[Quantifier], matrix: List[List[Formula]],
-                         constraints: List[Constraint]) -> Tuple[List[Quantifier], List[List[Formula]]]:
+                         constraints: List[Constraint], timer: Timer) -> Tuple[List[Quantifier], List[List[Formula]]]:
         assumptions = [self._depth_var(0, len(prefix))] + self._prefix_assumptions(prefix) + list(self._constraint_assumptions(constraints))
         def opt(matrix: List[List[Formula]]) -> List[List[Formula]]:
         
@@ -1583,7 +1584,8 @@ class FixedHybridSeparator(object):
                 candidate_matrix = [f+r for f,r in zip(final_matrix, remaining_matrix)]
 
                 # todo: thread timer here
-                if self.solver.check(*(assumptions + self._cnf_matrix_assumptions(prefix, candidate_matrix))) == z3.sat\
+                asmp = assumptions + self._cnf_matrix_assumptions(prefix, candidate_matrix)
+                if timer.solver_check(self.solver, *asmp) == z3.sat\
                    and self._check_formula_validity(prefix, candidate_matrix, constraints):
                     # candidate matrix is actually correct on the constraints
                     matrix = candidate_matrix
@@ -1598,7 +1600,7 @@ class FixedHybridSeparator(object):
         return prefix, matrix
 
     def _global_optimize_matrix(self, prefix: List[Quantifier], matrix: List[List[Formula]],
-                                constraints: List[Constraint]) -> Tuple[List[Quantifier], List[List[Formula]]]:
+                                constraints: List[Constraint], timer: Timer) -> Tuple[List[Quantifier], List[List[Formula]]]:
         
         assumptions = [self._depth_var(0, len(prefix))] + list(self._constraint_assumptions(constraints)) + self._prefix_assumptions(prefix)  
         atoms = self._all_atoms([q[1] for q in prefix])
@@ -1614,7 +1616,7 @@ class FixedHybridSeparator(object):
             k = (upper+lower) // 2
             bound = z3.PbLe(literal_vars, k)
             print(f"Optimize checking if there is a formula of size <= {k} (lower {lower} upper {upper})")
-            res = self.solver.check(*assumptions, bound)
+            res = timer.solver_check(self.solver, *assumptions, bound)
             if res == z3.sat:
                 _, candidate_matrix = self._extract_cnf_formula(self.solver.model(), 0, len(prefix), len(matrix))
                 print("candidate", candidate_matrix)
@@ -1660,9 +1662,9 @@ class FixedHybridSeparator(object):
 
                 if self._check_formula_validity(prefix, matrix_list, constraints):
                     if True:
-                        prefix, matrix_list = self._global_optimize_matrix(prefix, matrix_list, constraints)
+                        prefix, matrix_list = self._global_optimize_matrix(prefix, matrix_list, constraints, timer)
                     else:
-                        prefix, matrix_list = self._local_optimize_matrix(prefix, matrix_list, constraints)
+                        prefix, matrix_list = self._local_optimize_matrix(prefix, matrix_list, constraints, timer)
                     prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
                     fff: Formula = And([Or(cl) for cl in matrix_list])
                     for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix))):

@@ -77,7 +77,7 @@ def parse(s: str) -> List[AstNode]:
     lparen = re.compile("^\\(")
     rparen = re.compile("^\\)")
     semicolon = re.compile("^;.*")
-    ident = re.compile("([a-zA-Z_][a-zA-Z0-9_!'.]*)|0|[1-9][0-9]*|[+-/*&^|<>=?~]+")
+    ident = re.compile("([@$a-zA-Z_][-a-zA-Z0-9_!'.]*)|0|[1-9][0-9]*|[+-/*&^|<>=?~]+")
 
     def p_recur(input: Input) -> List[AstNode]:
         elems: List[AstNode] = []

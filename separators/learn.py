@@ -9,6 +9,7 @@ from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, 
 from .check import check
 from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, GeneralizedSeparator, HybridSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
+from .cvc4 import solve_with_cvc4
 from typing import *
 
 sorts_to_z3: Dict[str, z3.SortRef] = {}
@@ -17,8 +18,12 @@ z3_rel_func: Dict[str, z3.FuncDeclRef] = {}
 def toZ3(f: Union[Formula, Term], env: Environment) -> z3.ExprRef:
     def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ3(f, env)
     if isinstance(f, And):
+        if len(f.c) == 0:
+            return z3.BoolVal(True)
         return z3.And(*[R(x) for x in f.c])
     elif isinstance(f, Or):
+        if len(f.c) == 0:
+            return z3.BoolVal(False)
         return z3.Or(*[R(x) for x in f.c])
     elif isinstance(f, Not):
         return z3.Not(R(f.f))
@@ -117,6 +122,33 @@ def find_model_or_equivalence(current: Formula, formula: Formula, env: Environme
 
     raise RuntimeError("Z3 did not produce equivalence or model")
 
+def find_model_or_equivalence_cvc4(current: Formula, formula: Formula, env: Environment, s: z3.Solver, t: Timer) -> Optional[Model]:
+
+    # Check current => formula
+    s.push()
+    s.add(toZ3(current, env))
+    s.add(z3.Not(toZ3(formula, env)))
+    (r1, m) = solve_with_cvc4(s, env.sig, timeout=t.remaining())
+    s.pop()
+    if m is not None:
+        m.label = '-'
+        return m
+    
+    # Check formula => current
+    s.push()
+    s.add(toZ3(formula, env))
+    s.add(z3.Not(toZ3(current, env)))
+    (r2, m) = solve_with_cvc4(s, env.sig, timeout=t.remaining())
+    s.pop()
+    if m is not None:
+        m.label = '+'
+        return m
+
+    if r1 == z3.unsat and r2 == z3.unsat:
+        return None
+    raise RuntimeError("CVC4 did not produce equivalence or model")
+
+
 
 class LearningResult(object):
     def __init__(self, success: bool, current: Formula, ct: Timer, st: Timer, mt: Timer):
@@ -162,17 +194,21 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
             with result.counterexample_timer:
                 if not args.quiet:
                     print ("Checking formula")
-                r = find_model_or_equivalence(result.current, formula, env, s, result.counterexample_timer)
+                if args.use_cvc4:
+                    r = find_model_or_equivalence_cvc4(result.current, formula, env, s, result.counterexample_timer)
+                else:
+                    r = find_model_or_equivalence(result.current, formula, env, s, result.counterexample_timer)
+                
                 result.counterexample_timer.check_time()
                 if r is None:
                     if not args.quiet:
                         print ("formula matches!")
                         print (result.current)
-                        f = open("/tmp/out.fol", "w")
-                        f.write(str(sig))
-                        for m in result.models:
-                            f.write(str(m))
-                        f.close()
+                        # f = open("/tmp/out.fol", "w")
+                        # f.write(str(sig))
+                        # for m in result.models:
+                        #     f.write(str(m))
+                        # f.close()
                     result.success = True
                     return result
             
@@ -185,6 +221,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                     n_constraints.append(ident)
 
                 if not args.quiet:
+                    print ("New model is:")
                     print (r)
                     print ("Have new model, now have", len(result.models), "models total")
                 if True:
@@ -199,7 +236,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
         result.reason = "timeout"
     except RuntimeError as e:
         print("Error:", e)
-        raise e
+        #raise e
         result.reason = str(e)
 
     return result

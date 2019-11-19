@@ -174,7 +174,7 @@ class Model(object):
         self.elems_of_sort_index: List[List[int]] = [[] for i in range(len(sig.sort_names))]
         self.constants: Dict[str, int] = {}
         self.relations: Dict[str, Set[Tuple]] = dict([(r, set()) for r in sig.relations])
-        self.functions: Dict[str, Dict[Tuple, int]] = dict([(f, dict()) for f in sig.functions])
+        self.functions: Dict[str, Dict[Tuple[int, ...], int]] = dict([(f, dict()) for f in sig.functions])
         self.sig = sig
     def add_elem(self, name: str, sort: str) -> bool:
         if name in self.elems:

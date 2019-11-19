@@ -1,0 +1,3422 @@
+[
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:abp.index_t. (~(~(abp.receiver_array(I) = abp.bot)) | abp.receiver_array(I) = abp.sender_array(I))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp0",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp0.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:abp.index_t. ((abp.index.le(abp.sender_gen_i, I) & abp.sender_array(I) = abp.bot) | (~(abp.index.le(abp.sender_gen_i, I)) & ~(abp.sender_array(I) = abp.bot)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp1",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:abp.index_t. ((abp.index.le(abp.receiver_i, I) & abp.receiver_array(I) = abp.bot) | (~(abp.index.le(abp.receiver_i, I)) & ~(abp.receiver_array(I) = abp.bot)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp10",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall A2:abp.ack_msg_t. forall A1:abp.ack_msg_t. (~(((abp.sender_bit() & ~(abp.receiver_bit())) & abp.ack_msg.le(A1, A2))) | ~((~(abp.abit(A1)) & abp.abit(A2))))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp11",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp11.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "(~(((abp.sender_bit() & abp.receiver_bit()) | (~(abp.sender_bit()) & ~(abp.receiver_bit())))) | abp.sender_i = abp.receiver_i)"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp12",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp12.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "(~(((abp.sender_bit() & ~(abp.receiver_bit())) | (~(abp.sender_bit()) & ~(~(abp.receiver_bit()))))) | (~(abp.index.le(abp.receiver_i, abp.sender_i)) & forall I:abp.index_t. (~(~(abp.index.le(I, abp.sender_i))) | abp.index.le(abp.receiver_i, I))))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp13",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp13.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall M:abp.data_msg_t. (~((abp.data_msg.le(M, M) & ((abp.dbit(M) & abp.sender_bit()) | (~(abp.dbit(M)) & ~(abp.sender_bit()))))) | ~(abp.index.le(abp.sender_gen_i, abp.sender_i)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp14",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp14.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall M:abp.data_msg_t. (~((abp.data_msg.le(M, M) & ((abp.dbit(M) & abp.sender_bit()) | (~(abp.dbit(M)) & ~(abp.sender_bit()))))) | abp.d(M) = abp.sender_array(abp.sender_i))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp15",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp15.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall M:abp.data_msg_t. (~(abp.data_msg.le(M, M)) | ~(abp.d(M) = abp.bot))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp16",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp16.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall A:abp.ack_msg_t. (~((abp.ack_msg.le(A, A) & ((abp.abit(A) & abp.sender_bit()) | (~(abp.abit(A)) & ~(abp.sender_bit()))))) | ~(abp.index.le(abp.receiver_i, abp.sender_i)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp17",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp17.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall A:abp.ack_msg_t. (~((abp.ack_msg.le(A, A) & ((abp.abit(A) & abp.sender_bit()) | (~(abp.abit(A)) & ~(abp.sender_bit()))))) | abp.receiver_array(abp.sender_i) = abp.sender_array(abp.sender_i))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp18",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp18.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall A:abp.ack_msg_t. (~((abp.ack_msg.le(A, A) & ((abp.abit(A) & abp.sender_bit()) | (~(abp.abit(A)) & ~(abp.sender_bit()))))) | ~(abp.receiver_array(abp.sender_i) = abp.bot))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp2",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp2.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "abp.index.le(abp.sender_i, abp.sender_gen_i)"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp3",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp3.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall A:abp.ack_msg_t. (~(((~(abp.sender_bit()) & ~(abp.receiver_bit())) & abp.ack_msg.le(A, A))) | abp.abit(A))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp4",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall M1:abp.data_msg_t. forall M2:abp.data_msg_t. (~(((~(abp.sender_bit()) & ~(abp.receiver_bit())) & abp.data_msg.le(M1, M2))) | ~((abp.dbit(M1) & ~(abp.dbit(M2)))))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp5",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall A:abp.ack_msg_t. (~(((abp.sender_bit() & abp.receiver_bit()) & abp.ack_msg.le(A, A))) | ~(abp.abit(A)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp6",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall M1:abp.data_msg_t. forall M2:abp.data_msg_t. (~(((abp.sender_bit() & abp.receiver_bit()) & abp.data_msg.le(M1, M2))) | ~((~(abp.dbit(M1)) & abp.dbit(M2))))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp7",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall M:abp.data_msg_t. (~(((~(abp.sender_bit()) & abp.receiver_bit()) & abp.data_msg.le(M, M))) | ~(abp.dbit(M)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp8",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall A2:abp.ack_msg_t. forall A1:abp.ack_msg_t. (~(((~(abp.sender_bit()) & abp.receiver_bit()) & abp.ack_msg.le(A1, A2))) | ~((abp.abit(A1) & ~(abp.abit(A2)))))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp9",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall M:abp.data_msg_t. (~(((abp.sender_bit() & ~(abp.receiver_bit())) & abp.data_msg.le(M, M))) | abp.dbit(M))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_ack_msg",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_ack_msg.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Z:abp.ack_msg_t. forall Y:abp.ack_msg_t. forall X:abp.ack_msg_t. (~((abp.ack_msg.le(X, Y) & abp.ack_msg.le(Y, Z))) | abp.ack_msg.le(X, Z))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_ack_msg0",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_ack_msg0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:abp.ack_msg_t. forall X:abp.ack_msg_t. (~((abp.ack_msg.le(X, Y) & abp.ack_msg.le(Y, X))) | X = Y)"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_ack_msg1",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_ack_msg1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:abp.ack_msg_t. forall X:abp.ack_msg_t. (~(abp.ack_msg.le(X, Y)) | (abp.ack_msg.le(X, X) & abp.ack_msg.le(Y, Y)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_ack_msg2",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_ack_msg2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:abp.ack_msg_t. forall X:abp.ack_msg_t. (~((abp.ack_msg.le(X, X) & abp.ack_msg.le(Y, Y))) | (abp.ack_msg.le(X, Y) | abp.ack_msg.le(Y, X)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_data_msg",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_data_msg.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:abp.data_msg_t. forall Y:abp.data_msg_t. forall Z:abp.data_msg_t. (~((abp.data_msg.le(X, Y) & abp.data_msg.le(Y, Z))) | abp.data_msg.le(X, Z))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_data_msg0",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_data_msg0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:abp.data_msg_t. forall Y:abp.data_msg_t. (~((abp.data_msg.le(X, Y) & abp.data_msg.le(Y, X))) | X = Y)"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_data_msg1",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_data_msg1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:abp.data_msg_t. forall Y:abp.data_msg_t. (~(abp.data_msg.le(X, Y)) | (abp.data_msg.le(X, X) & abp.data_msg.le(Y, Y)))"
+ },
+ {
+  "base": "alternating_bit_protocol",
+  "conjecture": "abp_data_msg2",
+  "file": "conjectures/extracted/alternating_bit_protocol-abp_data_msg2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:abp.data_msg_t. forall Y:abp.data_msg_t. (~((abp.data_msg.le(X, X) & abp.data_msg.le(Y, Y))) | (abp.data_msg.le(X, Y) | abp.data_msg.le(Y, X)))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & dec(N1, V1)) & dec(N2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. (~(((~(member_f(N1)) & dec(N1, V1)) & und_cons_dec(V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall M:node. (~(((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2)) & ~(member_f(M)))) | ~(dec(M, V2)))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c10.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & dec(N, V))) | exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V)))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~(((~(member_f(N)) & done(N)) & ~(und_cons(N, V)))) | ~(exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V))))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c12.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 4,
+  "existentials": 5,
+  "max_term_depth": 0,
+  "golden_formula": "(forall V:value. (~(und_cons_dec(V)) | exists N:node. (~(member_f(N)) & und_cons(N, V))) | exists V1:value. exists V2:value. exists N1:node. exists N2:node. ((((~(member_f(N1)) & ~(member_f(N2))) & und_cons(N1, V1)) & und_cons(N2, V2)) & ~(V1 = V2)))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2))) | ~(und_cons_dec(V2)))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(sent_msg(N1, N2, V)) | sent_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(rcv_msg(N1, N2, V)) | rcv_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & sent_msg(N1, N2, V)) & rcv_msg_proj(N1, N2))) | rcv_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(~(member_f(N1))) | ((sent_msg(N1, N2, V) & input(N1, V)) | (~(sent_msg(N1, N2, V)) & ~(input(N1, V)))))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c7.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~(((~(member_f(N)) & und_cons(N, V1)) & und_cons(N, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & und_cons(N, V))) | done(N))"
+ },
+ {
+  "base": "bosco_oded_3t_safety",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/bosco_oded_3t_safety-c9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((~(member_f(N2)) & rcv_msg(N1, N2, V))) | sent_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall M:node. (~(((forall N:node. (~(member_f(N)) & input(N, V)) & done(M)) & ~(member_f(M)))) | dec(M, V))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(sent_msg(N1, N2, V)) | sent_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(rcv_msg(N1, N2, V)) | rcv_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & sent_msg(N1, N2, V)) & rcv_msg_proj(N1, N2))) | rcv_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(~(member_f(N1))) | ((sent_msg(N1, N2, V) & input(N1, V)) | (~(sent_msg(N1, N2, V)) & ~(input(N1, V)))))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~(((~(member_f(N)) & und_cons(N, V1)) & und_cons(N, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & und_cons(N, V))) | done(N))"
+ },
+ {
+  "base": "bosco_oded_5t_onestep",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/bosco_oded_5t_onestep-c6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((~(member_f(N2)) & rcv_msg(N1, N2, V))) | sent_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & dec(N1, V1)) & dec(N2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. (~(((~(member_f(N1)) & dec(N1, V1)) & und_cons_dec(V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall M:node. (~(((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2)) & ~(member_f(M)))) | ~(dec(M, V2)))"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & dec(N, V))) | exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V)))"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c12.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~(((~(member_f(N)) & done(N)) & ~(und_cons(N, V)))) | ~(exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V))))"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c13",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c13.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 4,
+  "existentials": 5,
+  "max_term_depth": 0,
+  "golden_formula": "(forall V:value. (~(und_cons_dec(V)) | exists N:node. (~(member_f(N)) & und_cons(N, V))) | exists V1:value. exists V2:value. exists N1:node. exists N2:node. ((((~(member_f(N1)) & ~(member_f(N2))) & und_cons(N1, V1)) & und_cons(N2, V2)) & ~(V1 = V2)))"
+ },
+ {
+  "base": "bosco_oded_5t_safety",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/bosco_oded_5t_safety-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2))) | ~(und_cons_dec(V2)))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall M:node. (~(((forall N:node. (~(~(member_f(N))) | input(N, V)) & done(M)) & ~(member_f(M)))) | dec(M, V))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(sent_msg(N1, N2, V)) | sent_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(rcv_msg(N1, N2, V)) | rcv_msg_proj(N1, N2))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & sent_msg(N1, N2, V)) & rcv_msg_proj(N1, N2))) | rcv_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~(~(member_f(N1))) | ((sent_msg(N1, N2, V) & input(N1, V)) | (~(sent_msg(N1, N2, V)) & ~(input(N1, V)))))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~(((~(member_f(N)) & und_cons(N, V1)) & und_cons(N, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & und_cons(N, V))) | done(N))"
+ },
+ {
+  "base": "bosco_oded_7t_onestep",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/bosco_oded_7t_onestep-c6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. (~((~(member_f(N2)) & rcv_msg(N1, N2, V))) | sent_msg(N1, N2, V))"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. forall N2:node. (~((((~(member_f(N1)) & ~(member_f(N2))) & dec(N1, V1)) & dec(N2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall N1:node. (~(((~(member_f(N1)) & dec(N1, V1)) & und_cons_dec(V2))) | V1 = V2)"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall M:node. (~(((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2)) & ~(member_f(M)))) | ~(dec(M, V2)))"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~(member_f(N)) & dec(N, V))) | exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V)))"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c12.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~(((~(member_f(N)) & done(N)) & ~(und_cons(N, V)))) | ~(exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~(member_f(M)))) | sent_msg(M, M, V))))"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c13",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c13.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 4,
+  "existentials": 5,
+  "max_term_depth": 0,
+  "golden_formula": "(forall V:value. (~(und_cons_dec(V)) | exists N:node. (~(member_f(N)) & und_cons(N, V))) | exists V1:value. exists V2:value. exists N1:node. exists N2:node. ((((~(member_f(N1)) & ~(member_f(N2))) & und_cons(N1, V1)) & und_cons(N2, V2)) & ~(V1 = V2)))"
+ },
+ {
+  "base": "bosco_oded_7t_safety",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/bosco_oded_7t_safety-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((forall N:node. (~(~(member_f(N))) | input(N, V1)) & ~(V1 = V2))) | ~(und_cons_dec(V2)))"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj10",
+  "file": "conjectures/extracted/byz_paxos-conj10.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. forall R:round. (~((~(member_b(N)) & prepare(N, R, V1) & prepare(N, R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj11",
+  "file": "conjectures/extracted/byz_paxos-conj11.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((~(member_b(N)) & vote(N, R, V))) | exists Q:quorum_c. forall N2:node. (~((~(member_b(N2)) & member_c(N2, Q))) | prepare(N2, R, V)))"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj12",
+  "file": "conjectures/extracted/byz_paxos-conj12.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((~(member_b(N)) & decision(N, R, V))) | exists Q:quorum_c. forall N2:node. (~((~(member_b(N2)) & member_c(N2, Q))) | vote(N2, R, V)))"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj13",
+  "file": "conjectures/extracted/byz_paxos-conj13.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall Q:quorum_c. forall N:node. forall V2:value. forall R2:round. (~((~(le(R2, R1)) & ~(member_b(N)) & prepare(N, R2, V2) & ~(V1 = V2))) | exists N2:node. (~(member_b(N2)) & member_c(N2, Q) & left_rnd(N2, R1) & ~(vote(N2, R1, V1))))"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj14",
+  "file": "conjectures/extracted/byz_paxos-conj14.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((~(member_b(N)) & one_b(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj8",
+  "file": "conjectures/extracted/byz_paxos-conj8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((~(member_b(N1)) & ~(member_b(N2)) & decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "byz_paxos",
+  "conjecture": "conj9",
+  "file": "conjectures/extracted/byz_paxos-conj9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:node. (~((~(member_b(N)) & ~(member_b(M)) & rcved_one_b(N, R, M))) | one_b(M, R))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.bs.f(X, Y)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord0",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.bs.p(X, Y, Z)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord1",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:chord.node. (~(~(chord.started())) | ~(chord.live(X)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord10",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P:chord.node. forall N:chord.node. (~(chord.prd(N, P)) | chord.bs.p(P, N, N))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord11",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. forall P:chord.node. forall N:chord.node. (~(((((chord.prd(N, P) & chord.bs.p(P, X, Y)) & chord.bs.p(P, Y, N)) & ~(Y = P)) & ~(X = Y))) | chord.ring.btw(P, X, Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord2",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.prd(X, Y)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord3",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.bs.p(X, Y, Y)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord4",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord5",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:chord.node. (~(chord.prd_proj(X)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord6",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.bs.p(X, Y, Y)) | chord.live(Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord7",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord7.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.live(Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord8",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.prd_proj(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord9",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~((chord.prd(X, Y) & chord.prd(X, Z))) | Y = Z)"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_at_least_one_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_at_least_one_ring.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "(~(chord.started()) | exists N:chord.node. chord.bs.p(N, N, N))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_at_most_one_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_at_most_one_ring.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~((chord.bs.p(X, X, X) & chord.bs.p(Y, Y, Y))) | (chord.bs.p(X, Y, Y) & chord.bs.p(Y, X, X)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall W:chord.node. forall Z:chord.node. forall X:chord.node. (~((chord.bs.p(W, X, Y) & chord.bs.p(W, Y, Z))) | chord.bs.p(W, X, Z))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs0",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall W:chord.node. forall X:chord.node. (~((chord.bs.p(W, X, Y) & chord.bs.p(W, Y, X))) | X = Y)"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs1",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall W:chord.node. forall X:chord.node. (~((chord.bs.p(W, X, X) & chord.bs.p(W, Y, Y))) | (chord.bs.p(W, X, Y) | chord.bs.p(W, Y, X)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs2",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall W:chord.node. forall X:chord.node. (~(chord.bs.p(W, X, Y)) | (chord.bs.p(W, X, X) & chord.bs.p(W, Y, Y)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs3",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.bs.p(X, X, Y)) | X = Y)"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs4",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~((chord.bs.p(X, Y, Y) & chord.bs.p(Y, Z, Z))) | chord.bs.p(X, Z, Z))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs5",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs5.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall W:chord.node. forall Z:chord.node. forall X:chord.node. (~(((chord.bs.p(X, Y, Z) & chord.bs.p(X, Z, W)) & ~(Y = Z))) | chord.bs.p(Y, Z, W))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_bs6",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_bs6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~(chord.bs.f(X, Y)) | (chord.bs.p(X, Y, Y) & (~(chord.bs.p(X, Z, Z)) | chord.bs.p(X, Y, Z))))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_connected_appendages",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_connected_appendages.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~((chord.live(X) & chord.bs.p(Y, Y, Y))) | chord.bs.p(X, Y, Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr-all-conjectures",
+  "conjecture": "chord_ordered_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-all-conjectures-chord_ordered_ring.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~((((chord.bs.p(X, X, X) & chord.bs.p(Y, Y, Y)) & chord.bs.p(Z, Z, Z)) & chord.ring.btw(X, Y, Z))) | chord.bs.p(X, Y, Z))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.bs.f(X, Y)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord0",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.bs.p(X, Y, Z)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord1",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:chord.node. (~(~(chord.started())) | ~(chord.live(X)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord10",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P:chord.node. forall N:chord.node. (~(chord.prd(N, P)) | chord.bs.p(P, N, N))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord11",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. forall P:chord.node. forall N:chord.node. (~(((((chord.prd(N, P) & chord.bs.p(P, X, Y)) & chord.bs.p(P, Y, N)) & ~(Y = P)) & ~(X = Y))) | chord.ring.btw(P, X, Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord2",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(~(chord.started())) | ~(chord.prd(X, Y)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord3",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.bs.p(X, Y, Y)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord4",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord5",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:chord.node. (~(chord.prd_proj(X)) | chord.live(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord6",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.bs.p(X, Y, Y)) | chord.live(Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord7",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord7.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.live(Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord8",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~(chord.prd(X, Y)) | chord.prd_proj(X))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord9",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~((chord.prd(X, Y) & chord.prd(X, Z))) | Y = Z)"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord_at_least_one_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord_at_least_one_ring.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "(~(chord.started()) | exists N:chord.node. chord.bs.p(N, N, N))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord_at_most_one_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord_at_most_one_ring.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~((chord.bs.p(X, X, X) & chord.bs.p(Y, Y, Y))) | (chord.bs.p(X, Y, Y) & chord.bs.p(Y, X, X)))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord_connected_appendages",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord_connected_appendages.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall X:chord.node. (~((chord.live(X) & chord.bs.p(Y, Y, Y))) | chord.bs.p(X, Y, Y))"
+ },
+ {
+  "base": "chord-1s-nofail-liveness-epr",
+  "conjecture": "chord_ordered_ring",
+  "file": "conjectures/extracted/chord-1s-nofail-liveness-epr-chord_ordered_ring.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:chord.node. forall Z:chord.node. forall X:chord.node. (~((((chord.bs.p(X, X, X) & chord.bs.p(Y, Y, Y)) & chord.bs.p(Z, Z, Z)) & chord.ring.btw(X, Y, Z))) | chord.bs.p(X, Y, Z))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c",
+  "file": "conjectures/extracted/fast_paxos-c.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/fast_paxos-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall R:round. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/fast_paxos-c1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. (~(any_msg(R)) | fast(R))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/fast_paxos-c10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/fast_paxos-c11.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~(vote(N, none, V))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/fast_paxos-c2.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~((~(fast(R)) & exists N:node. decision(N, R, V))) | exists Q:quorum_c. forall N:node. (~(member_c(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/fast_paxos-c3.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~((fast(R) & exists N:node. decision(N, R, V))) | exists Q:quorum_f. forall N:node. (~(member_f(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/fast_paxos-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((~(fast(R)) & vote(N, R, V))) | proposal(R, V))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/fast_paxos-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((fast(R) & vote(N, R, V))) | (proposal(R, V) | any_msg(R)))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/fast_paxos-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. ~((any_msg(R) & proposal(R, V)))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/fast_paxos-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. forall R:round. (~(((fast(R) & vote(N, R, V1)) & vote(N, R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/fast_paxos-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall Q:quorum_c. forall V2:value. forall R2:round. forall R1:round. (~(((~(fast(R1)) & ~(le(R2, R1))) & ((proposal(R2, V2) & ~(V1 = V2)) | any_msg(R2)))) | exists N:node. ((member_c(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "fast_paxos",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/fast_paxos-c9.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall R2:round. forall R1:round. forall Q:quorum_f. (~(((fast(R1) & ~(le(R2, R1))) & ((proposal(R2, V2) & ~(V1 = V2)) | any_msg(R2)))) | exists N:node. ((member_f(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c",
+  "file": "conjectures/extracted/fast_paxos_epr-c.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/fast_paxos_epr-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall R:round. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/fast_paxos_epr-c1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. (~(any_msg(R)) | fast(R))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/fast_paxos_epr-c10.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall N:node. forall V2:value. forall R2:round. forall R1:round. (~((one_b_max_vote(N, R2, none, V1) & ~(le(R2, R1)))) | ~(vote(N, R1, V2)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/fast_paxos_epr-c11.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall RMAX:round. forall R:round. forall V:value. (~((one_b_max_vote(N, R, RMAX, V) & ~(RMAX = none))) | (~(le(R, RMAX)) & vote(N, RMAX, V)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/fast_paxos_epr-c12.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall RMAX:round. forall R:round. forall V:value. forall VOTHER:value. forall ROTHER:round. (~((((one_b_max_vote(N, R, RMAX, V) & ~(RMAX = none)) & ~(le(R, ROTHER))) & ~(le(ROTHER, RMAX)))) | ~(vote(N, ROTHER, VOTHER)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c13",
+  "file": "conjectures/extracted/fast_paxos_epr-c13.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall RMAX:round. forall N:node. forall R:round. forall V:value. (~(one_b_max_vote(N, R, RMAX, V)) | one_b(N, R))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c14",
+  "file": "conjectures/extracted/fast_paxos_epr-c14.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c15",
+  "file": "conjectures/extracted/fast_paxos_epr-c15.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~(vote(N, none, V))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/fast_paxos_epr-c2.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~((~(fast(R)) & exists N:node. decision(N, R, V))) | exists Q:c_quorum. forall N:node. (~(c_member(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/fast_paxos_epr-c3.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~((fast(R) & exists N:node. decision(N, R, V))) | exists Q:f_quorum. forall N:node. (~(f_member(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/fast_paxos_epr-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((~(fast(R)) & vote(N, R, V))) | proposal(R, V))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/fast_paxos_epr-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~((fast(R) & vote(N, R, V))) | (proposal(R, V) | any_msg(R)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/fast_paxos_epr-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. ~((any_msg(R) & proposal(R, V)))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/fast_paxos_epr-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. forall R:round. (~(((fast(R) & vote(N, R, V1)) & vote(N, R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/fast_paxos_epr-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall Q:c_quorum. forall V2:value. forall R2:round. forall R1:round. (~(((~(fast(R1)) & ~(le(R2, R1))) & ((proposal(R2, V2) & ~(V1 = V2)) | any_msg(R2)))) | exists N:node. ((c_member(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "fast_paxos_epr",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/fast_paxos_epr-c9.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall Q:f_quorum. forall V2:value. forall R2:round. forall R1:round. (~(((fast(R1) & ~(le(R2, R1))) & ((proposal(R2, V2) & ~(V1 = V2)) | any_msg(R2)))) | exists N:node. ((f_member(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c",
+  "file": "conjectures/extracted/flexible_paxos_epr-c.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/flexible_paxos_epr-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall R:round. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/flexible_paxos_epr-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~(vote(N, R, V)) | proposal(R, V))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/flexible_paxos_epr-c2.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~(exists N:node. decision(N, R, V)) | exists Q:quorum_2. forall N:node. (~(member_2(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/flexible_paxos_epr-c3.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall N:node. forall V2:value. forall R2:round. forall R1:round. (~((one_b_max_vote(N, R2, none, V1) & ~(le(R2, R1)))) | ~(vote(N, R1, V2)))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/flexible_paxos_epr-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall RMAX:round. forall R:round. forall V:value. (~((one_b_max_vote(N, R, RMAX, V) & ~(RMAX = none))) | (~(le(R, RMAX)) & vote(N, RMAX, V)))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/flexible_paxos_epr-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall RMAX:round. forall R:round. forall V:value. forall VOTHER:value. forall ROTHER:round. (~((((one_b_max_vote(N, R, RMAX, V) & ~(RMAX = none)) & ~(le(R, ROTHER))) & ~(le(ROTHER, RMAX)))) | ~(vote(N, ROTHER, VOTHER)))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/flexible_paxos_epr-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~(vote(N, none, V))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/flexible_paxos_epr-c7.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall Q:quorum_2. forall R2:round. forall R1:round. (~(((~(le(R2, R1)) & proposal(R2, V2)) & ~(V1 = V2))) | exists N:node. ((member_2(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/flexible_paxos_epr-c8.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall RMAX:round. forall N:node. forall R:round. forall V:value. (~(one_b_max_vote(N, R, RMAX, V)) | one_b(N, R))"
+ },
+ {
+  "base": "flexible_paxos_epr",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/flexible_paxos_epr-c9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb10",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. (~((rb.obedient(N1) & rb.accept(N1))) | exists B:quorum_b. forall M:node. (~(member_b(M, B)) | rb.sent_msg_proj(M)))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb11",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 2,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "(~(exists A:quorum_a. forall M:node. (~((member_a(M, A) & rb.obedient(M))) | rb.sent_msg_proj(M))) | exists N:node. (rb.obedient(N) & rb.rcv_init(N)))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb5",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 1,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "(~(exists N:node. (rb.obedient(N) & rb.accept(N))) | exists M:node. (rb.obedient(M) & rb.rcv_init(M)))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb6",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~(rb.sent_msg(N1, N2)) | rb.sent_msg_proj(N1))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb7",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb7.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((rb.obedient(N2) & rb.rcv_msg(N1, N2))) | rb.sent_msg(N1, N2))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb8",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((rb.symmetric(N1) & rb.sent_msg_proj(N1))) | rb.sent_msg(N1, N2))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb9",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb9.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~(((rb.obedient(N1) & rb.sent_msg(N1, N2)) & ~(rb.rcv_init(N1)))) | exists A:quorum_a. forall M:node. (~(member_a(M, A)) | rb.sent_msg_proj(M)))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb_tp_correctness_impl",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb_tp_correctness_impl.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. (~(rb.obedient(N1)) | rb.rcv_init(N1))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb_tp_correctness_impl3",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb_tp_correctness_impl3.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "rb.correct(rb.tp_correctness.n0)"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb_tp_correctness_impl4",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb_tp_correctness_impl4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "~(exists B:quorum_b. forall N1:node. (~(member_b(N1, B)) | rb.rcv_msg(N1, rb.tp_correctness.n0)))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb_tp_relay_impl3",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb_tp_relay_impl3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall B:quorum_b. (~((rb.correct(rb.tp_relay.n1) & ~(rb.accept(rb.tp_relay.n1)))) | exists M:node. (member_b(M, B) & ~(rb.rcv_msg(M, rb.tp_relay.n1))))"
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "rb_tp_relay_impl4",
+  "file": "conjectures/extracted/hybrid_reliable_broadcast_cisa-rb_tp_relay_impl4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall A:quorum_a. (~((rb.correct(rb.tp_relay.n2) & ~(rb.sent_msg_proj(rb.tp_relay.n2)))) | exists M:node. (member_a(M, A) & ~(rb.rcv_msg(M, rb.tp_relay.n2))))"
+ },
+ {
+  "base": "leader_election_ring_btw_nonreflexive",
+  "conjecture": "c",
+  "file": "conjectures/extracted/leader_election_ring_btw_nonreflexive-c.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall Y:node. forall X:node. (~((leader(X) & leader(Y))) | X = Y)"
+ },
+ {
+  "base": "leader_election_ring_btw_nonreflexive",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/leader_election_ring_btw_nonreflexive-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N0:node. forall N1:node. ~(((le(idn(N1), idn(N0)) & pending(idn(N1), N1)) & ~(idn(N1) = idn(N0))))"
+ },
+ {
+  "base": "leader_election_ring_btw_nonreflexive",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/leader_election_ring_btw_nonreflexive-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N0:node. forall N1:node. forall N2:node. ~(((le(idn(N2), idn(N0)) & pending(idn(N2), N1)) & ring.btw(N0, N1, N2)))"
+ },
+ {
+  "base": "leader_election_ring_btw_nonreflexive",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/leader_election_ring_btw_nonreflexive-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N0:node. forall N1:node. ~(((le(idn(N1), idn(N0)) & leader(N1)) & ~(N1 = N0)))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c",
+  "file": "conjectures/extracted/learning_switch-c.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N0:node. forall N1:node. ~((route.tc(N1, N1, N0) & ~(N1 = N0)))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/learning_switch-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N0:node. forall N2:node. ~(((route.tc(N2, N0, N2) & ~(N0 = N2)) & ~(route.dom(N2, N0))))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/learning_switch-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N0:node. forall N1:node. forall N2:node. ~(((route.tc(N0, N2, N1) & ~(N1 = N2)) & ~(route.dom(N0, N2))))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/learning_switch-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N0:node. forall N1:node. forall N2:node. ~((((route.tc(N2, N1, N0) & ~(N0 = N2)) & ~(N1 = N0)) & ~(route.dom(N2, N0))))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/learning_switch-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P0:packet. forall N0:node. forall N1:node. ~(((pending(P0, N1, N0) & ~(N1 = src(P0))) & ~(route.dom(src(P0), N1))))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "route",
+  "file": "conjectures/extracted/learning_switch-route.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall X:node. route.tc(N, X, X)"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "route0",
+  "file": "conjectures/extracted/learning_switch-route0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall Y:node. forall X:node. forall Z:node. (~((route.tc(N, X, Y) & route.tc(N, Y, Z))) | route.tc(N, X, Z))"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "route1",
+  "file": "conjectures/extracted/learning_switch-route1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall Y:node. forall X:node. (~((route.tc(N, X, Y) & route.tc(N, Y, X))) | X = Y)"
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "route2",
+  "file": "conjectures/extracted/learning_switch-route2.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall Y:node. forall X:node. forall Z:node. (~((route.tc(N, X, Y) & route.tc(N, X, Z))) | (route.tc(N, Y, Z) | route.tc(N, Z, Y)))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj2",
+  "file": "conjectures/extracted/lockserv-conj2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((grant_msg(N1) & grant_msg(N2))) | N1 = N2)"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj3",
+  "file": "conjectures/extracted/lockserv-conj3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((unlock_msg(N1) & unlock_msg(N2))) | N1 = N2)"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj4",
+  "file": "conjectures/extracted/lockserv-conj4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((holds_lock(N1) & grant_msg(N2)))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj5",
+  "file": "conjectures/extracted/lockserv-conj5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((holds_lock(N1) & unlock_msg(N2)))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj6",
+  "file": "conjectures/extracted/lockserv-conj6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((grant_msg(N1) & unlock_msg(N2)))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj7",
+  "file": "conjectures/extracted/lockserv-conj7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((grant_msg(N) & server_holds_lock()))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj8",
+  "file": "conjectures/extracted/lockserv-conj8.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((holds_lock(N) & server_holds_lock()))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "conj9",
+  "file": "conjectures/extracted/lockserv-conj9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((unlock_msg(N) & server_holds_lock()))"
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "mutex",
+  "file": "conjectures/extracted/lockserv-mutex.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((holds_lock(N1) & holds_lock(N2))) | N1 = N2)"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c",
+  "file": "conjectures/extracted/multi_paxos_epr-c.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. forall I:inst. (~((decision(N1, I, R1, V1) & decision(N2, I, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/multi_paxos_epr-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. forall I:inst. (~(proposal(I, R, V)) | active(R))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/multi_paxos_epr-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall R:round. forall I:inst. (~((proposal(I, R, V1) & proposal(I, R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/multi_paxos_epr-c10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. (~(one_b_msg(N, R, M)) | joined_round(N, R))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/multi_paxos_epr-c2.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. forall I:inst. (~(vote(N, I, R, V)) | proposal(I, R, V))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/multi_paxos_epr-c3.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 5,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~(exists N:node. decision(N, I, R, V)) | exists Q:quorum. forall N:node. (~(member(N, Q)) | vote(N, I, R, V)))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/multi_paxos_epr-c4.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall R1:round. forall N:node. forall V2:value. forall R2:round. forall M:votemap. forall I:inst. (~(((one_b_msg(N, R2, M) & maxr(M, I) = none) & ~(le(R2, R1)))) | ~(vote(N, I, R1, V2)))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/multi_paxos_epr-c5.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. (~((one_b_msg(N, R, M) & ~(maxr(M, I) = none))) | (~(le(R, maxr(M, I))) & vote(N, I, maxr(M, I), maxv(M, I))))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/multi_paxos_epr-c6.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall M:votemap. forall N:node. forall R:round. forall VOTHER:value. forall I:inst. forall ROTHER:round. (~((((one_b_msg(N, R, M) & ~(maxr(M, I) = none)) & ~(le(R, ROTHER))) & ~(le(ROTHER, maxr(M, I))))) | ~(vote(N, I, ROTHER, VOTHER)))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/multi_paxos_epr-c7.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. forall I:inst. ~(vote(N, I, none, V))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/multi_paxos_epr-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall R2:round. forall R1:round. forall Q:quorum. forall I:inst. (~(((~(le(R2, R1)) & active(R2)) & ~(proposal(I, R2, V)))) | exists N:node. ((member(N, Q) & left_round(N, R1)) & ~(vote(N, I, R1, V))))"
+ },
+ {
+  "base": "multi_paxos_epr",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/multi_paxos_epr-c9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~(le(R2, R1)))) | left_round(N, R1))"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c",
+  "file": "conjectures/extracted/paxos_epr-c.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/paxos_epr-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall R:round. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/paxos_epr-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~(vote(N, R, V)) | proposal(R, V))"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/paxos_epr-c2.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 4,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~(exists N:node. decision(N, R, V)) | exists Q:quorum. forall N:node. (~(member(N, Q)) | vote(N, R, V)))"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/paxos_epr-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~(vote(N, none, V))"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/paxos_epr-c4.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall R2:round. forall R1:round. forall Q:quorum. (~(((~(le(R2, R1)) & proposal(R2, V2)) & ~(V1 = V2))) | exists N:node. ((member(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/paxos_epr-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. forall I:inst. (~((decision(N1, I, R1, V1) & decision(N2, I, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c0.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R2:round. forall R1:round. forall I2:inst. forall V:value. forall N1:node. forall N2:node. forall I1:inst. (~((decision(N1, I1, R1, stop) & ~(inst_le(I2, I1)))) | ~(decision(N2, I2, R2, V)))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. forall I:inst. (~(proposal(I, R, V)) | active(R))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c10.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I2:inst. forall R:round. forall V:value. forall I1:inst. (~((proposal(I1, R, stop) & ~(inst_le(I2, I1)))) | ~(proposal(I2, R, V)))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c11.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R2:round. forall I2:inst. forall V:value. forall R1:round. forall Q:quorum. forall I1:inst. (~(((~(le(R2, R1)) & ~(inst_le(I2, I1))) & proposal(I2, R2, V))) | exists N:node. ((member(N, Q) & left_round(N, R1)) & ~(vote(N, I1, R1, stop))))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c12.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R2:round. forall I2:inst. forall V:value. forall R1:round. forall Q:quorum. forall I1:inst. (~(((~(le(R2, R1)) & ~(inst_le(I2, I1))) & proposal(I1, R2, stop))) | exists N:node. ((member(N, Q) & left_round(N, R1)) & ~(vote(N, I2, R1, V))))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c13",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c13.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~(le(R2, R1)))) | left_round(N, R1))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c14",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c14.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. (~(one_b_msg(N, R, M)) | joined_round(N, R))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c2.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. forall R:round. forall I:inst. (~((proposal(I, R, V1) & proposal(I, R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. forall I:inst. (~(vote(N, I, R, V)) | proposal(I, R, V))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c4.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 5,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~(exists N:node. decision(N, I, R, V)) | exists Q:quorum. forall N:node. (~(member(N, Q)) | vote(N, I, R, V)))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall R1:round. forall N:node. forall V2:value. forall R2:round. forall M:votemap. forall I:inst. (~(((one_b_msg(N, R2, M) & maxr(M, I) = none) & ~(le(R2, R1)))) | ~(vote(N, I, R1, V2)))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c6.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. (~((one_b_msg(N, R, M) & ~(maxr(M, I) = none))) | (~(le(R, maxr(M, I))) & vote(N, I, maxr(M, I), maxv(M, I))))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c7.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall M:votemap. forall N:node. forall R:round. forall VOTHER:value. forall I:inst. forall ROTHER:round. (~((((one_b_msg(N, R, M) & ~(maxr(M, I) = none)) & ~(le(R, ROTHER))) & ~(le(ROTHER, maxr(M, I))))) | ~(vote(N, I, ROTHER, VOTHER)))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. forall I:inst. ~(vote(N, I, none, V))"
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/stoppable_paxos_epr-c9.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall R2:round. forall R1:round. forall Q:quorum. forall I:inst. (~(((~(le(R2, R1)) & active(R2)) & ~(proposal(I, R2, V)))) | exists N:node. ((member(N, Q) & left_round(N, R1)) & ~(vote(N, I, R1, V))))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol10",
+  "file": "conjectures/extracted/ticket-ticket_protocol10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~((~(ticket_protocol.next_ticket = ticket_protocol.zero) & ticket_protocol.m(T, M))) | ~(ticket_protocol.le(ticket_protocol.next_ticket, M)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol11",
+  "file": "conjectures/extracted/ticket-ticket_protocol11.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~((ticket_protocol.pc2(T) | ticket_protocol.pc3(T))) | ~(ticket_protocol.next_ticket = ticket_protocol.zero))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol12",
+  "file": "conjectures/extracted/ticket-ticket_protocol12.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall M:ticket_protocol.ticket. forall T1:ticket_protocol.thread. (~(((ticket_protocol.m(T1, M) & ticket_protocol.m(T2, M)) & ~(M = ticket_protocol.zero))) | T1 = T2)"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol13",
+  "file": "conjectures/extracted/ticket-ticket_protocol13.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~((ticket_protocol.pc2(T) & ticket_protocol.m(T, M))) | ticket_protocol.le(ticket_protocol.service, M))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol14",
+  "file": "conjectures/extracted/ticket-ticket_protocol14.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc3(T)) | ticket_protocol.m(T, ticket_protocol.service))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol15",
+  "file": "conjectures/extracted/ticket-ticket_protocol15.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "ticket_protocol.le(ticket_protocol.service, ticket_protocol.next_ticket)"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol16",
+  "file": "conjectures/extracted/ticket-ticket_protocol16.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall T1:ticket_protocol.thread. ~(((((~(ticket_protocol.pc1(T1)) & ~(ticket_protocol.pc1(T2))) & ticket_protocol.m(T1, ticket_protocol.zero)) & ticket_protocol.m(T2, ticket_protocol.zero)) & ~(T1 = T2)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol4",
+  "file": "conjectures/extracted/ticket-ticket_protocol4.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. ((ticket_protocol.pc1(T) | ticket_protocol.pc2(T)) | ticket_protocol.pc3(T))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol5",
+  "file": "conjectures/extracted/ticket-ticket_protocol5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc1(T)) | ~(ticket_protocol.pc2(T)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol6",
+  "file": "conjectures/extracted/ticket-ticket_protocol6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc1(T)) | ~(ticket_protocol.pc3(T)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol7",
+  "file": "conjectures/extracted/ticket-ticket_protocol7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc2(T)) | ~(ticket_protocol.pc3(T)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol8",
+  "file": "conjectures/extracted/ticket-ticket_protocol8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall K2:ticket_protocol.ticket. forall K1:ticket_protocol.ticket. forall T:ticket_protocol.thread. (~((ticket_protocol.m(T, K1) & ticket_protocol.m(T, K2))) | K1 = K2)"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol9",
+  "file": "conjectures/extracted/ticket-ticket_protocol9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.next_ticket = ticket_protocol.zero) | ticket_protocol.m(T, ticket_protocol.zero))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol_safety",
+  "file": "conjectures/extracted/ticket-ticket_protocol_safety.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall T1:ticket_protocol.thread. (~((ticket_protocol.pc3(T1) & ticket_protocol.pc3(T2))) | T1 = T2)"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol_tp1_impl",
+  "file": "conjectures/extracted/ticket-ticket_protocol_tp1_impl.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~(((ticket_protocol.pc1(T) & ticket_protocol.m(T, M)) & ~(M = ticket_protocol.zero))) | ~(ticket_protocol.le(ticket_protocol.service, M)))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol_tp1_impl0",
+  "file": "conjectures/extracted/ticket-ticket_protocol_tp1_impl0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall K:ticket_protocol.ticket. (~((~(ticket_protocol.le(ticket_protocol.next_ticket, K)) & ticket_protocol.le(ticket_protocol.service, K))) | exists T:ticket_protocol.thread. (ticket_protocol.m(T, K) & ~(ticket_protocol.pc1(T))))"
+ },
+ {
+  "base": "ticket",
+  "conjecture": "ticket_protocol_tp1_impl1",
+  "file": "conjectures/extracted/ticket-ticket_protocol_tp1_impl1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "exists M:ticket_protocol.ticket. ticket_protocol.m(ticket_protocol.tp1.sk0, M)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol10",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol10.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.next_ticket = ticket_protocol.zero) | ticket_protocol.m(T, ticket_protocol.zero))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol11",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol11.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~((~(ticket_protocol.next_ticket = ticket_protocol.zero) & ticket_protocol.m(T, M))) | ~(ticket_protocol.le(ticket_protocol.next_ticket, M)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol12",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol12.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~((ticket_protocol.pc2(T) | ticket_protocol.pc3(T))) | ~(ticket_protocol.next_ticket = ticket_protocol.zero))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol13",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol13.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall M:ticket_protocol.ticket. forall T1:ticket_protocol.thread. (~(((ticket_protocol.m(T1, M) & ticket_protocol.m(T2, M)) & ~(M = ticket_protocol.zero))) | T1 = T2)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol14",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol14.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~((ticket_protocol.pc2(T) & ticket_protocol.m(T, M))) | ticket_protocol.le(ticket_protocol.service, M))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol15",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol15.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc3(T)) | ticket_protocol.m(T, ticket_protocol.service))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol16",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol16.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "ticket_protocol.le(ticket_protocol.service, ticket_protocol.next_ticket)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol17",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol17.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall T1:ticket_protocol.thread. ~(((((~(ticket_protocol.pc1(T1)) & ~(ticket_protocol.pc1(T2))) & ticket_protocol.m(T1, ticket_protocol.zero)) & ticket_protocol.m(T2, ticket_protocol.zero)) & ~(T1 = T2)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol4",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol4.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. ((ticket_protocol.pc1(T) | ticket_protocol.pc2(T)) | ticket_protocol.pc3(T))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol5",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc1(T)) | ~(ticket_protocol.pc2(T)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol6",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc1(T)) | ~(ticket_protocol.pc3(T)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol7",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. (~(ticket_protocol.pc2(T)) | ~(ticket_protocol.pc3(T)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol8",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall K2:ticket_protocol.ticket. forall K1:ticket_protocol.ticket. forall T:ticket_protocol.thread. (~((ticket_protocol.m(T, K1) & ticket_protocol.m(T, K2))) | K1 = K2)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol9",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol9.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall K2:ticket_protocol.ticket. forall K1:ticket_protocol.ticket. forall T:ticket_protocol.thread. (~((ticket_protocol.c(T, K1) & ticket_protocol.c(T, K2))) | K1 = K2)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol_safety",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol_safety.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T2:ticket_protocol.thread. forall T1:ticket_protocol.thread. (~((ticket_protocol.pc3(T1) & ticket_protocol.pc3(T2))) | T1 = T2)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol_tp1_impl",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol_tp1_impl.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "exists K:ticket_protocol.ticket. ticket_protocol.c(ticket_protocol.tp1.sk1, K)"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol_tp1_impl0",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol_tp1_impl0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:ticket_protocol.thread. forall M:ticket_protocol.ticket. (~(((ticket_protocol.pc1(T) & ticket_protocol.m(T, M)) & ~(M = ticket_protocol.zero))) | ~(ticket_protocol.le(ticket_protocol.service, M)))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol_tp1_impl1",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol_tp1_impl1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall K:ticket_protocol.ticket. (~((~(ticket_protocol.le(ticket_protocol.next_ticket, K)) & ticket_protocol.le(ticket_protocol.service, K))) | exists T:ticket_protocol.thread. (ticket_protocol.m(T, K) & ~(ticket_protocol.pc1(T))))"
+ },
+ {
+  "base": "ticket_nested",
+  "conjecture": "ticket_protocol_tp1_impl2",
+  "file": "conjectures/extracted/ticket_nested-ticket_protocol_tp1_impl2.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "exists M:ticket_protocol.ticket. ticket_protocol.m(ticket_protocol.tp1.sk0, M)"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb",
+  "file": "conjectures/extracted/tlb-safety-tlb.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P:tlb.processor. (~((((((((((tlb.pc(P) = tlb.i3 | tlb.pc(P) = tlb.i4) | tlb.pc(P) = tlb.i5) | tlb.pc(P) = tlb.i6) | tlb.pc(P) = tlb.i7) | tlb.pc(P) = tlb.i8) | tlb.pc(P) = tlb.i9) | tlb.pc(P) = tlb.i11) | tlb.pc(P) = tlb.i12) | tlb.pc(P) = tlb.i14)) | tlb.plock(tlb.writepmap(P)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb0",
+  "file": "conjectures/extracted/tlb-safety-tlb0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P2:tlb.processor. forall P1:tlb.processor. (~(((((((((((tlb.pc(P1) = tlb.i3 | tlb.pc(P1) = tlb.i4) | tlb.pc(P1) = tlb.i5) | tlb.pc(P1) = tlb.i6) | tlb.pc(P1) = tlb.i7) | tlb.pc(P1) = tlb.i8) | tlb.pc(P1) = tlb.i9) | tlb.pc(P1) = tlb.i11) | tlb.pc(P1) = tlb.i12) | tlb.pc(P1) = tlb.i14) & (((((((((tlb.pc(P2) = tlb.i3 | tlb.pc(P2) = tlb.i4) | tlb.pc(P2) = tlb.i5) | tlb.pc(P2) = tlb.i6) | tlb.pc(P2) = tlb.i7) | tlb.pc(P2) = tlb.i8) | tlb.pc(P2) = tlb.i9) | tlb.pc(P2) = tlb.i11) | tlb.pc(P2) = tlb.i12) | tlb.pc(P2) = tlb.i14))) | (~(tlb.writepmap(P1) = tlb.writepmap(P2)) | P1 = P2))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb1",
+  "file": "conjectures/extracted/tlb-safety-tlb1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C2:tlb.processor. forall C1:tlb.processor. forall P:tlb.processor. (~((tlb.currentcpu(P, C1) & tlb.currentcpu(P, C2))) | C1 = C2)"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb10",
+  "file": "conjectures/extracted/tlb-safety-tlb10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((((tlb.pc(P) = tlb.i3 | tlb.pc(P) = tlb.i7) | tlb.pc(P) = tlb.i8) & ~(tlb.todo(P, C))) & ~(tlb.pc(C) = tlb.b1)) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc(C) = tlb.r5)) & ~(tlb.pc(C) = tlb.r6)) | P = C))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb11",
+  "file": "conjectures/extracted/tlb-safety-tlb11.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((((((tlb.pc(P) = tlb.i4 | tlb.pc(P) = tlb.i5) | tlb.pc(P) = tlb.i6) & ~(tlb.todo(P, C))) & ~(tlb.currentcpu(P, C))) & ~(tlb.pc(C) = tlb.b1)) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc(C) = tlb.r5)) & ~(tlb.pc(C) = tlb.r6)) | P = C))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb12",
+  "file": "conjectures/extracted/tlb-safety-tlb12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc(P) = tlb.i9 | tlb.pc(P) = tlb.i11) & ~(tlb.pc(C) = tlb.b1)) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc(C) = tlb.r5)) & ~(tlb.pc(C) = tlb.r6)) | P = C))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb13",
+  "file": "conjectures/extracted/tlb-safety-tlb13.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall P:tlb.processor. (~((~(tlb.pc(P) = tlb.b1) & ~(tlb.tlb(P) = tlb.pentry(tlb.userpmap(P))))) | ((tlb.actionneeded(P) & ~(tlb.pc(P) = tlb.r6)) | (tlb.pc(P) = tlb.i12 & tlb.userpmap(P) = tlb.writepmap(P))))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb14",
+  "file": "conjectures/extracted/tlb-safety-tlb14.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc(P) = tlb.i3 & ~(tlb.todo(P, C))) & ~(tlb.pc(C) = tlb.b1)) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc(C) = tlb.r1 | tlb.pc(C) = tlb.r2) | tlb.pc(C) = tlb.r3)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb15",
+  "file": "conjectures/extracted/tlb-safety-tlb15.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((((((((tlb.pc(P) = tlb.i4 | tlb.pc(P) = tlb.i5) | tlb.pc(P) = tlb.i6) | tlb.pc(P) = tlb.i7) | tlb.pc(P) = tlb.i8) & ~(tlb.todo(P, C))) & ~(tlb.pc(C) = tlb.b1)) & ~(tlb.currentcpu(P, C))) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc(C) = tlb.r1 | tlb.pc(C) = tlb.r2) | tlb.pc(C) = tlb.r3)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb16",
+  "file": "conjectures/extracted/tlb-safety-tlb16.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc(P) = tlb.i9 | tlb.pc(P) = tlb.i11) & ~(tlb.pc(C) = tlb.b1)) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc(C) = tlb.r1 | tlb.pc(C) = tlb.r2) | tlb.pc(C) = tlb.r3)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb17",
+  "file": "conjectures/extracted/tlb-safety-tlb17.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall C:tlb.processor. (~((~(tlb.tlb(C) = tlb.pentry(tlb.userpmap(C))) & ~(tlb.pc(C) = tlb.b1))) | ((tlb.interrupt(C) | (((tlb.pc(C) = tlb.r1 | tlb.pc(C) = tlb.r2) | tlb.pc(C) = tlb.r3) | tlb.pc(C) = tlb.r5)) | (tlb.pc(C) = tlb.i12 & tlb.writepmap(C) = tlb.userpmap(C))))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb18",
+  "file": "conjectures/extracted/tlb-safety-tlb18.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc(P) = tlb.i9 & ~(tlb.todo(P, C))) | tlb.pc(P) = tlb.i11) & tlb.userpmap(C) = tlb.writepmap(P))) | ~(tlb.pc(C) = tlb.m2))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb19",
+  "file": "conjectures/extracted/tlb-safety-tlb19.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall P:tlb.processor. (~(~(tlb.tlb(P) = tlb.pentry(tlb.userpmap(P)))) | ~(tlb.pc(P) = tlb.m2))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb2",
+  "file": "conjectures/extracted/tlb-safety-tlb2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((tlb.pc(P) = tlb.i6 | tlb.pc(P) = tlb.i7) & tlb.currentcpu(P, C))) | tlb.actionlock(C))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb20",
+  "file": "conjectures/extracted/tlb-safety-tlb20.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "~(tlb.error())"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb3",
+  "file": "conjectures/extracted/tlb-safety-tlb3.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P:tlb.processor. (~(((tlb.pc(P) = tlb.r5 | tlb.pc(P) = tlb.r6) | tlb.pc(P) = tlb.r7)) | tlb.actionlock(P))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb4",
+  "file": "conjectures/extracted/tlb-safety-tlb4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P2:tlb.processor. forall C:tlb.processor. forall P1:tlb.processor. (~(((((tlb.pc(P1) = tlb.i6 | tlb.pc(P1) = tlb.i7) & tlb.currentcpu(P1, C)) & (tlb.pc(P2) = tlb.i6 | tlb.pc(P2) = tlb.i7)) & tlb.currentcpu(P2, C))) | P1 = P2)"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb5",
+  "file": "conjectures/extracted/tlb-safety-tlb5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P2:tlb.processor. forall P1:tlb.processor. ~(((((tlb.pc(P1) = tlb.r5 | tlb.pc(P1) = tlb.r6) | tlb.pc(P1) = tlb.r7) & (tlb.pc(P2) = tlb.i6 | tlb.pc(P2) = tlb.i7)) & tlb.currentcpu(P2, P1)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb6",
+  "file": "conjectures/extracted/tlb-safety-tlb6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. (~((tlb.actionlock(C) & ~(((tlb.pc(C) = tlb.r5 | tlb.pc(C) = tlb.r6) | tlb.pc(C) = tlb.r7)))) | tlb.plock(tlb.userpmap(C)))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb7",
+  "file": "conjectures/extracted/tlb-safety-tlb7.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((tlb.actionlock(C) & ~(((tlb.pc(C) = tlb.r5 | tlb.pc(C) = tlb.r6) | tlb.pc(C) = tlb.r7))) & (((((((((tlb.pc(P) = tlb.i3 | tlb.pc(P) = tlb.i4) | tlb.pc(P) = tlb.i5) | tlb.pc(P) = tlb.i6) | tlb.pc(P) = tlb.i7) | tlb.pc(P) = tlb.i8) | tlb.pc(P) = tlb.i9) | tlb.pc(P) = tlb.i11) | tlb.pc(P) = tlb.i12) | tlb.pc(P) = tlb.i14))) | (~(tlb.userpmap(C) = tlb.writepmap(P)) | (tlb.currentcpu(P, C) & (tlb.pc(P) = tlb.i6 | tlb.pc(P) = tlb.i7))))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb8",
+  "file": "conjectures/extracted/tlb-safety-tlb8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc(P) = tlb.i5 | tlb.pc(P) = tlb.i6) | tlb.pc(P) = tlb.i7) & tlb.currentcpu(P, C))) | tlb.writepmap(P) = tlb.userpmap(C))"
+ },
+ {
+  "base": "tlb-safety",
+  "conjecture": "tlb9",
+  "file": "conjectures/extracted/tlb-safety-tlb9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P:tlb.processor. ((tlb.active(P) & ((((((tlb.pc(P) = tlb.b1 | tlb.pc(P) = tlb.m2) | tlb.pc(P) = tlb.m3) | tlb.pc(P) = tlb.m5) | tlb.pc(P) = tlb.i1) | tlb.pc(P) = tlb.r1) | tlb.pc(P) = tlb.r2)) | (~(tlb.active(P)) & ~(((((((tlb.pc(P) = tlb.b1 | tlb.pc(P) = tlb.m2) | tlb.pc(P) = tlb.m3) | tlb.pc(P) = tlb.m5) | tlb.pc(P) = tlb.i1) | tlb.pc(P) = tlb.r1) | tlb.pc(P) = tlb.r2))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb",
+  "file": "conjectures/extracted/tlb_pcrel-tlb.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P:tlb.processor. (~((((((((((tlb.pc_i3(P) | tlb.pc_i4(P)) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) | tlb.pc_i9(P)) | tlb.pc_i11(P)) | tlb.pc_i12(P)) | tlb.pc_i14(P))) | tlb.plock(tlb.writepmap(P)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb0",
+  "file": "conjectures/extracted/tlb_pcrel-tlb0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall P2:tlb.processor. forall P1:tlb.processor. (~(((((((((((tlb.pc_i3(P1) | tlb.pc_i4(P1)) | tlb.pc_i5(P1)) | tlb.pc_i6(P1)) | tlb.pc_i7(P1)) | tlb.pc_i8(P1)) | tlb.pc_i9(P1)) | tlb.pc_i11(P1)) | tlb.pc_i12(P1)) | tlb.pc_i14(P1)) & (((((((((tlb.pc_i3(P2) | tlb.pc_i4(P2)) | tlb.pc_i5(P2)) | tlb.pc_i6(P2)) | tlb.pc_i7(P2)) | tlb.pc_i8(P2)) | tlb.pc_i9(P2)) | tlb.pc_i11(P2)) | tlb.pc_i12(P2)) | tlb.pc_i14(P2)))) | (~(tlb.writepmap(P1) = tlb.writepmap(P2)) | P1 = P2))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb1",
+  "file": "conjectures/extracted/tlb_pcrel-tlb1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C2:tlb.processor. forall C1:tlb.processor. forall P:tlb.processor. (~((tlb.currentcpu(P, C1) & tlb.currentcpu(P, C2))) | C1 = C2)"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb10",
+  "file": "conjectures/extracted/tlb_pcrel-tlb10.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. (~((tlb.actionlock(C) & ~(((tlb.pc_r5(C) | tlb.pc_r6(C)) | tlb.pc_r7(C))))) | tlb.plock(tlb.userpmap(C)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb11",
+  "file": "conjectures/extracted/tlb_pcrel-tlb11.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((tlb.actionlock(C) & ~(((tlb.pc_r5(C) | tlb.pc_r6(C)) | tlb.pc_r7(C)))) & (((((((((tlb.pc_i3(P) | tlb.pc_i4(P)) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) | tlb.pc_i9(P)) | tlb.pc_i11(P)) | tlb.pc_i12(P)) | tlb.pc_i14(P)))) | (~(tlb.userpmap(C) = tlb.writepmap(P)) | (tlb.currentcpu(P, C) & (tlb.pc_i6(P) | tlb.pc_i7(P)))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb12",
+  "file": "conjectures/extracted/tlb_pcrel-tlb12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc_i5(P) | tlb.pc_i6(P)) | tlb.pc_i7(P)) & tlb.currentcpu(P, C))) | tlb.writepmap(P) = tlb.userpmap(C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb13",
+  "file": "conjectures/extracted/tlb_pcrel-tlb13.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P:tlb.processor. ((tlb.active(P) & ((((((tlb.pc_b1(P) | tlb.pc_m2(P)) | tlb.pc_m3(P)) | tlb.pc_m5(P)) | tlb.pc_i1(P)) | tlb.pc_r1(P)) | tlb.pc_r2(P))) | (~(tlb.active(P)) & ~(((((((tlb.pc_b1(P) | tlb.pc_m2(P)) | tlb.pc_m3(P)) | tlb.pc_m5(P)) | tlb.pc_i1(P)) | tlb.pc_r1(P)) | tlb.pc_r2(P)))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb14",
+  "file": "conjectures/extracted/tlb_pcrel-tlb14.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((((tlb.pc_i3(P) | tlb.pc_i7(P)) | tlb.pc_i8(P)) & ~(tlb.todo(P, C))) & ~(tlb.pc_b1(C))) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc_r5(C))) & ~(tlb.pc_r6(C))) | P = C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb15",
+  "file": "conjectures/extracted/tlb_pcrel-tlb15.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((((((tlb.pc_i4(P) | tlb.pc_i5(P)) | tlb.pc_i6(P)) & ~(tlb.todo(P, C))) & ~(tlb.currentcpu(P, C))) & ~(tlb.pc_b1(C))) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc_r5(C))) & ~(tlb.pc_r6(C))) | P = C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb16",
+  "file": "conjectures/extracted/tlb_pcrel-tlb16.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc_i9(P) | tlb.pc_i11(P)) & ~(tlb.pc_b1(C))) & tlb.userpmap(C) = tlb.writepmap(P))) | (((tlb.actionneeded(C) & ~(tlb.pc_r5(C))) & ~(tlb.pc_r6(C))) | P = C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb17",
+  "file": "conjectures/extracted/tlb_pcrel-tlb17.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall P:tlb.processor. (~((~(tlb.pc_b1(P)) & ~(tlb.tlb(P) = tlb.pentry(tlb.userpmap(P))))) | ((tlb.actionneeded(P) & ~(tlb.pc_r6(P))) | (tlb.pc_i12(P) & tlb.userpmap(P) = tlb.writepmap(P))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb18",
+  "file": "conjectures/extracted/tlb_pcrel-tlb18.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc_i3(P) & ~(tlb.todo(P, C))) & ~(tlb.pc_b1(C))) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc_r1(C) | tlb.pc_r2(C)) | tlb.pc_r3(C))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb19",
+  "file": "conjectures/extracted/tlb_pcrel-tlb19.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((((((((tlb.pc_i4(P) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) & ~(tlb.todo(P, C))) & ~(tlb.pc_b1(C))) & ~(tlb.currentcpu(P, C))) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc_r1(C) | tlb.pc_r2(C)) | tlb.pc_r3(C))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb2",
+  "file": "conjectures/extracted/tlb_pcrel-tlb2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((tlb.pc_i6(P) | tlb.pc_i7(P)) & tlb.currentcpu(P, C))) | tlb.actionlock(C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb20",
+  "file": "conjectures/extracted/tlb_pcrel-tlb20.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc_i9(P) | tlb.pc_i11(P)) & ~(tlb.pc_b1(C))) & tlb.userpmap(C) = tlb.writepmap(P))) | ((tlb.interrupt(C) | P = C) | ((tlb.pc_r1(C) | tlb.pc_r2(C)) | tlb.pc_r3(C))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb21",
+  "file": "conjectures/extracted/tlb_pcrel-tlb21.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall C:tlb.processor. (~((~(tlb.tlb(C) = tlb.pentry(tlb.userpmap(C))) & ~(tlb.pc_b1(C)))) | ((tlb.interrupt(C) | (((tlb.pc_r1(C) | tlb.pc_r2(C)) | tlb.pc_r3(C)) | tlb.pc_r5(C))) | (tlb.pc_i12(C) & tlb.writepmap(C) = tlb.userpmap(C))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb22",
+  "file": "conjectures/extracted/tlb_pcrel-tlb22.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((tlb.pc_i9(P) & ~(tlb.todo(P, C))) | tlb.pc_i11(P)) & tlb.userpmap(C) = tlb.writepmap(P))) | ~(tlb.pc_m2(C)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb23",
+  "file": "conjectures/extracted/tlb_pcrel-tlb23.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall P:tlb.processor. (~(~(tlb.tlb(P) = tlb.pentry(tlb.userpmap(P)))) | ~(tlb.pc_m2(P)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb24",
+  "file": "conjectures/extracted/tlb_pcrel-tlb24.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "~(tlb.error())"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb3",
+  "file": "conjectures/extracted/tlb_pcrel-tlb3.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P:tlb.processor. (~(((tlb.pc_r5(P) | tlb.pc_r6(P)) | tlb.pc_r7(P))) | tlb.actionlock(P))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb301",
+  "file": "conjectures/extracted/tlb_pcrel-tlb301.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P:tlb.processor. (((((((((((((((((((((((tlb.pc_i1(P) | tlb.pc_i2(P)) | tlb.pc_i3(P)) | tlb.pc_i4(P)) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) | tlb.pc_i9(P)) | tlb.pc_i11(P)) | tlb.pc_i12(P)) | tlb.pc_i14(P)) | tlb.pc_i15(P)) | tlb.pc_m2(P)) | tlb.pc_m3(P)) | tlb.pc_m5(P)) | tlb.pc_r1(P)) | tlb.pc_r2(P)) | tlb.pc_r3(P)) | tlb.pc_r5(P)) | tlb.pc_r6(P)) | tlb.pc_r7(P)) | tlb.pc_r8(P)) | tlb.pc_b1(P))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb4",
+  "file": "conjectures/extracted/tlb_pcrel-tlb4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P2:tlb.processor. forall C:tlb.processor. forall P1:tlb.processor. (~(((((tlb.pc_i6(P1) | tlb.pc_i7(P1)) & tlb.currentcpu(P1, C)) & (tlb.pc_i6(P2) | tlb.pc_i7(P2))) & tlb.currentcpu(P2, C))) | P1 = P2)"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb5",
+  "file": "conjectures/extracted/tlb_pcrel-tlb5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall P2:tlb.processor. forall P1:tlb.processor. ~(((((tlb.pc_r5(P1) | tlb.pc_r6(P1)) | tlb.pc_r7(P1)) & (tlb.pc_i6(P2) | tlb.pc_i7(P2))) & tlb.currentcpu(P2, P1)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb6",
+  "file": "conjectures/extracted/tlb_pcrel-tlb6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((((((tlb.pc_i3(P) | tlb.pc_i4(P)) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) | tlb.pc_i9(P)) & tlb.todo(P, C))) | (~(tlb.pc_b1(C)) & ~(C = P)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb7",
+  "file": "conjectures/extracted/tlb_pcrel-tlb7.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~((((((tlb.pc_i4(P) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) & tlb.currentcpu(P, C))) | ~(tlb.pc_b1(C)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb8",
+  "file": "conjectures/extracted/tlb_pcrel-tlb8.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:tlb.processor. forall P:tlb.processor. (~(((((tlb.pc_i5(P) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) & tlb.currentcpu(P, C))) | tlb.userpmap(C) = tlb.writepmap(P))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb9",
+  "file": "conjectures/extracted/tlb_pcrel-tlb9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:tlb.processor. (~(tlb.pc_b1(C)) | ~(tlb.actionlock(C)))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb_tp1_impl5",
+  "file": "conjectures/extracted/tlb_pcrel-tlb_tp1_impl5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "(~(tlb.plock(tlb.tp1.sk2)) | exists P:tlb.processor. (tlb.writepmap(P) = tlb.tp1.sk2 & (((((((((tlb.pc_i3(P) | tlb.pc_i4(P)) | tlb.pc_i5(P)) | tlb.pc_i6(P)) | tlb.pc_i7(P)) | tlb.pc_i8(P)) | tlb.pc_i9(P)) | tlb.pc_i11(P)) | tlb.pc_i12(P)) | tlb.pc_i14(P))))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb_tp1_impl6",
+  "file": "conjectures/extracted/tlb_pcrel-tlb_tp1_impl6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "(~(((((tlb.pc_i4(tlb.tp1.sk1) | tlb.pc_i5(tlb.tp1.sk1)) | tlb.pc_i6(tlb.tp1.sk1)) | tlb.pc_i7(tlb.tp1.sk1)) | tlb.pc_i8(tlb.tp1.sk1))) | exists C:tlb.processor. tlb.currentcpu(tlb.tp1.sk1, C))"
+ },
+ {
+  "base": "tlb_pcrel",
+  "conjecture": "tlb_tp1_impl7",
+  "file": "conjectures/extracted/tlb_pcrel-tlb_tp1_impl7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:tlb.processor. (~((((((tlb.pc_i4(tlb.tp1.sk1) | tlb.pc_i5(tlb.tp1.sk1)) | tlb.pc_i6(tlb.tp1.sk1)) | tlb.pc_i7(tlb.tp1.sk1)) | tlb.pc_i8(tlb.tp1.sk1)) & tlb.currentcpu(tlb.tp1.sk1, C))) | ((~(tlb.pc_b1(C)) & ~(tlb.todo(tlb.tp1.sk1, C))) & ~(tlb.tp1.sk1 = C)))"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj10",
+  "file": "conjectures/extracted/toy_lock_inv-conj10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall M:node. (~((held(N) & ~(N = M))) | ~(le(ep(N), ep(M))))"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj11",
+  "file": "conjectures/extracted/toy_lock_inv-conj11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall E:epoch. forall M:node. (~((held(N) & transfer(E, M))) | le(E, ep(N)))"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj12",
+  "file": "conjectures/extracted/toy_lock_inv-conj12.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall E:epoch. forall M:node. (~((transfer(E, N) & ~(le(E, ep(N))))) | ~(le(E, ep(M))))"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj13",
+  "file": "conjectures/extracted/toy_lock_inv-conj13.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall E:epoch. forall M:node. forall F:epoch. (~((transfer(E, N) & ~(le(E, ep(N))) & transfer(F, M))) | le(F, E))"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj7",
+  "file": "conjectures/extracted/toy_lock_inv-conj7.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall N1:node. forall E:epoch. (~((locked(E, N1) & locked(E, N2))) | N1 = N2)"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj8",
+  "file": "conjectures/extracted/toy_lock_inv-conj8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall N1:node. forall E:epoch. (~((transfer(E, N1) & transfer(E, N2))) | N1 = N2)"
+ },
+ {
+  "base": "toy_lock_inv",
+  "conjecture": "conj9",
+  "file": "conjectures/extracted/toy_lock_inv-conj9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall E:epoch. (~(locked(E, N)) | le(E, ep(N)))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:config. forall R2:round. forall R1:round. (~((minrelof(C, R1) & minrelof(C, R2))) | R1 = R2)"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c0",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c0.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall V2:value. forall R2:round. forall N1:node. forall N2:node. (~((decision(N1, R1, V1) & decision(N2, R2, V2))) | V1 = V2)"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c1",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall R:round. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c10",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c10.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall RMAX:round. forall N:node. forall R:round. forall V:value. (~(one_b_max_vote(N, R, RMAX, V)) | joined_round(N, R))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c11",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~(le(R2, R1)))) | left_rnd(N, R1))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c12",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c12.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:config. forall R:round. forall MINREL:round. (~((configure_round_msg(R, C) & minrelof(C, MINREL))) | (le(MINREL, R) & le(MINREL, master_minrel)))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c13",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c13.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 6,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:config. forall R:round. forall V:value. forall RR:round. forall Q:quorum. (~(((((irrelevant_msg(RR) & ~(le(RR, R))) & configure_round_msg(R, C)) & quorumin(Q, C)) & ~(exists N:node. ((member(N, Q) & left_rnd(N, R)) & ~(vote(N, R, V)))))) | exists N:node. decision(N, RR, V))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c14",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c14.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~(vote(N, none, V))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c2",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:config. forall R:round. forall C2:config. (~((configure_round_msg(R, C1) & configure_round_msg(R, C2))) | C1 = C2)"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c3",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall MINREL:round. (~(one_a(R, MINREL)) | exists C:config. (configure_round_msg(R, C) & minrelof(C, MINREL)))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c4",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~(vote(N, R, V)) | proposal(R, V))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c5",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c5.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall R2:round. forall R1:round. (~((proposal(R2, V) & le(R1, R2))) | exists C:config. configure_round_msg(R1, C))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c6",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c6.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:config. forall R2:round. forall R1:round. forall R3:round. (~(((R2 = master_minrel | (configure_round_msg(R3, C) & minrelof(C, R2))) & ~(le(R2, R1)))) | irrelevant_msg(R2))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c7",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c7.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R2:round. forall R1:round. (~((irrelevant_msg(R2) & ~(le(R2, R1)))) | exists C:config. configure_round_msg(R1, C))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c8",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 5,
+  "existentials": 3,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~(exists N:node. decision(N, R, V)) | exists C:config. exists Q:quorum. ((configure_round_msg(R, C) & quorumin(Q, C)) & forall N:node. (~(member(N, Q)) | vote(N, R, V))))"
+ },
+ {
+  "base": "vertical_paxos_epr_unverified_optimization",
+  "conjecture": "c9",
+  "file": "conjectures/extracted/vertical_paxos_epr_unverified_optimization-c9.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:config. forall V1:value. forall V2:value. forall R2:round. forall R1:round. forall Q:quorum. (~(((((~(le(R2, R1)) & proposal(R2, V2)) & ~(V1 = V2)) & configure_round_msg(R1, C)) & quorumin(Q, C))) | exists N:node. ((member(N, Q) & left_rnd(N, R1)) & ~(vote(N, R1, V1))))"
+ }
+]

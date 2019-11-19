@@ -3,9 +3,9 @@ import json, os, sys
 sys.path.append(".")
 from interpret import interpret, SemanticError
 from parse import parse, SyntaxError
-from logic import *
+from separators.logic import Formula, Exists, Forall, And, Or, Not, Relation, Equal, Term, Func, Var
 
-def count_quantifiers(f):
+def count_quantifiers(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return 1 + count_quantifiers(f.f)
     if isinstance(f, (And, Or)):
@@ -14,8 +14,9 @@ def count_quantifiers(f):
         return count_quantifiers(f.f)
     if isinstance(f, (Relation, Equal)):
         return 0
+    assert False
 
-def count_existentials(f):
+def count_existentials(f: Formula) -> int:
     if isinstance(f, (Exists)):
         return 1 + count_existentials(f.f)
     if isinstance(f, (Forall)):
@@ -26,9 +27,10 @@ def count_existentials(f):
         return count_existentials(f.f)
     if isinstance(f, (Relation, Equal)):
         return 0
+    assert False
 
 
-def max_quantifier_depth(f):
+def max_quantifier_depth(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return 1 + max_quantifier_depth(f.f)
     if isinstance(f, (And, Or)):
@@ -37,14 +39,16 @@ def max_quantifier_depth(f):
         return max_quantifier_depth(f.f)
     if isinstance(f, (Relation, Equal)):
         return 0
+    assert False
 
-def term_depth(t):
+def term_depth(t: Term) -> int:
     if isinstance(t, Var):
         return 0
     elif isinstance(t, Func):
         return 1 + max(term_depth(a) for a in t.args)
+    assert False
 
-def max_term_depth(f):
+def max_term_depth(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return max_term_depth(f.f)
     if isinstance(f, (And, Or)):
@@ -56,9 +60,10 @@ def max_term_depth(f):
             return max(term_depth(a) for a in f.args)
         else:
             return 0
+    assert False
 
 
-def main():
+def main() -> None:
     o = open("out/extracted.json", "w")
     p = 'conjectures/extracted'
     files = [os.path.join(p, f) for f in os.listdir(p)]

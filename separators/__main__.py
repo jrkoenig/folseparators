@@ -23,6 +23,7 @@ def main() -> None:
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("--separator", choices=('naive', 'v1', 'v2', 'generalized', 'hybrid'), default='naive', help="separator algorithm to use")
     parser.add_argument("--separate", action="store_true", default=False, help="only try to separate provided models")
+    parser.add_argument("--use-cvc4", action="store_true", default=False, help="Use cvc4 to generate counterexamples")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
     
