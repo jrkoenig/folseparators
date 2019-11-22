@@ -2,43 +2,59 @@ import argparse, random, json, os
 import numpy as np
 import pandas as pd
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
+
+
 import seaborn as sns
 from collections import Counter
+from typing import *
+import typing
 
-def int_bins(x):
+def int_bins(x: List[int]) -> List[float]:
     l,h = min(x),max(x)
     return [x - 0.5 for x in range(l,h+2)]
-def intdistplot(x, **kwargs):
+def intdistplot(x: Any, **kwargs: Any) -> Any:
     return sns.distplot(x, bins = int_bins(x), **kwargs)
 
 
-def main():
+def main() -> None:
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("results", type=argparse.FileType('r'))
-    parser.add_argument("--description", type=argparse.FileType('r'), default = "out/extracted.json")
-    parser.add_argument("--suffix", default = "")
-    parser.add_argument("--output", "-o", default = "out/charts")
+    parser.add_argument("--description", type=argparse.FileType('r'), default = "conjectures/benchmark.json")
+    parser.add_argument("--output", "-o", type=str, default = "out/charts")
     args = parser.parse_args()
 
+
+    try:
+        os.makedirs(args.output, exist_ok=True)
+        os.chdir(args.output)
+    except OSError as e:
+        print(e)
+        return
+
     sns.set(style="white", palette="muted", color_codes=True)
+    font = {'size':16, 'family':'serif', 'serif': ['CMU Serif']}
+    plt.rc('font', **font)
+    plt.rc('mathtext', fontset='cm')
+    plt.rc('axes', labelsize='medium')
+    plt.rc('xtick', labelsize='medium')
+    plt.rc('ytick', labelsize='medium')
+    plt.rc('legend', fontsize='medium')
+
     descs = json.load(args.description)
     desc_by_id = {}
     for d in descs:
         desc_by_id[(d['base'], d['conjecture'])] = d
-    def desc_of(r):
+    def desc_of(r: Dict) -> Dict:
         return desc_by_id[(r['base'], r['conjecture'])]
     results = json.load(args.results)
-
-    blacklist = ['tlb100', 'tlb101', 'tlb102', 'tlb103', 'tlb104', 'tlb105', 'tlb106', 'tlb107', 'tlb108', 'tlb109', 'tlb110', 'tlb111', 'tlb112', 'tlb113', 'tlb114', 'tlb115', 'tlb116', 'tlb117', 'tlb118', 'tlb119', 'tlb120', 'tlb121', 'tlb122', 'tlb123', 'tlb124', 'tlb125', 'tlb126', 'tlb127', 'tlb128', 'tlb129', 'tlb130', 'tlb131', 'tlb132', 'tlb133', 'tlb134', 'tlb135', 'tlb136', 'tlb137', 'tlb138', 'tlb139', 'tlb140', 'tlb141', 'tlb142', 'tlb143', 'tlb144', 'tlb145', 'tlb146', 'tlb147', 'tlb148', 'tlb149', 'tlb150', 'tlb151', 'tlb152', 'tlb153', 'tlb154', 'tlb155', 'tlb156', 'tlb157', 'tlb158', 'tlb159', 'tlb160', 'tlb161', 'tlb162', 'tlb163', 'tlb164', 'tlb165', 'tlb166', 'tlb167', 'tlb168', 'tlb169', 'tlb170', 'tlb171', 'tlb172', 'tlb173', 'tlb174', 'tlb175', 'tlb176', 'tlb177', 'tlb178', 'tlb179', 'tlb180', 'tlb181', 'tlb182', 'tlb183', 'tlb184', 'tlb185', 'tlb186', 'tlb187', 'tlb188', 'tlb189', 'tlb190', 'tlb191', 'tlb192', 'tlb193', 'tlb194', 'tlb195', 'tlb196', 'tlb197', 'tlb198', 'tlb199', 'tlb200', 'tlb201', 'tlb202', 'tlb203', 'tlb204', 'tlb205', 'tlb206', 'tlb207', 'tlb208', 'tlb209', 'tlb210', 'tlb211', 'tlb212', 'tlb213', 'tlb214', 'tlb215', 'tlb216', 'tlb217', 'tlb218', 'tlb219', 'tlb220', 'tlb221', 'tlb222', 'tlb223', 'tlb224', 'tlb225', 'tlb226', 'tlb227', 'tlb228', 'tlb229', 'tlb230', 'tlb231', 'tlb232', 'tlb233', 'tlb234', 'tlb235', 'tlb236', 'tlb237', 'tlb238', 'tlb239', 'tlb240', 'tlb241', 'tlb242', 'tlb243', 'tlb244', 'tlb245', 'tlb246', 'tlb247', 'tlb248', 'tlb249', 'tlb25', 'tlb250', 'tlb251', 'tlb252', 'tlb253', 'tlb254', 'tlb255', 'tlb256', 'tlb257', 'tlb258', 'tlb259', 'tlb26', 'tlb260', 'tlb261', 'tlb262', 'tlb263', 'tlb264', 'tlb265', 'tlb266', 'tlb267', 'tlb268', 'tlb269', 'tlb27', 'tlb270', 'tlb271', 'tlb272', 'tlb273', 'tlb274', 'tlb275', 'tlb276', 'tlb277', 'tlb278', 'tlb279', 'tlb28', 'tlb280', 'tlb281', 'tlb282', 'tlb283', 'tlb284', 'tlb285', 'tlb286', 'tlb287', 'tlb288', 'tlb289', 'tlb29', 'tlb290', 'tlb291', 'tlb292', 'tlb293', 'tlb294', 'tlb295', 'tlb296', 'tlb297', 'tlb298', 'tlb299', 'tlb30', 'tlb300', 'tlb31', 'tlb32', 'tlb33', 'tlb34', 'tlb35', 'tlb36', 'tlb37', 'tlb38', 'tlb39', 'tlb40', 'tlb41', 'tlb42', 'tlb43', 'tlb44', 'tlb45', 'tlb46', 'tlb47', 'tlb48', 'tlb49', 'tlb50', 'tlb51', 'tlb52', 'tlb53', 'tlb54', 'tlb55', 'tlb56', 'tlb57', 'tlb58', 'tlb59', 'tlb60', 'tlb61', 'tlb62', 'tlb63', 'tlb64', 'tlb65', 'tlb66', 'tlb67', 'tlb68', 'tlb69', 'tlb70', 'tlb71', 'tlb72', 'tlb73', 'tlb74', 'tlb75', 'tlb76', 'tlb77', 'tlb78', 'tlb79', 'tlb80', 'tlb81', 'tlb82', 'tlb83', 'tlb84', 'tlb85', 'tlb86', 'tlb87', 'tlb88', 'tlb89', 'tlb90', 'tlb91', 'tlb92', 'tlb93', 'tlb94', 'tlb95', 'tlb96', 'tlb97', 'tlb98', 'tlb99']
-    original_len = len(results)
-    print("Original problem count", len(descs))
-    print("Total results", original_len)
-    results = [r for r in results if not (r['base'] == 'tlb_pcrel' and r['conjecture'] in blacklist)]
-    print("Blacklisted", original_len-len(results))
-    print("Remaining problems", len(results))
-    print("")
+    
+    summary_file = open("summary.txt", "w")
+    def _print(*args: Any) -> None:
+        print(*args, file=summary_file)
 
     # print("Random Formula:")
     # sample = random.sample(results, 5)
@@ -49,15 +65,6 @@ def main():
     # print("There are {} protocols".format(len(set([r['base'] for r in results]))))
 
 
-    try:
-        os.makedirs(args.output, exist_ok=True)
-        os.chdir(args.output)
-    except OSError as e:
-        print(e)
-        return
-    # SUFFIX = args.suffix
-    # if SUFFIX != "" and not SUFFIX.startswith("-"):
-    #     SUFFIX = "-" + SUFFIX
 
     #intdistplot([d['quantifiers'] for d in descs], axlabel="quantifier count", kde=False).get_figure().savefig("quantifier_distribution.png")
     
@@ -71,9 +78,9 @@ def main():
 
 
     
-    s = Counter()
-    f = Counter()
-    k = Counter()
+    s: typing.Counter[str] = Counter()
+    f: typing.Counter[str] = Counter()
+    k: typing.Counter[str] = Counter()
     for r in results:
         if r['success']:
             s[r['base']] += 1
@@ -102,7 +109,8 @@ def main():
 
 
 
-    print ("Results count: ", len(results), "{}/{}/{} succ/kill/fail".format(sum(s.values()),sum(k.values()), sum(f.values())))
+    _print("Results count: ", len(results), "{}/{}/{} succ/kill/fail".format(sum(s.values()),sum(k.values()), sum(f.values())))
+    _print(f"Success rate: {sum(s.values())/len(results)*100.0:0.1f}" )
    
     # print ("\nProb Succ Killed Failed")
     # for l in labels:
@@ -130,19 +138,22 @@ def main():
     #plt.bar(range(len(labels)), list(k[l] for l in labels), color='#e44033', linewidth=0)
     plt.xticks(range(len(labels)), labels)
     plt.ylim(0,None)
+    
     plt.xlabel("Number of quantifiers in golden formula")
+    ax.tick_params(axis='y', left=True, width=0.5)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.spines['bottom'].set_visible(False)
     ax.spines['left'].set_visible(False)
+    ax.legend(['Success', 'Failure'], frameon=False)
     #fig.suptitle("Quantifier conjunct distribution with success rate")
     plt.savefig("success_by_quantifier_count.eps", bbox_inches='tight')
     plt.savefig("success_by_quantifier_count.png", bbox_inches='tight')
 
-    print("\nQuant. @ success @ killed @ failed")
+    _print("\nQuant. @ success @ killed @ failed")
     for l in labels:
-        print (l, "@", s[l],"@", k[l],"@", f[l])
-    print("\n")
+        _print (l, "@", s[l],"@", k[l],"@", f[l])
+    _print("\n")
 
     fig = plt.figure(figsize=(6,4))
     times = []
@@ -192,7 +203,7 @@ def main():
                 c_to += 1
             if r['stats']['separation_time'] > r['timeout'] - 5:
                 s_to += 1
-    print(f"counterexample timeout: {c_to}, separation timeout: {s_to}")
+    _print(f"counterexample timeout: {c_to}, separation timeout: {s_to}")
 
 
 
@@ -218,7 +229,7 @@ def main():
     m_heavy = 0
     m_light = 0
     lower_limit = 200
-    print("\nFormula with hard to infer matrices:")
+    _print("\nFormula with hard to infer matrices:")
     for r in results:
         if 'stats' in r:
             if r['stats']['separation_time'] > lower_limit:
@@ -227,8 +238,8 @@ def main():
                     print(r['success'],"\t", desc_of(r)['golden_formula'])
                 else:
                     m_light += 1
-    print(f"For examples taking > {lower_limit} sec")
-    print(f"matrix >50%: {m_heavy}, matrix <=50%: {m_light}")
+    _print(f"For examples taking > {lower_limit} sec")
+    _print(f"matrix >50%: {m_heavy}, matrix <=50%: {m_light}")
 
 
     errors = []
@@ -238,11 +249,11 @@ def main():
             gold = desc_of(r)['golden_formula']
             errors.append((qc, gold, r['base'] + "-" + r['conjecture']))
     errors.sort()
-    print("\nKilled Conjuncts:")
+    _print("\nKilled Conjuncts:")
     for (q, gold, name) in errors:
-        print(name, q, gold)
+        _print(name, q, gold)
             
-    errors = []
+    errors2 = []
     for r in results:
         if not r['killed'] and not r['success']:
             qc = desc_of(r)['quantifiers']
@@ -251,12 +262,12 @@ def main():
                 x = min(1, r['stats']['counterexample_time']/float(r['timeout']))
             else:
                 x = 0.0
-            errors.append((qc, gold, r['base'] + "-" + r['conjecture'], x, r))
-    errors.sort()
-    print("\nFailed Conjuncts(counter frac, matrix frac, quants, name, error):")
+            errors2.append((qc, gold, r['base'] + "-" + r['conjecture'], x, r))
+    errors2.sort()
+    _print("\nFailed Conjuncts(counter frac, matrix frac, quants, name, error):")
     # for (q, gold, name, x, r) in errors:
     #     print(f"{x:0.2f} {name}","@", q, "@", gold)
-    for (q, gold, name, x, r) in errors:
+    for (q, gold, name, x, r) in errors2:
         if 'stats' in r:
             c_frac = min(1, r['stats']['counterexample_time']/float(r['timeout']))
             m_frac = min(1, r['stats']['matrix_time']/max(0.001, r['stats']['separation_time']))
@@ -265,14 +276,14 @@ def main():
             c_frac = 0.0
             m_frac = 0.0
             error = "?"
-        print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}\t{r['stats']['formula_quantifiers']}")
+        _print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}\t{r['stats']['formula_quantifiers']}")
             
 
-    print("\nFailed Conjuncts(counter frac, matrix frac, quants, name, error):")
+    _print("\nFailed Conjuncts(counter frac, matrix frac, quants, name, error):")
     # for (q, gold, name, x, r) in errors:
     #     print(f"{x:0.2f} {name}","@", q, "@", gold)
-    cc = Counter()
-    for (q, gold, name, x, r) in errors:
+    cc: typing.Counter[Tuple[bool, bool]] = Counter()
+    for (q, gold, name, x, r) in errors2:
         if 'stats' in r:
             c_frac = min(1, r['stats']['counterexample_time']/float(r['timeout']))
             m_frac = min(1, r['stats']['matrix_time']/max(0.001, r['stats']['separation_time']))
@@ -285,10 +296,10 @@ def main():
         reason_m = not reason_c and  m_frac >= 0.95
         cc[(not reason_c, not reason_m)] += 1
         if not reason_c and not reason_m:
-            print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}")
-    for k,v in cc.items():
-        (counter, matrix) = k
-        print(f"{('c < 0.99' if counter else 'c >= 0.99')}, {('m < 0.95' if matrix else 'm >= 0.95')}: {v}")  
+            _print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}")
+    for kk,v in cc.items():
+        (counter, matrix) = kk
+        _print(f"{('c < 0.99' if counter else 'c >= 0.99')}, {('m < 0.95' if matrix else 'm >= 0.95')}: {v}")  
 
 
 if __name__ == "__main__":
