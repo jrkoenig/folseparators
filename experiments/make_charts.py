@@ -51,7 +51,8 @@ def main() -> None:
     def desc_of(r: Dict) -> Dict:
         return desc_by_id[(r['base'], r['conjecture'])]
     results = json.load(args.results)
-    
+    results = [r for r in results if r['base'] != 'tlb-safety']
+
     summary_file = open("summary.txt", "w")
     def _print(*args: Any) -> None:
         print(*args, file=summary_file)
@@ -76,6 +77,10 @@ def main() -> None:
     # fig.suptitle("Distribution of conjucts over protocols")
     # plt.savefig("conjunct_distribution.png")
 
+    for r in results:
+        if r['killed']: continue
+        if r['stats']['formula'] == 'false':
+            print (r['base'], r['conjecture'])
 
     
     s: typing.Counter[str] = Counter()
@@ -108,7 +113,7 @@ def main() -> None:
     # plt.savefig("success_by_protocol.png")
 
 
-
+    print("Missing", set((d['base'], d['conjecture']) for d in descs) - set((d['base'], d['conjecture']) for d in results))
     _print("Results count: ", len(results), "{}/{}/{} succ/kill/fail".format(sum(s.values()),sum(k.values()), sum(f.values())))
     _print(f"Success rate: {sum(s.values())/len(results)*100.0:0.1f}" )
    
@@ -159,7 +164,7 @@ def main() -> None:
     times = []
     for r in results:
         if r['success']:
-            times.append(r['stats']['total_time']/60.0)
+            times.append(r['stats']['total_time'])
         else:
             times.append(float('Inf'))
     times.sort()
@@ -167,33 +172,33 @@ def main() -> None:
     plt.plot([x+0.5 for x in range(len(times))], times, color='black')
     plt.yscale("log")
     plt.xlim(0,len(times))
-    plt.ylim(0.01,60)
-    plt.ylabel("Time to learn (minutes)")
+    plt.ylim(1,3600)
+    plt.ylabel("Time to learn (sec)")
     plt.xlabel("Conjecture (ordinal)")
     #fig.suptitle("Ordinal chart of time to learn conjuncts")
     plt.savefig("ordinal_learning_times.eps", bbox_inches='tight')
     plt.savefig("ordinal_learning_times.png", bbox_inches='tight')
 
-    fig = plt.figure(figsize=(6,4))
-    xs = []
-    ys = []
-    for r in results:
-        if 'stats' in r:
-            xs.append(max(0.001, r['stats']['counterexample_time']/60.0))
-            ys.append(max(0.001, r['stats']['separation_time']/60.0))
-    times.sort()
-    ax = plt.axes()
-    #ax.set_aspect('equal', 'datalim')
-    plt.scatter(xs, ys, color='black')
-    plt.yscale("log")
-    plt.ylim(0.001,10)
-    plt.xscale("log")
-    plt.xlim(0.001,10)
-    plt.ylabel("Separation")
-    plt.xlabel("Counterexample")
-    #fig.suptitle("Ordinal chart of time to learn conjuncts")
-    plt.savefig("time_scatter.eps", bbox_inches='tight')
-    plt.savefig("time_scatter.png", bbox_inches='tight')
+    # fig = plt.figure(figsize=(6,4))
+    # xs = []
+    # ys = []
+    # for r in results:
+    #     if 'stats' in r:
+    #         xs.append(max(0.001, r['stats']['counterexample_time']/60.0))
+    #         ys.append(max(0.001, r['stats']['separation_time']/60.0))
+    # times.sort()
+    # ax = plt.axes()
+    # #ax.set_aspect('equal', 'datalim')
+    # plt.scatter(xs, ys, color='black')
+    # plt.yscale("log")
+    # plt.ylim(0.001,10)
+    # plt.xscale("log")
+    # plt.xlim(0.001,10)
+    # plt.ylabel("Separation")
+    # plt.xlabel("Counterexample")
+    # #fig.suptitle("Ordinal chart of time to learn conjuncts")
+    # plt.savefig("time_scatter.eps", bbox_inches='tight')
+    # plt.savefig("time_scatter.png", bbox_inches='tight')
 
     c_to = 0
     s_to = 0
@@ -207,24 +212,24 @@ def main() -> None:
 
 
 
-    fig = plt.figure(figsize=(6,4))
-    xs = []
-    ys = []
-    for r in results:
-        if 'stats' in r:
-            xs.append(r['stats']['separation_time'])
-            ys.append(r['stats']['matrix_time']/max(0.0001,r['stats']['separation_time']))
-    times.sort()
-    ax = plt.axes()
-    #ax.set_aspect('equal', 'datalim')
-    plt.scatter(xs, ys, color='black')
-    plt.ylim(0,1)
-    #plt.xscale("log")
-    plt.ylabel("Matrix Fraction")
-    plt.xlabel("Separation Time")
-    #fig.suptitle("Ordinal chart of time to learn conjuncts")
-    plt.savefig("matrix_percentage.eps", bbox_inches='tight')
-    plt.savefig("matrix_percentage.png", bbox_inches='tight')
+    # fig = plt.figure(figsize=(6,4))
+    # xs = []
+    # ys = []
+    # for r in results:
+    #     if 'stats' in r:
+    #         xs.append(r['stats']['separation_time'])
+    #         ys.append(r['stats']['matrix_time']/max(0.0001,r['stats']['separation_time']))
+    # times.sort()
+    # ax = plt.axes()
+    # #ax.set_aspect('equal', 'datalim')
+    # plt.scatter(xs, ys, color='black')
+    # plt.ylim(0,1)
+    # #plt.xscale("log")
+    # plt.ylabel("Matrix Fraction")
+    # plt.xlabel("Separation Time")
+    # #fig.suptitle("Ordinal chart of time to learn conjuncts")
+    # plt.savefig("matrix_percentage.eps", bbox_inches='tight')
+    # plt.savefig("matrix_percentage.png", bbox_inches='tight')
 
     m_heavy = 0
     m_light = 0
