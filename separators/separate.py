@@ -247,7 +247,7 @@ class Separator(object):
                  pos: Collection[int],
                  neg: Collection[int],
                  imp: Collection[Tuple[int, int]],
-                 max_depth: int = 1000000, max_clauses: int = 10, conjuncts: int = 1,
+                 max_depth: int = 1000000, max_clauses: int = 10, max_complexity: int = 1,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         raise NotImplemented
 
@@ -278,7 +278,7 @@ class SeparatorNaive(Separator):
                  pos: Collection[int],
                  neg: Collection[int],
                  imp: Collection[Tuple[int, int]],
-                 max_depth: int = 1000000, max_clauses: int = 10, conjuncts: int = 1,
+                 max_depth: int = 1000000, max_clauses: int = 10, max_complexity: int = 1,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         self.timer = timer
         self.matrix_timer = matrix_timer
@@ -447,7 +447,7 @@ class SeparatorReductionV1(Separator):
                  pos: Collection[int],
                  neg: Collection[int],
                  imp: Collection[Tuple[int, int]],
-                 max_depth: int = 1000000, max_clauses: int = 10, conjuncts: int = 1,
+                 max_depth: int = 1000000, max_clauses: int = 10, max_complexity: int = 1,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         self.timer = timer
         self._setup_solver_for_depth()
@@ -1245,7 +1245,7 @@ class HybridSeparator(Separator):
                  imp: Collection[Tuple[int, int]],
                  max_depth: int = 0,
                  max_clauses: int = 1,
-                 max_conjuncts: int = 1,
+                 max_complexity: int = 1,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         
         constraints: List[Constraint] = [Pos(x) for x in pos]
@@ -1253,14 +1253,12 @@ class HybridSeparator(Separator):
         constraints.extend(Imp(a,b) for (a,b) in imp)
         
         assert max_clauses > 0
-        assert max_conjuncts == 1
 
         max_depths = [0]
-
         while True:
             for i in range(len(max_depths)):
                 # run clauses == i + 1 to depth max_depths[i]
-                if max_depths[i] > max_depth:
+                if max_depths[i] > max_depth or max_depths[i] + i > max_complexity:
                     continue
                 r = self._get_separator(i + 1).separate_exact(constraints, max_depths[i], timer = timer)
                 if r is not None:
@@ -1268,7 +1266,7 @@ class HybridSeparator(Separator):
                 max_depths[i] += 1
             if len(max_depths) < max_clauses:
                 max_depths.append(0)
-            if all(d > max_depth for d in max_depths):
+            if all(d > max_depth or d + i > max_complexity for i, d in enumerate(max_depths)):
                 return None
 
         # for depth in range(max_depth+1):
