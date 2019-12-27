@@ -1,11 +1,11 @@
 
-from collections import defaultdict
+from collections import defaultdict, Counter
 import itertools, copy, time, sys, re, random
 from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generator, Set, Optional, cast, Type, Collection, List, Dict, DefaultDict, Iterator, TypeVar, Any, Sequence
 
 import z3
 
-from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature
+from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars
 from .check import check, resolve_term
 from .matrix import infer_matrix, K_function_unrolling
 from .timer import Timer, UnlimitedTimer
@@ -247,7 +247,7 @@ class Separator(object):
                  pos: Collection[int],
                  neg: Collection[int],
                  imp: Collection[Tuple[int, int]],
-                 max_depth: int = 1000000, max_clauses: int = 10, max_complexity: int = 1,
+                 max_depth: int = 1000000, max_clauses: int = 10, max_complexity: int = 10,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         raise NotImplemented
 
@@ -1172,6 +1172,57 @@ def prefix_var_names(sig: Signature, prefix: Iterable[int]) -> Sequence[str]:
         ret.append(f"{var_prefix}{sort}_{n}")
     return ret
 
+def pretty_prefix_var_names(sig: Signature, pre: Iterable[int]) -> List[str]:
+    prefix = list(pre)
+    used_names = set(sig.all_names())
+    
+    def name_options(sortname: str, k: int, skip:int) -> Iterator[List[str]]:
+        def suffix(s: str) -> List[str]:
+            if k == 1:
+                return [s]
+            else:
+                return [f"{s}{i}" for i in range(1,k+1)]
+        name_parts = re.split("[^a-zA-Z]+", sortname)
+        if len(name_parts) == 0:
+            yield suffix(f"V_{sortname}")
+            yield from (suffix(f"V_{i}_{sortname}") for i in range(1, 1000000))
+            return
+        first_letter, initials = name_parts[0][0], "".join(np[0] for np in name_parts)
+        first_word, last_word = name_parts[0], name_parts[-1]
+        yield from (suffix(x) for x in [first_letter, initials, first_word, last_word])
+        yield from (suffix("V_"+x) for x in [first_letter, initials, first_word, last_word])
+        # we need skip because the generators are all incremented together when there
+        # is a collision, and if we didn't advance them differently they could always
+        # collide as they advance in lockstep
+        yield from (suffix(f"V_{i}_"+initials) for i in range(1, 1000000, skip))
+    
+    c: Counter = Counter(prefix)
+    options = dict((sort, name_options(sig.sort_names[sort].upper(), count, sort+1)) for sort, count in c.items())
+    fixed = ["" for i in prefix]
+    while len(options) > 0:
+        possible = dict((sort, next(gen)) for sort, gen in options.items())
+        # we need inv_map so that when a name collides, we can remember the first sort that needs
+        # to be advanced, and not just advance the second when we find it. Otherwise if we have
+        # quorum_a and quorum_b in the prefix, we could get vars q, qb, which wouldn't be symmetric
+        # we instead want both to become qa and qb.
+        inv_map: DefaultDict[str, List[int]] = defaultdict(list)
+        bad_sorts: Set[int] = set()
+        for sort, names in possible.items():
+            for n in names:
+                inv_map[n].append(sort)
+                if len(inv_map[n]) > 1 or n in used_names:
+                    bad_sorts.update(inv_map[n])
+        for ind, sort in enumerate(prefix):
+            if sort in possible and sort not in bad_sorts:
+                n = possible[sort].pop(0)
+                used_names.add(n)
+                fixed[ind] = n
+        options = dict((sort, gen) for (sort, gen) in options.items() if sort in bad_sorts)
+
+    assert len(fixed) == len(prefix) == len(set(fixed))
+    assert len(set(sig.all_names()).intersection(fixed)) == 0
+    return fixed
+
 def vars_of(t: Union[Term,Formula]) -> Iterator[str]:
     if isinstance(t, Var):
         yield t.var
@@ -1244,8 +1295,8 @@ class HybridSeparator(Separator):
                  neg: Collection[int],
                  imp: Collection[Tuple[int, int]],
                  max_depth: int = 0,
-                 max_clauses: int = 1,
-                 max_complexity: int = 1,
+                 max_clauses: int = 1000000,
+                 max_complexity: int = 1000000,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         
         constraints: List[Constraint] = [Pos(x) for x in pos]
@@ -1664,8 +1715,10 @@ class FixedHybridSeparator(object):
                     else:
                         prefix, matrix_list = self._local_optimize_matrix(prefix, matrix_list, constraints, timer)
                     prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
-                    fff: Formula = And([Or(cl) for cl in matrix_list])
-                    for varname, (is_forall, sort) in reversed(list(zip(prefix_vars, prefix))):
+                    pretty_vars = pretty_prefix_var_names(self._sig, (q[1] for q in prefix))
+                    mapping = dict(zip(prefix_vars, pretty_vars))
+                    fff: Formula = And([Or([rename_free_vars(a, mapping) for a in cl]) for cl in matrix_list])
+                    for varname, (is_forall, sort) in reversed(list(zip(pretty_vars, prefix))):
                         fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
                     return fff
                 
