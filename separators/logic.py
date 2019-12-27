@@ -163,6 +163,28 @@ class Relation(Formula):
     def _unpack(self) -> Tuple: return ("Relation", self.rel, self.args)
     def __hash__(self) -> int: return hash(('Relation', self.rel, tuple(map(hash, self.args))))
 
+def rename_free_vars_term(t: Term, mapping: Dict[str, str]) -> Term:
+    if isinstance(t, Var):
+        return Var(mapping.get(t.var, t.var))
+    elif isinstance(t, Func):
+        return Func(t.f, [rename_free_vars_term(a, mapping) for a in t.args])
+    else:
+        raise RuntimeError("Term is illformed")
+def rename_free_vars(f: Formula, mapping: Dict[str, str]) -> Formula:
+    if isinstance(f, And) or isinstance(f, Or):
+        return (And if isinstance(f, And) else Or)([rename_free_vars(c, mapping) for c in f.c])
+    elif isinstance(f, Not):
+        return Not(rename_free_vars(f.f, mapping))
+    elif isinstance(f, Equal):
+        return Equal(rename_free_vars_term(f.args[0], mapping), rename_free_vars_term(f.args[1], mapping))
+    elif isinstance(f, Relation):
+        return Relation(f.rel, [rename_free_vars_term(a, mapping) for a in f.args])
+    elif isinstance(f, Forall) or isinstance(f, Exists):
+        m = mapping if f.var not in mapping else dict((a,b) for a,b in mapping.items() if a != f.var)
+        return (Forall if isinstance(f, Forall) else Exists)(f.var, f.sort, rename_free_vars(f.f, m))
+    else:
+        raise RuntimeError("Formula is illformed")
+
 
 class Model(object):
     def __init__(self, sig: Signature):
