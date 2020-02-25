@@ -1,7 +1,7 @@
 
 from collections import defaultdict
 import itertools
-from typing import Optional, Set, Dict, List, Tuple, DefaultDict, Iterable
+from typing import Optional, Set, Dict, List, Tuple, DefaultDict, Iterable, Iterator
 
 reserved_names = ["", "sort", "relation", "constant", "function", "axiom", "model", "forall", "exists", "and", "or", "not", "implies", "="]
 
@@ -185,6 +185,32 @@ def rename_free_vars(f: Formula, mapping: Dict[str, str]) -> Formula:
     else:
         raise RuntimeError("Formula is illformed")
 
+def free_vars_term(t: Term) -> Iterator[str]:
+    if isinstance(t, Var):
+        yield t.var
+    elif isinstance(t, Func):
+        for a in t.args:
+            yield from free_vars_term(a)
+    else:
+        raise RuntimeError("Term is illformed")
+def free_vars(f: Formula) -> Iterator[str]:
+    if isinstance(f, And) or isinstance(f, Or):
+        for c in f.c:
+            yield from free_vars(c)
+    elif isinstance(f, Not):
+        yield from free_vars(f.f)
+    elif isinstance(f, Equal):
+        yield from free_vars_term(f.args[0])
+        yield from free_vars_term(f.args[1])
+    elif isinstance(f, Relation):
+        for a in f.args:
+            yield from free_vars_term(a)
+    elif isinstance(f, Forall) or isinstance(f, Exists):
+        for v in free_vars(f.f):
+            if v != f.var:
+                yield v
+    else:
+        raise RuntimeError("Formula is illformed")
 
 class Model(object):
     def __init__(self, sig: Signature):
