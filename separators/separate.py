@@ -5,7 +5,7 @@ from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generat
 
 import z3
 
-from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars
+from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars
 from .check import check, resolve_term
 from .matrix import infer_matrix, K_function_unrolling
 from .timer import Timer, UnlimitedTimer
@@ -1352,6 +1352,15 @@ class FixedHybridSeparator(object):
 
         self._atoms_defined: Set[Tuple[int, int, int]] = set()
 
+        self._var_presence_assertions_cache: Set[Tuple[int, ...]] = set()
+
+        self._literal_upper_bound_vars: Dict[Tuple[Tuple[int, ...], int], int] = {}
+
+        self._imp_constraint_cache: Set[Tuple[int, int]] = set()
+
+        self._limit_matrix_size: bool = False
+        self._limit_quantifier_sorts: bool = False
+
     def add_model(self, model:Model) -> int:
         l = len(self._models)
         self._models.append(model)
@@ -1396,7 +1405,12 @@ class FixedHybridSeparator(object):
                     self.solver.add(z3.Not(z3.And(E_i_dm1, E_j_d)))
             if self._logic == "universal":
                 self.solver.add(self._prefix_quant_var(conjunct, d))
-            # TODO: add other logic restrictions
+            # TODO: add other logic restrictions here
+            
+            if self._limit_quantifier_sorts:
+                # Limit to two instances of any sort
+                for sort in range(n_sorts):
+                    self.solver.add(z3.Implies(self._depth_var(0, depth), z3.PbLe([(self._prefix_sort_var(0, sort, d),1) for d in range(depth)], 2)))
         self._highest_prefix[conjunct] = max(self._highest_prefix[conjunct], depth)
 
     def _make_node(self, model_i: int, inst: List[int]) -> InstNode:
@@ -1405,9 +1419,16 @@ class FixedHybridSeparator(object):
         self._next_node_index += 1
         var = z3.Bool(f"v_{c.index}")
         d = len(c.instantiation)
+        # At the right depth, this node is exactly the FO type
         self.solver.add(z3.Implies(self._depth_var(0, d), var == self._fo_type_var(c.fo_type)))
+        # If the depth is greater, then (FO type) => node
         self.solver.add(z3.Implies(self._depth_greater_var(0, d),
                                     z3.Implies(self._fo_type_var(c.fo_type), var)))
+        # If the depth is greater, and there are no literals with deeper variables, then !(FO type) => !node
+        model = self._models[model_i]
+        sort_list = [self._sig.sort_indices[model.sorts[e]] for e in c.instantiation]
+        L_requirements = [self._var_less_var(sort, len([x for x in sort_list if x == sort])) for sort in range(len(self._sig.sort_names))]
+        self.solver.add(z3.Implies(z3.And(self._depth_greater_var(0, d), *L_requirements, z3.Not(self._fo_type_var(c.fo_type))), z3.Not(var)))
         return c
 
     def _root_var(self, model: int, conjunct: int) -> z3.ExprRef:
@@ -1437,7 +1458,43 @@ class FixedHybridSeparator(object):
                                   z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
             self._atoms_defined.add(i)
         return z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1 if polarity else 0}")
-    
+
+    def _var_less_var(self, sort:int, index: int) -> z3.ExprRef:
+        return z3.Bool(f"L_{sort}_{index}")
+
+    def _var_presence_assertions(self, sort_list: List[int]) -> None:
+        key = tuple(sort_list)
+        if key in self._var_presence_assertions_cache:
+            return
+        else:
+            self._var_presence_assertions_cache.add(key)
+        vs = prefix_var_names(self._sig, sort_list)
+        atoms = self._all_atoms(sort_list)
+        var_max: Dict[Tuple[str, int], int] = {}
+        sort_max: List[int] = [1]*len(self._sig.sort_names)
+        for v, sort in zip(vs, sort_list):
+            var_max[(v, sort)] = sort_max[sort]
+            sort_max[sort] += 1
+        # Now var_max tells us ordinal of a variable for a sort. So x_0_1 should have value 2, etc.
+        
+        def literal_vars(atms: Iterable[int]) -> Iterable[z3.ExprRef]:
+            return [self._literal_var(0, c, a, p) for c in range(self._clauses) for a in atms for p in [True, False]]
+        depth = len(sort_list)
+        assump = z3.And(self._depth_var(0, depth), *(self._prefix_sort_var(0, s, d) for d, s in enumerate(sort_list)))
+        for sort in range(len(self._sig.sort_names)):
+            atoms_by_slot: List[List[int]] = [[] for d in range(depth + 1)]
+            for atom_index in atoms:
+                max_slot = 0
+                for v in free_vars(self._atoms[atom_index]):
+                    max_slot = max(max_slot, var_max.get((v,sort), 0))
+                atoms_by_slot[max_slot].append(atom_index)
+            for d in range(depth + 1):
+                higher_atoms = [a for dd in range(d+1, depth + 1) for a in atoms_by_slot[dd]]
+                self.solver.add(z3.Implies(z3.And(assump, *(z3.Not(x) for x in literal_vars(higher_atoms))), self._var_less_var(sort, d)))
+
+        # also add constraint that there are at most 4 literals
+        if self._limit_matrix_size:
+            self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 4)))
     def _atom_id(self, a: Formula) -> int:
         if a not in self._atoms_cache:
             i = len(self._atoms)
@@ -1470,7 +1527,18 @@ class FixedHybridSeparator(object):
             self._fo_types_defined.add(fo_type)
         return z3.Bool(f"M_{fo_type}")
 
-
+    def _literal_upper_bound_var(self, prefix: List[int], bound: int) -> z3.ExprRef:
+        k = (tuple(prefix), bound)
+        if k not in self._literal_upper_bound_vars:
+            v = len(self._literal_upper_bound_vars)
+            prefix_vars = [self._prefix_sort_var(0, sort, d) for (d, sort) in enumerate(prefix)]
+            atoms = self._all_atoms(prefix)
+            literal_vars = [(self._literal_var(0, cl, a, False), 1) for cl in range(self._clauses) for a in atoms] +\
+                           [(self._literal_var(0, cl, a, True), 1) for cl in range(self._clauses) for a in atoms]
+            b = z3.PbLe(literal_vars, bound)
+            self.solver.add(z3.Implies(z3.And(z3.Bool(f"PbLe_{v}"), *prefix_vars), b))
+            self._literal_upper_bound_vars[k] = v
+        return z3.Bool(f"PbLe_{self._literal_upper_bound_vars[k]}")
 
     def _extract_cnf_formula(self, m: z3.ModelRef, conjunct: int, depth: int, clauses: int) \
                                -> Tuple[List[Tuple[bool, int]], List[List[Formula]]]:
@@ -1494,6 +1562,12 @@ class FixedHybridSeparator(object):
                 # else atom doesn't appear either positively or negatively so do nothing
         return (prefix, matrix_list)
 
+    def _imp_constraint_var(self, i: int, j:int) -> z3.ExprRef:
+        v = z3.Bool(f"Imp_{i}_{j}")
+        if (i,j) not in self._imp_constraint_cache:
+            self.solver.add(z3.Implies(v, z3.Implies(self._root_var(i, 0), self._root_var(j, 0))))
+            self._imp_constraint_cache.add((i,j))
+        return v
     def _constraint_assumptions(self, constraints: List[Constraint]) -> Iterator[z3.ExprRef]:
         for const in constraints:
             if isinstance(const, Pos):
@@ -1501,7 +1575,7 @@ class FixedHybridSeparator(object):
             if isinstance(const, Neg):
                 yield z3.Not(self._root_var(const.i, 0))
             if isinstance(const, Imp):
-                yield z3.Implies(self._root_var(const.i, 0), self._root_var(const.j, 0))
+                yield self._imp_constraint_var(const.i, const.j)
     def _prefix_assumptions(self, prefix: List[Quantifier]) -> List[z3.ExprRef]:
         return [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
                [((lambda x: x) if is_fa else z3.Not)(self._prefix_quant_var(0,d))
@@ -1632,7 +1706,6 @@ class FixedHybridSeparator(object):
                 # candidate matrix is final and remaining, which now lacks `a`
                 candidate_matrix = [f+r for f,r in zip(final_matrix, remaining_matrix)]
 
-                # todo: thread timer here
                 asmp = assumptions + self._cnf_matrix_assumptions(prefix, candidate_matrix)
                 if timer.solver_check(self.solver, *asmp) == z3.sat\
                    and self._check_formula_validity(prefix, candidate_matrix, constraints):
@@ -1652,9 +1725,6 @@ class FixedHybridSeparator(object):
                                 constraints: List[Constraint], timer: Timer) -> Tuple[List[Quantifier], List[List[Formula]]]:
         
         assumptions = [self._depth_var(0, len(prefix))] + list(self._constraint_assumptions(constraints)) + self._prefix_assumptions(prefix)  
-        atoms = self._all_atoms([q[1] for q in prefix])
-        literal_vars = [(self._literal_var(0, cl, a, False), 1) for cl in range(len(matrix)) for a in atoms] +\
-                       [(self._literal_var(0, cl, a, True), 1) for cl in range(len(matrix)) for a in atoms]
         upper = sum(len(cl) for cl in matrix)
         lower = 0
 
@@ -1663,7 +1733,7 @@ class FixedHybridSeparator(object):
             if lower == upper:
                 break
             k = (upper+lower) // 2
-            bound = z3.PbLe(literal_vars, k)
+            bound = self._literal_upper_bound_var([sort for (is_forall, sort) in prefix], k)
             print(f"Optimize checking if there is a formula of size <= {k} (lower {lower} upper {upper})")
             res = timer.solver_check(self.solver, *assumptions, bound)
             if res == z3.sat:
@@ -1674,7 +1744,7 @@ class FixedHybridSeparator(object):
                     matrix = candidate_matrix
                     upper = k
                 else:
-                    print("Matrix wasn't valid")
+                    print(f"Matrix wasn't valid; expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(len(prefix)+1))}")
                     pass # do nothing, because now the solver knows more and won't give us the same matrix
             else:
                 print("Couldn't solve problem")
@@ -1722,6 +1792,7 @@ class FixedHybridSeparator(object):
                         fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
                     return fff
                 
+                self._var_presence_assertions([x[1] for x in prefix])
                 # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
                 print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
                 # Assume the same prefix on the next iteration, to help by focusing the solver
