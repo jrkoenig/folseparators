@@ -76,6 +76,7 @@ def main() -> None:
     # plt.subplots_adjust(left=0.5)
     # fig.suptitle("Distribution of conjucts over protocols")
     # plt.savefig("conjunct_distribution.png")
+    _print(f"Total CPU hours {sum(r['stats']['total_time'] for r in results)/3600:.0f}\n")
 
     for r in results:
         if r['killed']: continue
@@ -112,8 +113,9 @@ def main() -> None:
     # fig.suptitle("Success rate by protocol (normalized)")
     # plt.savefig("success_by_protocol.png")
 
-
-    print("Missing", set((d['base'], d['conjecture']) for d in descs) - set((d['base'], d['conjecture']) for d in results))
+    missing_experiments = set((d['base'], d['conjecture']) for d in descs) - set((d['base'], d['conjecture']) for d in results)
+    if len(missing_experiments) > 0:
+        _print(f"Missing {len(missing_experiments)} results from benchmark")
     _print("Results count: ", len(results), "{}/{}/{} succ/kill/fail".format(sum(s.values()),sum(k.values()), sum(f.values())))
     _print(f"Success rate: {sum(s.values())/len(results)*100.0:0.1f}" )
    
