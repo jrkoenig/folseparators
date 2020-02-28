@@ -194,7 +194,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
             with result.counterexample_timer:
                 if not args.quiet:
                     print ("Checking formula")
-                if args.use_cvc4:
+                if not args.no_cvc4:
                     r = find_model_or_equivalence_cvc4(result.current, formula, env, s, result.counterexample_timer)
                 else:
                     r = find_model_or_equivalence(result.current, formula, env, s, result.counterexample_timer)
