@@ -1424,11 +1424,6 @@ class FixedHybridSeparator(object):
         # If the depth is greater, then (FO type) => node
         self.solver.add(z3.Implies(self._depth_greater_var(0, d),
                                     z3.Implies(self._fo_type_var(c.fo_type), var)))
-        # If the depth is greater, and there are no literals with deeper variables, then !(FO type) => !node
-        model = self._models[model_i]
-        sort_list = [self._sig.sort_indices[model.sorts[e]] for e in c.instantiation]
-        L_requirements = [self._var_less_var(sort, len([x for x in sort_list if x == sort])) for sort in range(len(self._sig.sort_names))]
-        self.solver.add(z3.Implies(z3.And(self._depth_greater_var(0, d), *L_requirements, z3.Not(self._fo_type_var(c.fo_type))), z3.Not(var)))
         return c
 
     def _root_var(self, model: int, conjunct: int) -> z3.ExprRef:
@@ -1459,42 +1454,7 @@ class FixedHybridSeparator(object):
             self._atoms_defined.add(i)
         return z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1 if polarity else 0}")
 
-    def _var_less_var(self, sort:int, index: int) -> z3.ExprRef:
-        return z3.Bool(f"L_{sort}_{index}")
 
-    def _var_presence_assertions(self, sort_list: List[int]) -> None:
-        key = tuple(sort_list)
-        if key in self._var_presence_assertions_cache:
-            return
-        else:
-            self._var_presence_assertions_cache.add(key)
-        vs = prefix_var_names(self._sig, sort_list)
-        atoms = self._all_atoms(sort_list)
-        var_max: Dict[Tuple[str, int], int] = {}
-        sort_max: List[int] = [1]*len(self._sig.sort_names)
-        for v, sort in zip(vs, sort_list):
-            var_max[(v, sort)] = sort_max[sort]
-            sort_max[sort] += 1
-        # Now var_max tells us ordinal of a variable for a sort. So x_0_1 should have value 2, etc.
-        
-        def literal_vars(atms: Iterable[int]) -> Iterable[z3.ExprRef]:
-            return [self._literal_var(0, c, a, p) for c in range(self._clauses) for a in atms for p in [True, False]]
-        depth = len(sort_list)
-        assump = z3.And(self._depth_var(0, depth), *(self._prefix_sort_var(0, s, d) for d, s in enumerate(sort_list)))
-        for sort in range(len(self._sig.sort_names)):
-            atoms_by_slot: List[List[int]] = [[] for d in range(depth + 1)]
-            for atom_index in atoms:
-                max_slot = 0
-                for v in free_vars(self._atoms[atom_index]):
-                    max_slot = max(max_slot, var_max.get((v,sort), 0))
-                atoms_by_slot[max_slot].append(atom_index)
-            for d in range(depth + 1):
-                higher_atoms = [a for dd in range(d+1, depth + 1) for a in atoms_by_slot[dd]]
-                self.solver.add(z3.Implies(z3.And(assump, *(z3.Not(x) for x in literal_vars(higher_atoms))), self._var_less_var(sort, d)))
-
-        # also add constraint that there are at most 4 literals
-        if self._limit_matrix_size:
-            self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 4)))
     def _atom_id(self, a: Formula) -> int:
         if a not in self._atoms_cache:
             i = len(self._atoms)
@@ -1792,7 +1752,6 @@ class FixedHybridSeparator(object):
                         fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
                     return fff
                 
-                self._var_presence_assertions([x[1] for x in prefix])
                 # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
                 print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
                 # Assume the same prefix on the next iteration, to help by focusing the solver
