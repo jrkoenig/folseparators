@@ -51,6 +51,7 @@ def main() -> None:
     parser.add_argument("--timeout", metavar='T', type=float, default = 10*60, help="timeout for each of learning and separation (seconds)")
     parser.add_argument("--cpus", type=int, default=os.cpu_count(), help="number of concurrent processes to run")
     parser.add_argument("--count", metavar='N', type=int, default = 1, help="number of times to learn each conjecture")
+    parser.add_argument("--single", metavar='S', type=str, default = "", help="run only this example")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="arguments to learner")
     
     args = parser.parse_args()
@@ -60,6 +61,8 @@ def main() -> None:
 
     with ThreadPoolExecutor(max_workers=args.cpus) as executor:
         for d in descs:
+            if args.single != "" and args.single != d['base'] + "-" + d['conjecture']:
+                continue
             for i in range(args.count):
                 r = {"base": d['base'],
                      "conjecture": d['conjecture'],
