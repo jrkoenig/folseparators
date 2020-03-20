@@ -212,6 +212,34 @@ def free_vars(f: Formula) -> Iterator[str]:
     else:
         raise RuntimeError("Formula is illformed")
 
+
+def symbols_term(t: Term) -> Iterator[str]:
+    if isinstance(t, Var):
+        yield t.var
+    elif isinstance(t, Func):
+        yield t.f
+        for a in t.args:
+            yield from symbols_term(a)
+    else:
+        raise RuntimeError("Term is illformed")
+def symbols(f: Formula) -> Iterator[str]:
+    if isinstance(f, And) or isinstance(f, Or):
+        for c in f.c:
+            yield from symbols(c)
+    elif isinstance(f, Not):
+        yield from symbols(f.f)
+    elif isinstance(f, Equal):
+        yield "="
+        yield from symbols_term(f.args[0])
+        yield from symbols_term(f.args[1])
+    elif isinstance(f, Relation):
+        for a in f.args:
+            yield from symbols_term(a)
+    elif isinstance(f, Forall) or isinstance(f, Exists):
+        yield from symbols(f.f)
+    else:
+        raise RuntimeError("Formula is illformed")
+
 class Model(object):
     def __init__(self, sig: Signature):
         self.label = ""

@@ -5,7 +5,7 @@ from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generat
 
 import z3
 
-from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars
+from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars, symbols
 from .check import check, resolve_term
 from .matrix import infer_matrix, K_function_unrolling
 from .timer import Timer, UnlimitedTimer
@@ -1264,15 +1264,18 @@ class InstNode(object):
         self.children: List[List[InstNode]] = [[] for i in range(n_sorts)]
         self.fo_type = fo_type
         self.model_i = model_i
+    def size(self) -> int:
+        return 1 + sum(c.size() for x in self.children for c in x)
 
 class HybridSeparator(Separator):
-    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
+    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], expt_flags: Set[str] = set()):
         self._sig = sig
         self._quiet = quiet
         self._logic = logic
         self._epr_wrt_formulas = epr_wrt_formulas
         self._separators: Dict[int, FixedHybridSeparator] = {}
         self._models: List[Model] = []
+        self._expt_flags = expt_flags
 
     def add_model(self, model:Model) -> int:
         l = len(self._models)
@@ -1285,7 +1288,8 @@ class HybridSeparator(Separator):
     def _get_separator(self, clauses: int) -> 'FixedHybridSeparator':
         assert clauses > 0
         if clauses not in self._separators:
-            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas)
+            seed = random.randint(0,2 ** 64 - 1)
+            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas, seed, self._expt_flags)
             for m in self._models:
                 h.add_model(m)
             self._separators[clauses] = h
@@ -1328,7 +1332,7 @@ class HybridSeparator(Separator):
         # return None
 
 class FixedHybridSeparator(object):
-    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None):
+    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None, expt_flags: Set[str] = set()):
         self._sig = sig
         self._clauses = clauses
         self._logic = logic
@@ -1358,8 +1362,7 @@ class FixedHybridSeparator(object):
 
         self._imp_constraint_cache: Set[Tuple[int, int]] = set()
 
-        self._limit_matrix_size: bool = False
-        self._limit_quantifier_sorts: bool = False
+        self._expt_flags = expt_flags
 
     def add_model(self, model:Model) -> int:
         l = len(self._models)
@@ -1388,6 +1391,8 @@ class FixedHybridSeparator(object):
         return z3.And(self._prefix_sort_var(conjunct, sort, depth), 
                         self._prefix_quant_var(conjunct, depth) if is_forall else
                         z3.Not(self._prefix_quant_var(conjunct, depth)))
+    def _var_less_var(self, sort: int, index: int) -> z3.ExprRef:
+        return z3.Bool(f"L_{sort}_{index}")
 
     def _prefix_var_definition(self, conjunct: int, depth: int) -> None:
         n_sorts = len(self._sig.sort_names)
@@ -1407,7 +1412,7 @@ class FixedHybridSeparator(object):
                 self.solver.add(self._prefix_quant_var(conjunct, d))
             # TODO: add other logic restrictions here
             
-            if self._limit_quantifier_sorts:
+            if 'limitquantifier2' in self._expt_flags:
                 # Limit to two instances of any sort
                 for sort in range(n_sorts):
                     self.solver.add(z3.Implies(self._depth_var(0, depth), z3.PbLe([(self._prefix_sort_var(0, sort, d),1) for d in range(depth)], 2)))
@@ -1424,6 +1429,12 @@ class FixedHybridSeparator(object):
         # If the depth is greater, then (FO type) => node
         self.solver.add(z3.Implies(self._depth_greater_var(0, d),
                                     z3.Implies(self._fo_type_var(c.fo_type), var)))
+        # If the depth is greater, and there are no literals with deeper variables, then !(FO type) => !node
+        if 'neglookahead' in self._expt_flags:
+            model = self._models[model_i]
+            sort_list = [self._sig.sort_indices[model.sorts[e]] for e in c.instantiation]
+            L_requirements = [self._var_less_var(sort, len([x for x in sort_list if x == sort])) for sort in range(len(self._sig.sort_names))]
+            self.solver.add(z3.Implies(z3.And(self._depth_greater_var(0, d), *L_requirements, z3.Not(self._fo_type_var(c.fo_type))), z3.Not(var)))
         return c
 
     def _root_var(self, model: int, conjunct: int) -> z3.ExprRef:
@@ -1452,9 +1463,52 @@ class FixedHybridSeparator(object):
             self.solver.add(z3.Or(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")),
                                   z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
             self._atoms_defined.add(i)
+            if 'nodecisionquorum' in self._expt_flags:
+                # require the atom to not be used
+                if 'decision_quorum' in symbols(self._atoms[atom]) or 'none' in symbols(self._atoms[atom]):
+                   self.solver.add(z3.And(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")),
+                                          z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
+
         return z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1 if polarity else 0}")
 
 
+    def _var_presence_assertions(self, sort_list: List[int]) -> None:
+        key = tuple(sort_list)
+        if key in self._var_presence_assertions_cache:
+            return
+        else:
+            self._var_presence_assertions_cache.add(key)
+
+        depth = len(sort_list)
+        assump = z3.And(self._depth_var(0, depth), *(self._prefix_sort_var(0, s, d) for d, s in enumerate(sort_list)))
+        def literal_vars(atms: Iterable[int]) -> Iterable[z3.ExprRef]:
+            return [self._literal_var(0, c, a, p) for c in range(self._clauses) for a in atms for p in [True, False]]
+        atoms = self._all_atoms(sort_list)
+            
+        if 'neglookahead' in self._expt_flags:
+            vs = prefix_var_names(self._sig, sort_list)
+            atoms = self._all_atoms(sort_list)
+            var_max: Dict[Tuple[str, int], int] = {}
+            sort_max: List[int] = [1]*len(self._sig.sort_names)
+            for v, sort in zip(vs, sort_list):
+                var_max[(v, sort)] = sort_max[sort]
+                sort_max[sort] += 1
+            # Now var_max tells us ordinal of a variable for a sort. So x_0_1 should have value 2, etc.
+            
+            for sort in range(len(self._sig.sort_names)):
+                atoms_by_slot: List[List[int]] = [[] for d in range(depth + 1)]
+                for atom_index in atoms:
+                    max_slot = 0
+                    for v in free_vars(self._atoms[atom_index]):
+                        max_slot = max(max_slot, var_max.get((v,sort), 0))
+                    atoms_by_slot[max_slot].append(atom_index)
+                for d in range(depth + 1):
+                    higher_atoms = [a for dd in range(d+1, depth + 1) for a in atoms_by_slot[dd]]
+                    self.solver.add(z3.Implies(z3.And(assump, *(z3.Not(x) for x in literal_vars(higher_atoms))), self._var_less_var(sort, d)))
+
+        # also add constraint that there are at most 4 literals
+        if 'matrixsize4' in self._expt_flags:
+            self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 4)))
     def _atom_id(self, a: Formula) -> int:
         if a not in self._atoms_cache:
             i = len(self._atoms)
@@ -1637,17 +1691,32 @@ class FixedHybridSeparator(object):
                 if not root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[(c.i, 0)], True)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[(c.i, 0)].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded + in {c.i}, {s}/{max}")
                     return False
             elif isinstance(c, Neg):
                 if root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[(c.i,0)], False)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[(c.i, 0)].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded - in {c.i}, {s}/{max}")
                     return False
             elif isinstance(c, Imp):
                 if root_node_value(c.i) and not root_node_value(c.j):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[(c.i,0)], False)
                     expand_to_prove(self._node_roots[(c.j,0)], True)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[(c.i, 0)].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded x-> in {c.i}, {s}/{max}")
+                        s = self._node_roots[(c.j, 0)].size()
+                        max = sum(len(self._models[c.j].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded ->x in {c.j}, {s}/{max}")
                     return False
         return True
 
@@ -1724,6 +1793,8 @@ class FixedHybridSeparator(object):
         prefix_assumptions: List[z3.ExprRef] = []
 
         print(f"Separating depth {depth} clauses {self._clauses}")
+        if 'showconstraints' in self._expt_flags:
+            s = ', '.join([(f"+{c.i}" if isinstance(c, Pos) else f"-{c.i}" if isinstance(c, Neg) else f"{c.i}->{c.j}" if isinstance(c, Imp) else '') for c in constraints])
         while True:
             res = timer.solver_check(self.solver, *(assumptions + prefix_assumptions))
             if res == z3.unsat:
@@ -1752,6 +1823,7 @@ class FixedHybridSeparator(object):
                         fff = (Forall if is_forall else Exists)(varname, self._sig.sort_names[sort], fff) 
                     return fff
                 
+                self._var_presence_assertions([q[1] for q in prefix])
                 # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
                 print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
                 # Assume the same prefix on the next iteration, to help by focusing the solver
@@ -1760,3 +1832,55 @@ class FixedHybridSeparator(object):
                 print(self.solver)
                 assert False # z3 should always return SAT/UNSAT on propositional formula
         
+def _decompose(f: Formula) -> Tuple[List[Tuple[bool, str, str]], List[List[Formula]]]:
+    prefix: List[Tuple[bool, str, str]] = []
+    while isinstance(f, (Forall, Exists)):
+        is_forall = isinstance(f, Forall)
+        prefix.append((is_forall, f.sort, f.var))
+        f = f.f
+    clauses: List[List[Formula]] = []
+    if isinstance(f, And):
+        for c in f.c:
+            if isinstance(c, Or):
+                clauses.append(c.c)
+            else:
+                clauses.append([c])
+    elif isinstance(f, Or):
+        clauses.append(f.c)
+    else:
+        clauses.append([f])
+    return prefix, clauses
+
+def successor_formula(s: Signature, f: Formula) -> Iterable[Formula]:
+    prefix, clauses = _decompose(f)
+
+    def with_prefix(matrix: Formula) -> Formula:
+        f = matrix
+        for (is_forall, sort, var) in reversed(prefix):
+            f = (Forall if is_forall else Exists)(var, sort, f)
+        return f
+
+    atoms = atoms_of(s, [(var, sort) for (is_forall, sort, var) in prefix])
+
+    for atom in atoms:
+        for clause_ind in range(len(clauses)):
+            if atom in clauses[clause_ind] or Not(atom) in clauses[clause_ind]:
+                continue
+            new_clauses_p = And([Or(cl if i != clause_ind else cl + [atom]) for i, cl in enumerate(clauses)])
+            new_clauses_n = And([Or(cl if i != clause_ind else cl + [Not(atom)]) for i, cl in enumerate(clauses)])
+            yield with_prefix(new_clauses_p)
+            yield with_prefix(new_clauses_n)
+            
+def predecessor_formula(s: Signature, f: Formula) -> Iterable[Formula]:
+    prefix, clauses = _decompose(f)
+    
+    def with_prefix(matrix: Formula) -> Formula:
+        f = matrix
+        for (is_forall, sort, var) in reversed(prefix):
+            f = (Forall if is_forall else Exists)(var, sort, f)
+        return f
+    
+    for clause_ind in range(len(clauses)):
+        for literal_ind in range(len(clauses[clause_ind])):
+            new_clauses = And([Or(cl if i != clause_ind else cl[:literal_ind] + cl[literal_ind+1:]) for i, cl in enumerate(clauses)])
+            yield with_prefix(new_clauses)
