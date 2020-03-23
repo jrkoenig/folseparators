@@ -69,6 +69,8 @@ class Term(object):
 class Var(Term):
     def __init__(self, v: str):
         self.var = v
+    def __str__(self) -> str:
+        return self.var
     def __repr__(self) -> str:
         return self.var
     def _unpack(self) -> Tuple: return ('0Var', self.var) # extra zero so vars before funcs
@@ -79,8 +81,10 @@ class Func(Term):
     def __init__(self, f: str, args: List[Term]):
         self.f = f
         self.args = args
+    def __str__(self) -> str:
+        return self.f + "(" + ", ".join(map(str, self.args)) + ")"
     def __repr__(self) -> str:
-        return self.f + "(" + ", ".join(map(repr, self.args)) + ")"
+        return "(" + self.f + " " + " ".join(map(repr, self.args)) + ")"
     def _unpack(self) -> Tuple: return ('1Func', self.f, self.args)
     def __hash__(self) -> int: return hash(('1Func', self.f, tuple(map(hash, self.args))))
 
@@ -98,34 +102,40 @@ class Formula(object):
 class And(Formula):
     def __init__(self, conjuncts: List[Formula]):
         self.c = conjuncts
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if len(self.c) == 0:
             return "true"
         if len(self.c) == 1:
-            return repr(self.c[0])
-        return "(" + " & ".join(map(repr, self.c)) + ")"
+            return str(self.c[0])
+        return "(" + " & ".join(map(str, self.c)) + ")"
+    def __repr__(self) -> str:
+        return "(and " + " ".join(map(repr, self.c)) + ")"
     def _unpack(self) -> Tuple: return ("And", self.c)
 
 class Or(Formula):
     def __init__(self, disjuncts: List[Formula]):
         self.c = disjuncts
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if len(self.c) == 0:
             return "false"
         if len(self.c) == 1:
-            return repr(self.c[0])
-        return "(" + " | ".join(map(repr, self.c)) + ")"
+            return str(self.c[0])
+        return "(" + " | ".join(map(str, self.c)) + ")"
+    def __repr__(self) -> str:
+        return "(or " + " ".join(map(repr, self.c)) + ")"
     def _unpack(self) -> Tuple: return ("Or", self.c)
 
 class Not(Formula):
     def __init__(self, formula: Formula):
         self.f = formula
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         if isinstance(self.f, (Relation, Var)):
-            return "~" + repr(self.f)
+            return "~" + str(self.f)
         if isinstance(self.f, Equal):
-            return repr(self.f.args[0]) + " ~= " + repr(self.f.args[1])
-        return "~(" + repr(self.f) + ")"
+            return str(self.f.args[0]) + " ~= " + str(self.f.args[1])
+        return "~(" + str(self.f) + ")"
+    def __repr__(self) -> str:
+        return f"(not {repr(self.f)})"
     def _unpack(self) -> Tuple: return ("Not", self.f)
 
 class Exists(Formula):
@@ -133,8 +143,10 @@ class Exists(Formula):
         self.var = var
         self.sort = sort
         self.f = formula
+    def __str__(self) -> str:
+        return "exists "+self.var+":"+self.sort+". " + str(self.f)
     def __repr__(self) -> str:
-        return "exists "+self.var+":"+self.sort+". " + repr(self.f)
+        return f"(exists {self.var} {self.sort} {repr(self.f)})"
     def _unpack(self) -> Tuple: return ("Exists", self.var, self.sort, self.f)
 
 class Forall(Formula):
@@ -142,15 +154,19 @@ class Forall(Formula):
         self.var = var
         self.sort = sort
         self.f = formula
+    def __str__(self) -> str:
+        return "forall "+self.var+":"+self.sort+". " + str(self.f)
     def __repr__(self) -> str:
-        return "forall "+self.var+":"+self.sort+". " + repr(self.f)
+        return f"(forall {self.var} {self.sort} {repr(self.f)})"
     def _unpack(self) -> Tuple: return ("Forall", self.var, self.sort, self.f)
 
 class Equal(Formula):
     def __init__(self, a: Term, b: Term):
         self.args = [a,b]
+    def __str__(self) -> str:
+        return " = ".join(map(str, self.args))
     def __repr__(self) -> str:
-        return " = ".join(map(repr, self.args))
+        return f"(= {repr(self.args[0])} {repr(self.args[1])})"
     def _unpack(self) -> Tuple: return ("Equal", self.args)
     def __hash__(self) -> int: return hash(('Equal', tuple(map(hash, self.args))))
 
@@ -158,8 +174,10 @@ class Relation(Formula):
     def __init__(self, r:str, args: List[Term]):
         self.rel = r
         self.args = args
+    def __str__(self) -> str:
+        return self.rel + "(" + ", ".join(map(str, self.args)) + ")"
     def __repr__(self) -> str:
-        return self.rel + "(" + ", ".join(map(repr, self.args)) + ")"
+        return f"({self.rel} {' '.join(map(repr, self.args))})"
     def _unpack(self) -> Tuple: return ("Relation", self.rel, self.args)
     def __hash__(self) -> int: return hash(('Relation', self.rel, tuple(map(hash, self.args))))
 
