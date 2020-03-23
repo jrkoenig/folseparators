@@ -1,0 +1,13 @@
+; File: examples/fol/firewall.pyv
+
+; Sig
+(sort node)
+(relation allowed_in node)
+(relation internal node)
+(relation sent node node)
+; End sig
+
+; Axioms
+
+; Conjecture c1
+(conjecture (forall D node (or (not (allowed_in D)) (exists I node (and (internal I) (sent I D))))))

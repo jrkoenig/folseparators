@@ -1,0 +1,16 @@
+; File: examples/fol/client_server_ae.pyv
+
+; Sig
+(sort node)
+(sort request)
+(sort response)
+(relation match request response)
+(relation request_sent node request)
+(relation response_received node response)
+(relation response_sent node response)
+; End sig
+
+; Axioms
+
+; Conjecture c0
+(conjecture (forall N node (forall P response (or (not (response_received N P)) (exists R request (and (request_sent N R) (match R P)))))))

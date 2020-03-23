@@ -1,0 +1,19 @@
+; File: examples/fol/consensus_forall_without_decide.pyv
+
+; Sig
+(sort node)
+(sort quorum)
+(constant voting_quorum quorum)
+(relation leader node)
+(relation member node quorum)
+(relation vote_msg node node)
+(relation vote_request_msg node node)
+(relation voted node)
+(relation votes node node)
+; End sig
+
+; Axioms
+(axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+; Conjecture c1
+(conjecture (forall N node (forall N1 node (or (not (votes N N1)) (vote_msg N1 N)))))

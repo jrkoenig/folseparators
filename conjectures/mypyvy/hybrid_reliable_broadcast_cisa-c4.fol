@@ -1,0 +1,35 @@
+; File: examples/fol/hybrid_reliable_broadcast_cisa.pyv
+
+; Sig
+(sort node)
+(sort quorum_a)
+(sort quorum_b)
+(relation accept node)
+(relation correct node)
+(relation member_a node quorum_a)
+(relation member_b node quorum_b)
+(relation member_fa node)
+(relation member_fc node)
+(relation member_fi node)
+(relation member_fs node)
+(relation obedient node)
+(relation rcv_init node)
+(relation rcv_msg node node)
+(relation sent_msg node node)
+(relation sent_msg_proj node)
+(relation symmetric node)
+; End sig
+
+; Axioms
+(axiom (exists B quorum_b (forall N node (or (not (member_b N B)) (and (not (member_fa N)) (not (member_fc N)) (not (member_fs N)) (not (member_fi N)))))))
+(axiom (forall A_BP quorum_a (exists N node (and (member_a N A_BP) (not (member_fa N)) (not (member_fs N))))))
+(axiom (forall B_CF quorum_b (exists A quorum_a (forall N node (or (not (member_a N A)) (and (member_b N B_CF) (not (member_fa N)) (not (member_fi N))))))))
+(axiom (forall N node (not (and (member_fc N) (member_fi N)))))
+(axiom (forall N node (not (and (member_fc N) (member_fs N)))))
+(axiom (forall N node (not (and (member_fc N) (member_fa N)))))
+(axiom (forall N node (not (and (member_fi N) (member_fs N)))))
+(axiom (forall N node (not (and (member_fi N) (member_fa N)))))
+(axiom (forall N node (not (and (member_fs N) (member_fa N)))))
+
+; Conjecture c4
+(conjecture (forall N1 node (forall N2 node (or (not (and (obedient N1) (sent_msg N1 N2) (not (rcv_init N1)))) (exists A quorum_a (forall M node (or (not (member_a M A)) (sent_msg_proj M))))))))

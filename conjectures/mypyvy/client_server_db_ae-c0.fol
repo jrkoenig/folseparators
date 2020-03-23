@@ -1,0 +1,20 @@
+; File: examples/fol/client_server_db_ae.pyv
+
+; Sig
+(sort db_request_id)
+(sort node)
+(sort request)
+(sort response)
+(relation db_request_sent db_request_id request)
+(relation db_response_sent db_request_id response)
+(relation match request response)
+(relation request_sent node request)
+(relation response_received node response)
+(relation response_sent node response)
+(relation t db_request_id node)
+; End sig
+
+; Axioms
+
+; Conjecture c0
+(conjecture (forall N node (forall P response (or (not (response_received N P)) (exists R request (and (request_sent N R) (match R P)))))))

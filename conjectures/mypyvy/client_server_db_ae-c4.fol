@@ -1,0 +1,20 @@
+; File: examples/fol/client_server_db_ae.pyv
+
+; Sig
+(sort db_request_id)
+(sort node)
+(sort request)
+(sort response)
+(relation db_request_sent db_request_id request)
+(relation db_response_sent db_request_id response)
+(relation match request response)
+(relation request_sent node request)
+(relation response_received node response)
+(relation response_sent node response)
+(relation t db_request_id node)
+; End sig
+
+; Axioms
+
+; Conjecture c4
+(conjecture (forall I db_request_id (forall N1 node (forall N2 node (or (not (and (t I N1) (t I N2))) (= N1 N2))))))

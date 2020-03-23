@@ -1,0 +1,15 @@
+; File: examples/fol/sharded-kv-no-lost-keys.pyv
+
+; Sig
+(sort key)
+(sort node)
+(sort value)
+(relation owner node key)
+(relation table node key value)
+(relation transfer_msg node key value)
+; End sig
+
+; Axioms
+
+; Conjecture c1
+(conjecture (forall K key (or (exists N node (owner N K)) (exists N node (exists V value (transfer_msg N K V))))))

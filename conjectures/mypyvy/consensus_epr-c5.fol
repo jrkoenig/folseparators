@@ -1,0 +1,20 @@
+; File: examples/fol/consensus_epr.pyv
+
+; Sig
+(sort node)
+(sort quorum)
+(sort value)
+(relation decided node value)
+(relation leader node)
+(relation member node quorum)
+(relation vote_msg node node)
+(relation vote_request_msg node node)
+(relation voted node)
+(relation votes node node)
+; End sig
+
+; Axioms
+(axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+; Conjecture c5
+(conjecture (exists Q quorum (forall N node (forall M node (or (not (and (leader N) (member M Q))) (votes N M))))))
