@@ -5,19 +5,16 @@
 (sort quorum_a)
 (sort quorum_b)
 (relation accept node)
-(relation correct node)
 (relation member_a node quorum_a)
 (relation member_b node quorum_b)
 (relation member_fa node)
 (relation member_fc node)
 (relation member_fi node)
 (relation member_fs node)
-(relation obedient node)
 (relation rcv_init node)
 (relation rcv_msg node node)
 (relation sent_msg node node)
 (relation sent_msg_proj node)
-(relation symmetric node)
 ; End sig
 
 ; Axioms
@@ -32,4 +29,4 @@
 (axiom (forall N node (not (and (member_fs N) (member_fa N)))))
 
 ; Conjecture c6
-(conjecture (or (not (exists A quorum_a (forall M node (or (not (and (member_a M A) (obedient M))) (sent_msg_proj M))))) (exists N node (and (obedient N) (rcv_init N)))))
+(conjecture (or (not (exists A quorum_a (forall M node (or (not (and (member_a M A) (not (member_fs M)) (not (member_fa M)))) (sent_msg_proj M))))) (exists N node (and (not (member_fs N)) (not (member_fa N)) (rcv_init N)))))

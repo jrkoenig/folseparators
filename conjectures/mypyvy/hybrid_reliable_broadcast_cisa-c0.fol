@@ -5,19 +5,16 @@
 (sort quorum_a)
 (sort quorum_b)
 (relation accept node)
-(relation correct node)
 (relation member_a node quorum_a)
 (relation member_b node quorum_b)
 (relation member_fa node)
 (relation member_fc node)
 (relation member_fi node)
 (relation member_fs node)
-(relation obedient node)
 (relation rcv_init node)
 (relation rcv_msg node node)
 (relation sent_msg node node)
 (relation sent_msg_proj node)
-(relation symmetric node)
 ; End sig
 
 ; Axioms

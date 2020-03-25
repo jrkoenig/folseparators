@@ -1,0 +1,27 @@
+; File: examples/fol/paxos_epr.pyv
+
+; Sig
+(sort node)
+(sort quorum)
+(sort round)
+(sort value)
+(constant none round)
+(relation decision round value)
+(relation le round round)
+(relation left_round node round)
+(relation member node quorum)
+(relation one_a round)
+(relation one_b node round)
+(relation proposal round value)
+(relation vote node round value)
+; End sig
+
+; Axioms
+(axiom (forall X round (le X X)))
+(axiom (forall X round (forall Y round (forall Z round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+(axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+; Conjecture c2
+(conjecture (forall N node (forall R round (forall V value (or (not (vote N R V)) (proposal R V))))))

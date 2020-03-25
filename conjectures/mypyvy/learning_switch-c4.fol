@@ -9,4 +9,4 @@
 ; Axioms
 
 ; Conjecture c4
-(conjecture (forall PS node (forall PD node (forall S node (forall D node (or (not (and (pending PS PD S D) (not (= PS S)))) (exists W node (and (table PS S W) (not (= W S))))))))))
+(conjecture (forall PS node (forall PD node (forall S node (forall D node (or (not (and (pending PS PD S D) (not (= PS S)))) (table PS S PS)))))))
