@@ -65,4 +65,4 @@
 (axiom (forall I index (forall T term (not (term_at log0 I T)))))
 
 ; Conjecture choosable_AER_current_log
-(conjecture (forall T1 term (forall I index (forall N node (or (not (and (exists Q quorum (forall N node (or (not (member N Q)) (or (append_reply_msg N T1 I T1) (not (left_term N T1)))))) (append_reply_msg N T1 I T1))) (term_at (current_log N) I T1))))))
+(conjecture (forall T1 term (forall I index (forall N node (or (not (and (exists Q quorum (forall N1 node (or (not (member N1 Q)) (or (append_reply_msg N1 T1 I T1) (not (left_term N1 T1)))))) (append_reply_msg N T1 I T1))) (term_at (current_log N) I T1))))))

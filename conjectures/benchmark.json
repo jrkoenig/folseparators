@@ -2521,6 +2521,16 @@
  },
  {
   "base": "raft",
+  "conjecture": "choosable_AER_current_log",
+  "file": "conjectures/mypyvy/raft-choosable_AER_current_log.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "forall T1:term. forall I:index. forall N:node. (~((exists Q:quorum. forall N1:node. (~member(N1, Q) | (append_reply_msg(N1, T1, I, T1) | ~left_term(N1, T1))) & append_reply_msg(N, T1, I, T1))) | term_at(current_log(N), I, T1))"
+ },
+ {
+  "base": "raft",
   "conjecture": "choosable_future_term_log",
   "file": "conjectures/mypyvy/raft-choosable_future_term_log.fol",
   "quantifiers": 5,
@@ -2528,6 +2538,16 @@
   "existentials": 1,
   "max_term_depth": 1,
   "golden_formula": "forall T1:term. forall I:index. forall T2:term. (~((term_at(term_log(T1), I, T1) & exists Q:quorum. forall N:node. (~member(N, Q) | (append_reply_msg(N, T1, I, T1) | ~left_term(N, T1))) & started(T2) & term_le(T1, T2))) | term_at(term_log(T2), I, T1))"
+ },
+ {
+  "base": "raft",
+  "conjecture": "choosable_vote_msg",
+  "file": "conjectures/mypyvy/raft-choosable_vote_msg.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "forall T1:term. forall I:index. forall N:node. forall C:node. forall T2:term. (~((exists Q:quorum. forall N1:node. (~member(N1, Q) | (append_reply_msg(N1, T1, I, T1) | ~left_term(N1, T1))) & append_reply_msg(N, T1, I, T1) & vote_msg(C, T2, N) & ~term_le(T2, T1) & ~started(T2) & ~left_term(C, T2))) | term_at(current_log(C), I, T1))"
  },
  {
   "base": "raft",
