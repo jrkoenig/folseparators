@@ -1,4 +1,4 @@
-; File: examples/fol/consensus_forall_without_decide.pyv
+; File: examples/fol/consensus_wo_decide.pyv
 
 ; Sig
 (sort node)
@@ -15,5 +15,5 @@
 ; Axioms
 (axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
 
-; Conjecture c4
-(conjecture (forall N node (forall N1 node (or (not (and (leader N) (member N1 voting_quorum))) (votes N N1)))))
+; Conjecture c0
+(conjecture (forall N1 node (forall N2 node (or (not (and (leader N1) (leader N2))) (= N1 N2)))))
