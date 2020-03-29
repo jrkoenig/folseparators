@@ -1187,6 +1187,7 @@ def pretty_prefix_var_names(sig: Signature, pre: Iterable[int]) -> List[str]:
             yield suffix(f"V_{sortname}")
             yield from (suffix(f"V_{i}_{sortname}") for i in range(1, 1000000))
             return
+        name_parts = [np for np in name_parts if np != '']
         first_letter, initials = name_parts[0][0], "".join(np[0] for np in name_parts)
         first_word, last_word = name_parts[0], name_parts[-1]
         yield from (suffix(x) for x in [first_letter, initials, first_word, last_word])
