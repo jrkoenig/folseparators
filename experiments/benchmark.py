@@ -62,8 +62,7 @@ def max_term_depth(f: Formula) -> int:
     assert False
 
 ivy_whitelist = ['alternating_bit_protocol', 'byz_paxos', 'fast_paxos', 'fast_paxos_epr', 'flexible_paxos_epr', 
-                 'multi_paxos_epr', 'paxos_epr', 'stoppable_paxos_epr', 'lockserv',
-                 'vertical_paxos_epr_unverified_optimization']
+                 'multi_paxos_epr', 'stoppable_paxos_epr', 'vertical_paxos_epr_unverified_optimization']
 
 tlb_pcrel_blacklist = ['tlb100', 'tlb101', 'tlb102', 'tlb103', 'tlb104', 'tlb105', 'tlb106', 'tlb107', 'tlb108',
                        'tlb109', 'tlb110', 'tlb111', 'tlb112', 'tlb113', 'tlb114', 'tlb115', 'tlb116', 'tlb117',
