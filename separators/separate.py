@@ -26,7 +26,9 @@ def collapse(model: Model, sig: Signature, assignment: Iterable[int]) -> str:
     rels = []
 
     for const in sorted(model.constants.keys()):
-        consts.append(get_element(model.constants[const]))
+        c = model.constants[const]
+        assert c is not None
+        consts.append(get_element(c))
 
     for e in assignment:
         consts.append(get_element(e))
@@ -44,11 +46,11 @@ def collapse(model: Model, sig: Signature, assignment: Iterable[int]) -> str:
                 funcs.append(get_element(f_repr[t]))
 
     for rel in sorted(model.relations.keys()):
-        tuples = model.relations[rel]
+        interp = model.relations[rel]
         collapsed_tuples = []
-        for t in tuples:
-            if all([x in mapping for x in t]):
-                collapsed_tuples.append(tuple([mapping[x] for x in t]))
+        for t, val in interp.items():
+            if all(x in mapping for x in t) and val:
+                collapsed_tuples.append(tuple(mapping[x] for x in t))
         collapsed_tuples.sort()
         rels.append(collapsed_tuples)
     return repr((consts, funcs, rels, sorts))
@@ -1302,7 +1304,6 @@ class HybridSeparator(Separator):
                  max_clauses: int = 1000000,
                  max_complexity: int = 1000000,
                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
-        
         constraints: List[Constraint] = [Pos(x) for x in pos]
         constraints.extend(Neg(y) for y in neg)
         constraints.extend(Imp(a,b) for (a,b) in imp)

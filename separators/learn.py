@@ -1,11 +1,11 @@
 
-import itertools, random, json, time, sys, argparse
+import itertools, random, json, time, sys, argparse, copy
 from collections import defaultdict
 import z3
 
 from .interpret import interpret, FOLFile
 from .parse import parse
-from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func
+from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
 from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, GeneralizedSeparator, HybridSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
@@ -15,8 +15,8 @@ from typing import *
 sorts_to_z3: Dict[str, z3.SortRef] = {}
 z3_rel_func: Dict[str, z3.FuncDeclRef] = {}
 
-def toZ3(f: Union[Formula, Term], env: Environment) -> z3.ExprRef:
-    def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ3(f, env)
+def toZ3(f: Union[Formula, Term], env: Environment, sorts: Dict[str, z3.SortRef] = sorts_to_z3, rel_funcs: Dict[str, z3.FuncDeclRef] = z3_rel_func) -> z3.ExprRef:
+    def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ3(f, env, sorts, rel_funcs)
     if isinstance(f, And):
         if len(f.c) == 0:
             return z3.BoolVal(True)
@@ -27,21 +27,57 @@ def toZ3(f: Union[Formula, Term], env: Environment) -> z3.ExprRef:
         return z3.Or(*[R(x) for x in f.c])
     elif isinstance(f, Not):
         return z3.Not(R(f.f))
+    elif isinstance(f, Iff):
+        return R(f.c[0]) == R(f.c[1])
     elif isinstance(f, Relation):
-        return z3_rel_func[f.rel](*[R(x) for x in f.args])
+        return rel_funcs[f.rel](*[R(x) for x in f.args])
     elif isinstance(f, Func):
-        return z3_rel_func[f.f](*[R(x) for x in f.args])
+        return rel_funcs[f.f](*[R(x) for x in f.args])
     elif isinstance(f, Equal):
         return R(f.args[0]) == R(f.args[1])
     elif isinstance(f, Var):
         v = env.lookup_var(f.var)
         if v is None: raise RuntimeError("Cannot convert invalid formula to z3")
-        return z3.Const(f.var, sorts_to_z3[v])
+        return z3.Const(f.var, sorts[v])
     elif isinstance(f, Forall) or isinstance(f, Exists):
         env.bind(f.var, f.sort)
-        sub_f = toZ3(f.f, env)
+        sub_f = R(f.f)
         env.pop()
-        bv = z3.Const(f.var, sorts_to_z3[f.sort])
+        bv = z3.Const(f.var, sorts[f.sort])
+        return z3.ForAll(bv, sub_f) if isinstance(f, Forall) else z3.Exists(bv, sub_f)
+    else:
+        print ("Can't translate", f)
+        assert False
+
+def toZ32(f: Union[Formula, Term], env: Environment, sorts: Dict[str, z3.SortRef], rel_funcs: Dict[str, z3.FuncDeclRef], ctx: z3.Context) -> z3.ExprRef:
+    def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ32(f, env, sorts, rel_funcs, ctx)
+    if isinstance(f, And):
+        if len(f.c) == 0:
+            return z3.BoolVal(True, ctx)
+        return z3.And(*[R(x) for x in f.c], ctx)
+    elif isinstance(f, Or):
+        if len(f.c) == 0:
+            return z3.BoolVal(False)
+        return z3.Or(*[R(x) for x in f.c], ctx)
+    elif isinstance(f, Not):
+        return z3.Not(R(f.f), ctx)
+    elif isinstance(f, Iff):
+        return R(f.c[0]) == R(f.c[1])
+    elif isinstance(f, Relation):
+        return rel_funcs[f.rel](*[R(x) for x in f.args])
+    elif isinstance(f, Func):
+        return rel_funcs[f.f](*[R(x) for x in f.args])
+    elif isinstance(f, Equal):
+        return R(f.args[0]) == R(f.args[1])
+    elif isinstance(f, Var):
+        v = env.lookup_var(f.var)
+        if v is None: raise RuntimeError("Cannot convert invalid formula to z3")
+        return z3.Const(f.var, sorts[v])
+    elif isinstance(f, Forall) or isinstance(f, Exists):
+        env.bind(f.var, f.sort)
+        sub_f = R(f.f)
+        env.pop()
+        bv = z3.Const(f.var, sorts[f.sort])
         return z3.ForAll(bv, sub_f) if isinstance(f, Forall) else z3.Exists(bv, sub_f)
     else:
         print ("Can't translate", f)
@@ -65,14 +101,327 @@ def extract_model(m: z3.ModelRef, sig: Signature, label: str = "") -> Model:
         univs = [m.get_universe(sorts_to_z3[s]) for s in sorts]
         for t in itertools.product(*univs):
             ev = m.eval(z3_rel_func[rel](*t), model_completion = True)
-            if ev:
-                M.add_relation(rel, [str(x) for x in t])
+            M.add_relation(rel, [str(x) for x in t], True if ev else False)
     for func, (sorts, _) in sorted(sig.functions.items()):
         univs = [m.get_universe(sorts_to_z3[s]) for s in sorts]
         for t in itertools.product(*univs):
             ev = m.eval(z3_rel_func[func](*t), model_completion = True)
             M.add_function(func, [str(x) for x in t], str(ev))
+    assert model_is_complete_wrt_sig(M, sig)
     return M
+
+
+def expand_completions(M: Model) -> Iterable[Model]:
+    for c, e in M.constants.items():
+        if e is None:
+            for e_i in M.universe(M.sig.constants[c]):
+                Mp = M.copy()
+                Mp.add_constant(c, e_i)
+                yield from expand_completions(Mp)
+            return
+    for r, interp in M.relations.items():
+        sorts = M.sig.relations[r]
+        for t in itertools.product(*[M.elems_of_sort[sort] for sort in sorts]):
+            if t not in interp:
+                for truth in [True, False]:
+                    Mp = M.copy()
+                    Mp.add_relation(r, [M.names[x] for x in t], truth)
+                    yield from expand_completions(Mp)
+                return
+    for f, finterp in M.functions.items():
+        sorts, ret_sort = M.sig.functions[f]
+        for t in itertools.product(*[M.elems_of_sort[sort] for sort in sorts]):
+            if t not in finterp:
+                for e_i in M.universe(ret_sort):
+                    Mp = M.copy()
+                    Mp.add_function(f, [M.names[x] for x in t], e_i)
+                    yield from expand_completions(Mp)
+                return
+    yield M
+    
+def sig_without_primed(old: Signature) -> Signature:
+    sig = Signature()
+    sig.sorts = set(old.sorts)
+    sig.finalize_sorts()
+    sig.relations = dict(x for x in old.relations.items() if not x[0].endswith('\''))
+    sig.constants = dict(x for x in old.constants.items() if not x[0].endswith('\''))
+    sig.functions = dict(x for x in old.functions.items() if not x[0].endswith('\''))
+    return sig
+    
+def two_state_pre(M: Model) -> Model:
+    '''Projects the pre-state out of a two-state model as a one state model'''
+    Mp = M.copy()
+    Mp.sig = sig_without_primed(M.sig)
+    Mp.relations = dict(x for x in Mp.relations.items() if not x[0].endswith('\''))
+    Mp.constants = dict(x for x in Mp.constants.items() if not x[0].endswith('\''))
+    Mp.functions = dict(x for x in Mp.functions.items() if not x[0].endswith('\''))
+    assert model_is_partial_wrt_sig(Mp, Mp.sig)
+    return Mp
+    
+
+def two_state_post(M: Model) -> Model:
+    '''Projects the post-state out of a two-state model as a one state model'''
+    Mp = M.copy()
+    Mp.sig = sig_without_primed(M.sig)
+    Mp.relations = dict(x for x in Mp.relations.items() if not x[0].endswith('\''))
+    Mp.constants = dict(x for x in Mp.constants.items() if not x[0].endswith('\''))
+    Mp.functions = dict(x for x in Mp.functions.items() if not x[0].endswith('\''))
+    # overwrite unprimed symbols with primed ones
+    for x, r in M.relations.items():
+        if x.endswith('\''):
+            Mp.relations[x[:-1]] = r
+    for x, c in M.constants.items():
+        if x.endswith('\''):
+            Mp.constants[x[:-1]] = c
+    for x, f in M.functions.items():
+        if x.endswith('\''):
+            Mp.functions[x[:-1]] = f
+    assert model_is_partial_wrt_sig(Mp, Mp.sig)
+    return Mp
+
+def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:str = '') -> Model:
+
+    ctx = z3.Context()
+    s = z3.Solver(ctx=ctx)
+
+    sig = M.sig
+    env = Environment(sig)
+    _sorts_to_z3: Dict[str, z3.SortRef] = {}
+    _z3_rel_func: Dict[str, z3.FuncDeclRef] = {}
+
+    for sort in sig.sorts:
+        _sorts_to_z3[sort] = z3.DeclareSort(sort, ctx = ctx)
+    for const, sort in sig.constants.items():
+        z3.Const(const, _sorts_to_z3[sort])
+    for rel, sorts in sig.relations.items():
+        _z3_rel_func[rel] = z3.Function(rel, *[_sorts_to_z3[x] for x in sorts], z3.BoolSort(ctx= ctx))
+    for fun, (sorts, ret) in sig.functions.items():
+        _z3_rel_func[fun] = z3.Function(fun, *[_sorts_to_z3[x] for x in sorts], _sorts_to_z3[ret])
+
+    s.set("unsat_core", True, "core.minimize", True)
+    elems = []
+    elems_by_sort: DefaultDict[str, List[z3.ExprRef]] = defaultdict(list)
+    for n, sort in zip(M.names, M.sorts):
+        constant = z3.Const(n, _sorts_to_z3[sort])
+        elems.append(constant)
+        elems_by_sort[sort].append(constant)
+    
+    # Bound each sort and ensure constants are distinct
+    for sort in M.sig.sorts:
+        consts = elems_by_sort[sort]
+        x = z3.Const(f"__x_{sort}", _sorts_to_z3[sort])
+        s.add(z3.Distinct(*consts))
+        s.add(z3.ForAll(x, z3.Or(*[x == c for c in consts], ctx)))
+
+    
+    Mp = Model(M.sig)
+    for name, sort in zip(M.names, M.sorts):
+        Mp.add_elem(name, sort)
+    
+    class Fact(object):
+        def __init__(self, kind:str, ident: Tuple[str,...], desc: str = '') -> None:
+            self.z3_var: z3.ExprRef = z3.BoolVal(True)
+            self.desc = desc
+            self.kind = kind
+            self.ident = ident
+            self.applied = False
+            self.index = -1
+
+    # fact_vars: List[z3.ExprRef] = []
+    # facts: List[Callable] = []
+    # fact_desc: List[str] = []
+    # fact_size_factor: List[int] = []
+
+    facts: List[Fact] = []
+    normal_facts_by_id: Dict[Tuple[str, ...], Fact] = {}
+
+    def make_facts() -> None:
+        next_var_index = 0
+        def next_var() -> z3.ExprRef:
+            nonlocal next_var_index
+            v = z3.Bool(f"__iv_{next_var_index}", ctx=ctx)
+            next_var_index += 1
+            return v
+        def add_fact(f: Fact) -> Fact:
+            f.z3_var = next_var()
+            f.index = len(facts)
+            facts.append(f)
+            if not f.kind.endswith('='):
+                normal_facts_by_id[f.ident] = f
+            return f
+        
+        
+        for c, e in M.constants.items():
+            assert e is not None
+            n = M.names[e]
+            f = add_fact(Fact('constant', (c,), desc=f"{c} == {n}"))
+            s.add(z3.Implies(f.z3_var, z3.Const(c, _sorts_to_z3[M.sig.constants[c]]) == elems[e]))
+            
+        for r, rel in M.relations.items():
+            for args, val in rel.items():
+                R = _z3_rel_func[r](*[elems[i] for i in args])
+                f = add_fact(Fact('relation', (r, *(M.names[a] for a in args)), desc = f"{R} == {val}"))
+                s.add(z3.Implies(f.z3_var, R if val else z3.Not(R)))
+                
+        for fn, func in M.functions.items():
+            for args, result in func.items():
+                F = _z3_rel_func[fn](*[elems[i] for i in args])
+                n = M.names[result]
+                f = add_fact(Fact('function', (fn, *(M.names[a] for a in args)), desc = f"{F} == {n}"))
+                s.add(z3.Implies(f.z3_var, F == elems[result]))
+
+        # now add all the two-state equalities:
+        if two_state:
+            for c, e in M.constants.items():
+                if c.endswith('\'') and c[:-1] in M.constants and M.constants[c] == M.constants[c[:-1]]:
+                    c_pre = c[:-1]
+                    sort = _sorts_to_z3[M.sig.constants[c]]
+                    f = add_fact(Fact('constant=', (c_pre,), desc=f"{c_pre} == {c}"))
+                    s.add(z3.Implies(f.z3_var, z3.Const(c_pre, sort) == z3.Const(c, sort), ctx))
+        
+            for r, rel in M.relations.items():
+                for args, val in rel.items():
+                    if r.endswith('\'') and r[:-1] in M.relations and rel[args] == M.relations[r[:-1]][args]:
+                        r_pre = r[:-1]
+                        R = _z3_rel_func[r](*[elems[i] for i in args])
+                        R_pre = _z3_rel_func[r_pre](*[elems[i] for i in args])
+                        f = add_fact(Fact('relation=', (r_pre, *(M.names[a] for a in args)), desc = f"{R_pre} == {R}"))
+                        s.add(z3.Implies(f.z3_var, R_pre == R, ctx))
+                        
+
+                        # fact_vars.append(v)
+                        # constraint = Iff(Relation(r_pre, [Var(M.names[e]) for e in args]), Relation(r, [Var(M.names[e]) for e in args]))
+                        # facts.append(lambda constraint=constraint: Mp.constraints.append(constraint))
+                        # fact_size_factor.append(1)
+                        # fact_desc.append(f"{R_pre} == {R}")
+
+            for fn, func in M.functions.items():
+                for args, result in func.items():
+                    if fn.endswith('\'') and fn[:-1] in M.functions and func[args] == M.functions[fn[:-1]][args]:
+                        fn_pre = fn[:-1]
+                        F_pre = _z3_rel_func[fn_pre](*[elems[i] for i in args])
+                        F = _z3_rel_func[fn](*[elems[i] for i in args])
+                        f = add_fact(Fact('function=', (fn_pre, *(M.names[a] for a in args)), desc=f"{F_pre} == {F}"))
+                        s.add(z3.Implies(f.z3_var, F_pre == F, ctx))
+                        # fact_vars.append(v)
+                        # constraint = Equal(Func(f_pre, [Var(M.names[e]) for e in args]), Func(f, [Var(M.names[e]) for e in args]))
+                        # facts.append(lambda constraint=constraint: Mp.constraints.append(constraint))
+                        # fact_size_factor.append(1)
+                        # fact_desc.append(f"{F_pre} == {F}")
+
+        
+    make_facts()
+    
+    s.add(toZ32(Not(formula), env, _sorts_to_z3, _z3_rel_func, ctx))
+
+    core = list(range(len(facts)))
+    
+    # minimize the core
+    result = s.check(*[facts[i].z3_var for i in core])
+    assert result == z3.unsat
+    
+    final_core: List[int] = []
+    while len(core) > 0:
+        result = s.check(*[facts[i].z3_var for i in core[1:]], *[facts[i].z3_var for i in final_core])
+        if result == z3.unsat:
+            pass
+        else:
+            final_core.append(core[0])
+        core = core[1:]
+        
+    core = final_core
+
+    # Use z3 to find the unsat core
+    # solver_core = s.unsat_core()
+    # solver_int_core: Set[int] = set()
+    # for x in solver_core:
+    #     n = str(x)
+    #     assert n.startswith("__iv_")
+    #     solver_int_core.add(int(n[5:]))
+
+    # core = list(solver_int_core)
+    
+    completions = 1
+
+    # construct the final result in Mp
+    for i,f in enumerate(facts):
+        if not f.kind.endswith('='):
+            continue
+        f_pre = normal_facts_by_id[f.ident]
+        f_post = normal_facts_by_id[(f.ident[0]+'\'', *f.ident[1:])]
+        
+        size = 2 # for relation=
+        if f.kind == 'constant=':
+            size = len([*M.universe(M.sig.constants[f.ident[0]])])
+        if f.kind == 'function=':
+            size = len([*M.universe(M.sig.functions[f.ident[0]][1])])
+        
+        f.applied = True
+
+        # If we have x = a and x = x', then we should also have x' = a
+        if i in core and f_pre.index in core and f_post.index not in core: 
+            core.append(f_post.index)
+        # The reverse: if we have x' = a and x = x', then we should also have x = a
+        if i in core and f_post.index in core and f_pre.index not in core: 
+            core.append(f_pre.index)
+
+        # If this is true, then the equality is used
+        if size > 1 and i in core and f_pre.index not in core and f_post.index not in core:
+            completions *= size
+            # Prevent us from multiplying by these values again
+            f_pre.applied = True
+            f_post.applied = True
+
+            # Add the constraint to the model
+            name = f.ident[0]
+            args = f.ident[1:]
+            if f.kind == 'constant=':
+                Mp.constraints.append(Equal(Var(name), Var(name+'\'')))
+            elif f.kind == 'relation=':
+                Mp.constraints.append(Iff(Relation(name, [Var(e) for e in args]), Relation(name+'\'', [Var(e) for e in args])))
+            elif f.kind == 'function=':
+                Mp.constraints.append(Equal(Func(name, [Var(e) for e in args]), Func(name+'\'', [Var(e) for e in args])))
+            else: assert False
+
+
+    for i,f in enumerate(facts):
+        if f.applied:
+            continue
+        if f.kind == 'constant':
+            c = f.ident[0]
+            if i in core:
+                e = M.constants[c]
+                assert e is not None
+                Mp.add_constant(c, M.names[e])
+            else:
+                completions *= len([*M.universe(M.sig.constants[c])])
+        elif f.kind == 'relation':
+            r = f.ident[0]
+            args = f.ident[1:]
+            args_int = tuple(M.elems[x] for x in args)
+            if i in core:
+                Mp.add_relation(r, list(args), M.relations[r][args_int])
+            else:
+                completions *= 2
+        elif f.kind == 'function':
+            fn = f.ident[0]
+            args = f.ident[1:]
+            args_int = tuple(M.elems[x] for x in args)
+            if i in core:
+                Mp.add_function(fn, list(args), M.names[M.functions[fn][args_int]])
+            else:
+                completions *= len([*M.universe(M.sig.functions[fn][1])])
+        else: assert False
+
+    # for i, fact in enumerate(facts):
+    #     if i in core:
+    #         print(f"CORE {fact.desc}")
+    #     else:
+    #         print(f"---- {fact.desc}")
+
+    print(f"Generalized to {completions} completions{'' if label == '' else ' ('+label+')'}!")
+    return Mp
+
 
 def fm(a: Formula, b: Formula, env: Environment, solver: z3.Solver, timer: Timer) -> Tuple[z3.CheckSatResult, Optional[z3.ModelRef]]:
     solver.push()
@@ -89,7 +438,7 @@ def bound_sort_counts(solver: z3.Solver, bounds: Dict[str, int]) -> None:
         bv = z3.Const("elem_{}".format(sort), S)
         solver.add(z3.ForAll(bv, z3.Or(*[z3.Const("elem_{}_{}".format(sort, i), S) == bv for i in range(K)])))            
 
-def find_model_or_equivalence(current: Formula, formula: Formula, env: Environment, s: z3.Solver, t: Timer) -> Optional[Model]:
+def find_model_or_equivalence(current: Formula, formula: Formula, axioms: List[Formula], env: Environment, s: z3.Solver, t: Timer) -> Optional[Model]:
     (r1, m) = fm(current, formula, env, s, t)
     if m is not None:
         for k in range(1, 100000):
@@ -98,7 +447,11 @@ def find_model_or_equivalence(current: Formula, formula: Formula, env: Environme
             (_, m) = fm(current, formula, env, s, t)
             s.pop()
             if m is not None:
-                return extract_model(m, env.sig, "-")
+                M = extract_model(m, env.sig, "-")
+                print("Original: ", M)
+                Mp = generalize_model(M, And(axioms + [Not(formula)]))
+                print("Generalized: ", Mp)
+                return M
         assert False
     (r2, m) = fm(formula, current, env, s, t)
     if m is not None:
@@ -108,7 +461,11 @@ def find_model_or_equivalence(current: Formula, formula: Formula, env: Environme
             (_, m) = fm(formula, current, env, s, t)
             s.pop()
             if m is not None:
-                return extract_model(m, env.sig, "+")
+                M = extract_model(m, env.sig, "+")
+                print("Original: ", M)
+                Mp = generalize_model(M, And([formula] + axioms))
+                print("Generalized: ", Mp)
+                return M
         assert False
     if r1 == z3.unsat and r2 == z3.unsat:
         return None
@@ -160,7 +517,6 @@ class LearningResult(object):
         self.models: List[Model] = []
         self.reason = ""
 
-
 def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
@@ -182,7 +538,6 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
         z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
     for fun, (sorts, ret) in sig.functions.items():
         z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
-
     for ax in axioms:
         s.add(toZ3(ax, env))
 
@@ -197,7 +552,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                 if not args.no_cvc4:
                     r = find_model_or_equivalence_cvc4(result.current, formula, env, s, result.counterexample_timer)
                 else:
-                    r = find_model_or_equivalence(result.current, formula, env, s, result.counterexample_timer)
+                    r = find_model_or_equivalence(result.current, formula, axioms, env, s, result.counterexample_timer)
                 
                 result.counterexample_timer.check_time()
                 if r is None:

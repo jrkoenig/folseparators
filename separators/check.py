@@ -6,7 +6,9 @@ def resolve_term(term: Term, model: Model, assumptions: Dict[str, int] = {}) -> 
         if term.var in assumptions:
             return assumptions[term.var]
         elif term.var in model.constants:
-            return model.constants[term.var]
+            c = model.constants[term.var]
+            assert c is not None
+            return c
         else:
             raise RuntimeError(f"variable {term.var} not defined")
     elif isinstance(term, Func):
@@ -26,12 +28,15 @@ def check(formula: Formula, model: Model, assumptions: Dict[str, int] = {}) -> b
         return False
     elif isinstance(formula, Not):
         return not check(formula.f, model, assumptions)
+    if isinstance(formula, Iff):
+        return check(formula.c[0], model, assumptions) == check(formula.c[1], model, assumptions)
     elif isinstance(formula, Equal):
         return resolve_term(formula.args[0], model, assumptions) == \
                resolve_term(formula.args[1], model, assumptions)
     elif isinstance(formula, Relation):
-        elems = [resolve_term(t, model, assumptions) for t in formula.args]
-        return tuple(elems) in model.relations[formula.rel]
+        elems = tuple(resolve_term(t, model, assumptions) for t in formula.args)
+        assert elems in model.relations[formula.rel]
+        return model.relations[formula.rel][elems]
     elif isinstance(formula, Forall):
         universe = model.elems_of_sort[formula.sort]
         for e in universe:

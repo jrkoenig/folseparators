@@ -3,7 +3,7 @@
 from typing import Optional, List, Tuple, NoReturn
 
 from .parse import parse, Atom, Parens, AstNode, SrcLoc
-from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, model_is_complete_wrt_sig
+from .logic import Signature, Environment, Model, And, Or, Not, Iff, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, model_is_partial_wrt_sig
 
 class SemanticError(Exception):
     def __init__(self, desc:str = "?"):
@@ -40,17 +40,18 @@ def formula(env: Environment, token: AstNode) -> Formula:
     if isinstance(token, Atom) or len(token) == 0 or not isinstance(token[0], Atom):
         error_at("Invalid formula", token)
     head = token[0]
-    # check for and
     if head.name() == "and":
         return And([formula(env, t) for t in token[1:]])
-    # check for or
     if head.name() == "or":
         return Or([formula(env, t) for t in token[1:]])
-    # check for not
     if head.name() == "not":
         if len(token) != 2:
             error_at("Not takes exactly one argument", token)
         return Not(formula(env, token[1]))
+    if head.name() == "iff":
+        if len(token) != 3:
+            error_at("Iff is binary", token)
+        return Iff(*[formula(env, t) for t in token[1:]])
     # check for forall, exists
     if head.name() == "forall" or head.name() == "exists":
         if len(token) != 4:
@@ -216,7 +217,27 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                             if not isinstance(arg, Atom) or m.sort_of(arg.name()) != e_s:
                                 error_at("Incorrect sort", arg)
                             args.append(arg.name())
-                        m.add_relation(fact_root, args)
+                        m.add_relation(fact_root, args, True)
+                    if fact_root == "not":
+                        if len(fact) != 2:
+                            error_at("Negation is unary", fact)
+                        fact = fact[1]
+                        if not isinstance(fact, Parens):
+                            error_at("Invalid model fact", fact)
+                        if len(fact) == 0 or not isinstance(fact[0], Atom):
+                            error_at("Invalid model fact", fact)
+                        fact_root = fact[0].name()
+                        if fact_root not in sig.relations:
+                            error_at("Model fact must be relation", fact)
+                        expected_sorts = sig.relations[fact_root]
+                        if len(fact) != len(expected_sorts) + 1:
+                            error_at("Wrong relation arity", fact)
+                        args = []
+                        for arg, e_s in zip(fact[1:], expected_sorts):
+                            if not isinstance(arg, Atom) or m.sort_of(arg.name()) != e_s:
+                                error_at("Incorrect sort", arg)
+                            args.append(arg.name())
+                        m.add_relation(fact_root, args, False)
                     elif fact_root == "=":
                         if len(fact) != 3:
                             error_at("Equality is binary", fact)
@@ -243,8 +264,8 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                             error_at("Equality not of correct form", fact)
                     else:
                         error_at("Unrecognized fact in model", fact)
-                if not model_is_complete_wrt_sig(m, sig):
-                    error_at("Model is not complete with respect to signature (missing constant/function definitions?)", c)
+                if not model_is_partial_wrt_sig(m, sig):
+                    error_at("Model is not partial with respect to signature (missing constant/function definitions?)", c)
                 models.append(m)
             else:
                 error_at("Unexpected Command", c)
