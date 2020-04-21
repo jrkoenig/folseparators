@@ -5,13 +5,13 @@ This repository contains code to generate a first order formula which separates 
 
 ## Requirements
 
-This code requires `python3` with `z3py` installed.
+This code requires `python3.7` with `z3py` installed.
 
 ## Example Commands
 
-- `python3 check.py problems/toy_lock_simple.fol`
-- `python3 learn.py conjectures/toy_lock_invar11.fol`
-- `python3 separate.py problems/every_edge_triangle.fol` (*Currently does not work*)
+- `python3.7 -m separators --separate problems/every_edge_triangle.fol`
+- `python3.7 -m separators conjectures/toy_lock_invar11.fol`
+- `python3.7 -m separators --logic=universal conjectures/toy_lock_invar7.fol`
 
 ## File format
 The `.fol` file format is an s-expr based format for representing FO signatures, models, and formula. An example file (`problems/example.fol`) is:
@@ -65,17 +65,16 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
 - `logic.py`: defines logic objects like `Model`s, `Formula`s and `Signature`s.
 - `matrix.py`: generates the matrix of a formula given the satisfying formula and FO-types via `infer_matrix()`.
 - `parse.py`: parses a s-expr file into lists of lists and atoms via `parse()`. Performs both lexing and parsing but does not check well-formedness of the resulting parse tree or build logic objects.
-- `separate.py`: given a set of postive and negative models, infer a formula which separates them via a `Separator` object.
-- `experiments/describe_conjectures.py`: given a directory of conjecture `.fol` files, creates a JSON representation (in `extracted.json`) of each along with some basic statistics.
+- `separate.py`: given a set of positive and negative models, infer a formula which separates them via a `Separator` object.
 - `experiments/make_charts.py`: generates summary charts given a `results.json` file.
-- `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `extracted.json` file, and produces a `results.json` file
+- `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `benchmark.json` file, and produces a `results.json` file.
 
 ## Data files
 
-- `problems/`: contains a few simple seperation problems, created by hand. These are only suitable for debugging.
+- `problems/`: contains a few simple separation problems, created by hand. These are only suitable for debugging.
 - `conjectures/`: contains conjectures suitable for the learning process. The root level contains toy lock invariants, which are the simplest real-world tests of the learning process.
-- `conjectures/extracted/`: contains conjectures extracted from a number of correct ivy protocols. These are suitable as a development test set.
+- `conjectures/extracted/`, `conjectures/mypyvy/`: contains conjectures extracted from a number of correct Ivy and mypyvy protocols. These are suitable as a development test set.
 
 ## License
 
-This code is copyrighted Stanford University and is not for public distribution.
+This code in `separators/` is copyright 2020 Stanford University, and is available under the Apache 2.0 License (`LICENSE.txt`). Some other data and file(s) in this distribution are under copyright by other author(s).

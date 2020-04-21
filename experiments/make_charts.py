@@ -1,3 +1,17 @@
+# Copyright 2020 Stanford University
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import argparse, random, json, os
 import numpy as np
 import pandas as pd
@@ -35,14 +49,16 @@ def main() -> None:
         print(e)
         return
 
-    sns.set(style="white", palette="muted", color_codes=True)
-    font = {'size':16, 'family':'serif', 'serif': ['CMU Serif']}
+    #sns.set(style="white", palette="muted", color_codes=False)
+    font = {'size':10, 'family':'serif', 'serif': ['CMU Serif']}
     plt.rc('font', **font)
     plt.rc('mathtext', fontset='cm')
     plt.rc('axes', labelsize='medium')
     plt.rc('xtick', labelsize='medium')
     plt.rc('ytick', labelsize='medium')
     plt.rc('legend', fontsize='medium')
+    plt.rc('pgf', rcfonts=False)
+    plt.rc('')
 
     descs = json.load(args.description)
     desc_by_id = {}
@@ -124,7 +140,7 @@ def main() -> None:
     #     print(l, s[l], k[l], f[l])
     # print("")
 
-    fig = plt.figure(figsize=(6,4))
+    fig = plt.figure(figsize=(3.4,2))
     
     s = Counter()
     f = Counter()
@@ -156,13 +172,14 @@ def main() -> None:
     #fig.suptitle("Quantifier conjunct distribution with success rate")
     plt.savefig("success_by_quantifier_count.eps", bbox_inches='tight')
     plt.savefig("success_by_quantifier_count.png", bbox_inches='tight')
+    plt.savefig("success_by_quantifier_count.pgf", bbox_inches='tight')
 
     _print("\nQuant. @ success @ killed @ failed")
     for l in labels:
         _print (l, "@", s[l],"@", k[l],"@", f[l])
     _print("\n")
 
-    fig = plt.figure(figsize=(6,4))
+    fig = plt.figure(figsize=(3.4,2))
     times = []
     for r in results:
         if r['success']:
@@ -176,10 +193,11 @@ def main() -> None:
     plt.xlim(0,len(times))
     plt.ylim(1,3600)
     plt.ylabel("Time to learn (sec)")
-    plt.xlabel("Conjecture (ordinal)")
+    plt.xlabel("Formula (ordinal)")
     #fig.suptitle("Ordinal chart of time to learn conjuncts")
     plt.savefig("ordinal_learning_times.eps", bbox_inches='tight')
     plt.savefig("ordinal_learning_times.png", bbox_inches='tight')
+    plt.savefig("ordinal_learning_times.pgf", bbox_inches='tight')
 
     # fig = plt.figure(figsize=(6,4))
     # xs = []

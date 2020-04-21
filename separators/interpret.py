@@ -1,4 +1,16 @@
+# Copyright 2020 Stanford University
 
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from typing import Optional, List, Tuple, NoReturn
 
@@ -157,12 +169,16 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                 sig.functions[n] = (function_sort[:-1], function_sort[-1])
                 
             elif command == "axiom":
+                if in_sig:
+                    sig.finalize_sorts()
                 in_sig = False
                 if len(c) != 2:
                     error_at("Invalid axiom definition", c)
                 env = Environment(sig)
                 axioms.append(formula(env, c[1]))
             elif command == "conjecture":
+                if in_sig:
+                    sig.finalize_sorts()
                 in_sig = False
                 if len(c) != 2:
                     error_at("Invalid conjecture definition", c)
@@ -182,6 +198,8 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                         else:
                             error_at("constraint must be M, (not M), or (implies M1 M2)", constraint)
             elif command == "model":
+                if in_sig:
+                    sig.finalize_sorts()
                 in_sig = False
                 m = Model(sig)
                 if len(c) < 2 or not isinstance(c[1], Atom):
@@ -255,6 +273,5 @@ def interpret(commands: List[AstNode]) -> FOLFile:
     if not saw_any_constraint:
         result.constraint_pos.append("+")
         result.constraint_neg.append("-")
-        
-    sig.finalize_sorts()
+    
     return result
