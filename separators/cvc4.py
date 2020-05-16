@@ -108,7 +108,6 @@ def _parse_model(sig: Signature, lines: List[str]) -> Model:
         else:
             print(item)
             assert False
-    #print(m)
 
     # Perform model completion:
     for c in sig.constants.keys():
@@ -116,12 +115,18 @@ def _parse_model(sig: Signature, lines: List[str]) -> Model:
             sort = sig.constants[c]
             v = m.names[m.elems_of_sort[sort][0]]
             m.add_constant(c, v)
-    for rel in sig.relations.keys():
+    for rel, sorts in sig.relations.items():
         if rel not in m.relations:
-            m.relations[rel] = set()
+            m.relations[rel] = dict()
+        rep = m.relations[rel]
+        for t in itertools.product(*[m.elems_of_sort[sort] for sort in sorts]):
+            if t not in rep:
+                rep[t] = False
     for f in sig.functions.keys():
         sorts, ret_sort = sig.functions[f]
         v = m.names[m.elems_of_sort[ret_sort][0]]
+        if f not in m.functions:
+            m.functions[f] = dict()
         for t in itertools.product(*[m.elems_of_sort[sort] for sort in sorts]):
             args = [m.names[x] for x in t]
             if t not in m.functions[f]:
