@@ -78,4 +78,4 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
 
 ## License
 
-This code is copyrighted Stanford University and is not for public distribution.
+This code in `separators/` is copyright 2020 Stanford University, and is available under the Apache 2.0 License (`LICENSE.txt`). Some other data and file(s) in this distribution are under copyright by other author(s).
