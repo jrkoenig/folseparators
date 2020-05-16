@@ -53,14 +53,14 @@ def toZ32(f: Union[Formula, Term], env: Environment, sorts: Dict[str, z3.SortRef
     def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ32(f, env, sorts, rel_funcs, ctx)
     if isinstance(f, And):
         if len(f.c) == 0:
-            return z3.BoolVal(True, ctx)
-        return z3.And(*[R(x) for x in f.c], ctx)
+            return z3.BoolVal(True)
+        return z3.And(*[R(x) for x in f.c])
     elif isinstance(f, Or):
         if len(f.c) == 0:
             return z3.BoolVal(False)
-        return z3.Or(*[R(x) for x in f.c], ctx)
+        return z3.Or(*[R(x) for x in f.c])
     elif isinstance(f, Not):
-        return z3.Not(R(f.f), ctx)
+        return z3.Not(R(f.f))
     elif isinstance(f, Iff):
         return R(f.c[0]) == R(f.c[1])
     elif isinstance(f, Relation):
@@ -211,7 +211,7 @@ def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:
         consts = elems_by_sort[sort]
         x = z3.Const(f"__x_{sort}", _sorts_to_z3[sort])
         s.add(z3.Distinct(*consts))
-        s.add(z3.ForAll(x, z3.Or(*[x == c for c in consts], ctx)))
+        s.add(z3.ForAll(x, z3.Or(*[x == c for c in consts])))
 
     
     Mp = Model(M.sig)
@@ -277,7 +277,7 @@ def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:
                     c_pre = c[:-1]
                     sort = _sorts_to_z3[M.sig.constants[c]]
                     f = add_fact(Fact('constant=', (c_pre,), desc=f"{c_pre} == {c}"))
-                    s.add(z3.Implies(f.z3_var, z3.Const(c_pre, sort) == z3.Const(c, sort), ctx))
+                    s.add(z3.Implies(f.z3_var, z3.Const(c_pre, sort) == z3.Const(c, sort)))
         
             for r, rel in M.relations.items():
                 for args, val in rel.items():
@@ -286,7 +286,7 @@ def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:
                         R = _z3_rel_func[r](*[elems[i] for i in args])
                         R_pre = _z3_rel_func[r_pre](*[elems[i] for i in args])
                         f = add_fact(Fact('relation=', (r_pre, *(M.names[a] for a in args)), desc = f"{R_pre} == {R}"))
-                        s.add(z3.Implies(f.z3_var, R_pre == R, ctx))
+                        s.add(z3.Implies(f.z3_var, R_pre == R))
                         
 
                         # fact_vars.append(v)
@@ -302,7 +302,7 @@ def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:
                         F_pre = _z3_rel_func[fn_pre](*[elems[i] for i in args])
                         F = _z3_rel_func[fn](*[elems[i] for i in args])
                         f = add_fact(Fact('function=', (fn_pre, *(M.names[a] for a in args)), desc=f"{F_pre} == {F}"))
-                        s.add(z3.Implies(f.z3_var, F_pre == F, ctx))
+                        s.add(z3.Implies(f.z3_var, F_pre == F))
                         # fact_vars.append(v)
                         # constraint = Equal(Func(f_pre, [Var(M.names[e]) for e in args]), Func(f, [Var(M.names[e]) for e in args]))
                         # facts.append(lambda constraint=constraint: Mp.constraints.append(constraint))
