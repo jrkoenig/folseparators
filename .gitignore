@@ -2,5 +2,4 @@ __pycache__
 *.pyc
 .vscode
 .mypy_cache
-*.txt
 out/
