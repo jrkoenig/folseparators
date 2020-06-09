@@ -51,18 +51,19 @@ class Signature(object):
 class Environment(object):
     def __init__(self, sig: Signature):
         self.sig = sig
-        self.bound: Dict[str, str] = {}
+        self.bound: Dict[str, List[str]] = {}
         self.stack: List[str] = []
     def bind(self, v: str, sort: str) -> None:
-        self.bound[v] = sort
+        self.bound.setdefault(v, [])
+        self.bound[v].append(sort)
         self.stack.append(v)
     def pop(self) -> None:
         v = self.stack[-1]
         self.stack.pop()
-        del self.bound[v]
+        self.bound[v].pop()
     def lookup_var(self, x: str) -> Optional[str]:
-        if x in self.bound:
-            return self.bound[x]
+        if x in self.bound and len(self.bound[x]) > 0:
+            return self.bound[x][-1]
         elif x in self.sig.constants:
             return self.sig.constants[x]
         else:
