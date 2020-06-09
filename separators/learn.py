@@ -66,11 +66,11 @@ def toZ32(f: Union[Formula, Term], env: Environment, sorts: Dict[str, z3.SortRef
     def R(f: Union[Formula, Term]) -> z3.ExprRef: return toZ32(f, env, sorts, rel_funcs, ctx)
     if isinstance(f, And):
         if len(f.c) == 0:
-            return z3.BoolVal(True)
+            return z3.BoolVal(True, ctx)
         return z3.And(*[R(x) for x in f.c])
     elif isinstance(f, Or):
         if len(f.c) == 0:
-            return z3.BoolVal(False)
+            return z3.BoolVal(False, ctx)
         return z3.Or(*[R(x) for x in f.c])
     elif isinstance(f, Not):
         return z3.Not(R(f.f))
