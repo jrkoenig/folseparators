@@ -195,6 +195,8 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                         else:
                             error_at("constraint must be M, (not M), or (implies M1 M2)", constraint)
             elif command == "model":
+                if in_sig:
+                    sig.finalize_sorts()
                 in_sig = False
                 m = Model(sig)
                 if len(c) < 2 or not isinstance(c[1], Atom):
@@ -230,7 +232,7 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                                 error_at("Incorrect sort", arg)
                             args.append(arg.name())
                         m.add_relation(fact_root, args, True)
-                    if fact_root == "not":
+                    elif fact_root == "not":
                         if len(fact) != 2:
                             error_at("Negation is unary", fact)
                         fact = fact[1]
@@ -289,5 +291,6 @@ def interpret(commands: List[AstNode]) -> FOLFile:
         result.constraint_pos.append("+")
         result.constraint_neg.append("-")
         
-    sig.finalize_sorts()
+    if in_sig:
+        sig.finalize_sorts()
     return result

@@ -155,8 +155,10 @@ class Not(Formula):
 class Iff(Formula):
     def __init__(self, a: Formula, b: Formula):
         self.c = [a,b]
+    def __str__(self) -> str:
+        return "(" +  " <-> ".join(map(str, self.c)) + ")"
     def __repr__(self) -> str:
-        return " <-> ".join(map(repr, self.c))
+        return "(iff " +  " ".join(map(repr, self.c)) + ")"
     def _unpack(self) -> Tuple: return ("Iff", self.c)
 
 class Exists(Formula):

@@ -20,7 +20,7 @@ from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
-from .separate import Separator, SeparatorNaive, SeparatorReductionV1, SeparatorReductionV2, GeneralizedSeparator, HybridSeparator
+from .separate import Separator, HybridSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
@@ -331,6 +331,15 @@ def generalize_model(M: Model, formula: Formula, two_state: bool = False, label:
     
     # minimize the core
     result = s.check(*[facts[i].z3_var for i in core])
+    if result == z3.sat:
+        print("Unexpected sat in generalize_model():")
+        print(s.model())
+        for xx in s.assertions():
+            print(xx)
+        print(M)
+        print(formula)
+        print(check(formula, M))
+    
     assert result == z3.unsat
     
     final_core: List[int] = []
@@ -533,11 +542,7 @@ class LearningResult(object):
 def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
-    S = SeparatorReductionV1 if args.separator == 'v1' else\
-        SeparatorReductionV2 if args.separator == 'v2' else\
-        GeneralizedSeparator if args.separator == 'generalized' else\
-        HybridSeparator if args.separator == 'hybrid' else\
-        SeparatorNaive 
+    S = HybridSeparator
         
     separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)]) 
 
@@ -613,11 +618,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
 def separate(f: FOLFile, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
-    S = SeparatorReductionV1 if args.separator == 'v1' else\
-        SeparatorReductionV2 if args.separator == 'v2' else\
-        GeneralizedSeparator if args.separator == 'generalized' else\
-        HybridSeparator if args.separator == 'hybrid' else\
-        SeparatorNaive 
+    S = HybridSeparator
         
     separator: Separator = S(f.sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=f.axioms)
 
