@@ -23,9 +23,12 @@ def test_partial() -> None:
     (conjecture (forall x N (forall y N (not (r x y)))))
     (conjecture (forall x N (forall y N (or (r x y) (r y x)))))
     (conjecture (forall x N (forall y N (or (= x y) (r x y) (r y x)))))
+    (conjecture (exists x N (exists y N (or (r x y)))))
+    (conjecture (exists x N (r x x)))
+    (conjecture (exists x N (not (r x x))))
     '''))
     print(fol.models[0])
-    for conj,expected in zip(fol.conjectures, [False, False, False, True]):
+    for conj,expected in zip(fol.conjectures, [False, False, False, True, True, True, False]):
         value = check_partial(Completion(PartialModel(fol.models[0])), conj)
         print("Conjecture", conj, " = ", value)
         assert value == expected

@@ -26,7 +26,7 @@ from .timer import Timer, UnlimitedTimer
 QuantifierStr = Tuple[bool, str]
 
 def collapse(model: Model, sig: Signature, assignment: Iterable[int]) -> str:
-    mapping: Dict[int,int] = {}
+    mapping: Dict[int, int] = {}
     sorts: List[str] = []
     def get_element(e: int) -> int:
         if e not in mapping:
@@ -870,6 +870,7 @@ def predecessor_formula(s: Signature, f: Formula) -> Iterable[Formula]:
 
 ### PARTIAL SEPARATION: ###
 
+Assumptions = Dict[int, int]
 class PartialModel(object):
     '''Represents additional information about a (possibly) partial model.
     
@@ -919,7 +920,7 @@ class PartialModel(object):
     def domain(self, fact: int) -> List[int]:
         return self.fact_domains.get(fact, [])
 
-    def eval_atomic(self, atomic: Formula, assumptions: Dict[int, int]) -> Union[bool, Tuple[Dict[int, int], Dict[int, int]]]:
+    def eval_atomic(self, atomic: Formula, assumptions: Assumptions) -> Union[bool, Tuple[Assumptions, Assumptions]]:
         '''Given an atomic formula (r(_,_) or _=_), return whether the value is definitely True, False or uncertain.
         
         If `atomic` has a uniform value in all completions described by `assumptions`, return that value. Otherwise,
@@ -931,7 +932,7 @@ class PartialModel(object):
         false_assumptions = {}
         can_be_true = False
         true_assumptions = {}
-        def definite(asmpt: Dict[int, int], value: bool) -> None:
+        def definite(asmpt: Assumptions, value: bool) -> None:
             '''Under `asmpt`, the atomic formula definitely has truth `value`.'''
             nonlocal can_be_false, can_be_true, true_assumptions, false_assumptions
             if value:
@@ -970,7 +971,7 @@ class PartialModel(object):
         assert can_be_true != can_be_false
         return can_be_true
 
-    def _eval_term_tuple(self, ts: Tuple[Term, ...], a: Dict[int, int]) ->  Iterator[Tuple[Tuple[int, ...], Dict[int, int]]]:
+    def _eval_term_tuple(self, ts: Tuple[Term, ...], a: Assumptions) ->  Iterator[Tuple[Tuple[int, ...], Assumptions]]:
         if len(ts) == 0:
             yield ((), a)
         else:
@@ -979,7 +980,7 @@ class PartialModel(object):
                 for (vs, result_a) in self._eval_term_tuple(rest, new_a):
                     yield ((v, *vs), result_a)
 
-    def _eval_term(self, t: Term, a: Dict[int, int]) -> Iterator[Tuple[int, Dict[int, int]]]:
+    def _eval_term(self, t: Term, a: Assumptions) -> Iterator[Tuple[int, Assumptions]]:
         if isinstance(t, Var):
             if t.var in self.consts:
                 fact_index = self.consts[t.var]
@@ -1013,22 +1014,26 @@ class PartialModel(object):
         else:
             assert False
     
-
 class Completion(object):
     '''Represents a completion of a particular partial model via a set of assumptions.
     
     Each entry in `self.assumptions` maps a fact to a particular value for that fact. For 
     relations, this is 0 or 1 for false or true. For constants or functions, this is the
     model element id. `validate()` can be used to check well-sortedness of the assumptions.'''
-    def __init__(self, pm: PartialModel, assumptions: Dict[int, int] = {}):
+    def __init__(self, pm: PartialModel, assumptions: Assumptions = {}):
         '''Constructs a completion for a partial model. By default, the completion represents
         the entire set of all completions in `pm`.'''
         self.model = pm
-        self.assumptions: Dict[int, int] = assumptions if len(assumptions) > 0 else {}
+        self.assumptions: Assumptions = assumptions if len(assumptions) > 0 else {}
     def with_fact(self, fact: int, value: int) -> 'Completion':
         c = Completion(self.model)
         c.assumptions = {**self.assumptions, fact: value}
         return c
+    # wrapper around the method from `PartialModel`
+    def eval_atomic(self, f:Formula) -> Union[bool, Tuple[Assumptions, Assumptions]]:
+        return self.model.eval_atomic(f, self.assumptions)
+
+
     def __str__(self) -> str:
         res = "@["
         def N(i: int) -> str: return self.model.model.names[i]
@@ -1047,23 +1052,6 @@ class Completion(object):
                     break
         return res+ "]"
 
-
-    # # for both quantified variables and constants
-    # def with_var(self, var: str, val: int) -> Completion:
-    #     c = Completion(self.model)
-    #     c.assumptions = {**self.assumptions, self.model.consts[var]: val}
-    #     return c
-    # def with_relation(self, r: str, args: Tuple[int, ...], v: bool) -> Completion:
-    #     c = Completion(self.model)
-    #     c.assumptions = {**self.assumptions, self.model.rels[(r, *args)]: 1 if v else 0}
-    #     return c
-    # def with_func(self, f: str, args: Tuple[int, ...], v: int) -> Completion:
-    #     c = Completion(self.model)
-    #     c.assumptions = {**self.assumptions, self.model.funcs[(f, *args)]: v}
-    #     return c
-    # wrapper around the method from `PartialModel`
-    def eval_atomic(self, f:Formula) -> Union[bool, Tuple[Dict[int, int], Dict[int, int]]]:
-        return self.model.eval_atomic(f, self.assumptions)
     def validate(self) -> None:
         '''Raises an exception if the assumptions are not well formed wrt the underlying model.'''
         for (fact, val) in self.assumptions.items():
@@ -1084,74 +1072,138 @@ class Completion(object):
                 if self.model.model.sorts[self.assumptions[fact]] != sort:
                     raise RuntimeError("Function fact does not have correct sort")
 
+def _assumptions_without(a: Assumptions, fact: int) -> Assumptions:
+    if fact in a:
+        aa = a.copy()
+        del aa[fact]
+        return aa
+    return a
+def _assumptions_opt_without(a: Optional[Assumptions], fact: int) -> Optional[Assumptions]:
+    return _assumptions_without(a, fact) if a is not None else None
 
-def _expand_clause(f: Formula) -> List[Tuple[bool, Formula]]:
-    '''Turns a clause into a list of (positive?, atomic) pairs.
+def _choose_split_fact(base: Assumptions, choices: Sequence[Assumptions]) -> Optional[int]:
+    for a in choices:
+        for k, v in a.items():
+            if k not in base:
+                return k
+    return None
+
+def _F_eval_existential(M: Completion, qvar: int, domain: Sequence[int], p: Formula, inner_polarity: bool) -> Optional[Assumptions]:
+    # First try each element in order. If any work, we're done.
+    assumptions = []
+    for v in domain:
+        assert qvar not in M.assumptions
+        r = _F_eval(M.with_fact(qvar, v), p, inner_polarity)
+        if r is None:
+            return None
+        assumptions.append(_assumptions_without(r, qvar))
+    domain_next = []
+    for v in domain:
+        assert qvar not in M.assumptions
+        r = _F_eval(M.with_fact(qvar, v), p, not inner_polarity)
+        if r is not None:
+            assumptions.append(_assumptions_without(r, qvar))
+            domain_next.append(v)
+        # else, this choice of qvar is always false, so we can drop it from further consideration
+    if len(domain_next) == 0:
+        return M.assumptions
+
+    fact = _choose_split_fact(M.assumptions, assumptions)
+    print(M, qvar, fact, domain_next, inner_polarity, assumptions)
+    assert fact is not None and fact != qvar
+    for v in M.model.domain(fact):
+        r = _F_eval_existential(M.with_fact(fact, v), qvar, domain_next, p, inner_polarity)
+        if r is not None:
+            return r
+    return None
     
-    Positive is true, negation is false. Atomic is either `Equal` or `Relation`.'''
+def _F_eval_or(M: Completion, ps: Sequence[Formula], inner_polarity: bool) -> Optional[Assumptions]:
+    # First try each disjunct in order. If any are true, we're done.
+    assumptions = []
+    for p in ps:
+        r = _F_eval(M, p, inner_polarity)
+        if r is None:
+            return None
+        assumptions.append(r)
+    ps_next = []
+    for p in ps:
+        r = _F_eval(M, p, not inner_polarity)
+        if r is not None:
+            assumptions.append(r)
+            ps_next.append(p)
+        # else, this conjunct is always false, so we can drop it from further consideration
+    
+    if len(ps_next) == 0:
+        return M.assumptions
 
-    if isinstance(f, (Equal, Relation)):
-        return [(True, f)]
-    elif isinstance(f, Not) and isinstance(f.f, (Equal, Relation)):
-        return [(False, f.f)]
-    elif isinstance(f, Or):
-        r = []
-        for c in f.c:
-            r.extend(_expand_clause(c))
-        return r
+    # Otherwise, choose a fact to split on and recuse
+    fact = _choose_split_fact(M.assumptions, assumptions)
+    assert fact is not None
+    for v in M.model.domain(fact):
+        r = _F_eval_or(M.with_fact(fact, v), ps_next, inner_polarity)
+        if r is not None:
+            return r
+    return None
+
+def _F_eval(M: Completion, p: Formula, polarity: bool) -> Optional[Assumptions]:
+    '''Determine whether M |- p (if polarity) or M |- ~p (if !polarity). Return a witness otherwise.
+
+    Evaluate a formula in a partial model, and determine if p (or ~p) satisfies M. If it doesn't satisfy,
+    return a (possibly partial) completion that is a witness to the negation. So if _F_eval(M, p, True)
+    returns a witness, it will be a completion M' such that M' |- ~p. Notice that the witness will be an
+    underapproximation of the set of counterexample completions (i.e. every completion in the return value
+    must be uniformly the opposite of the desired polarity).
+    '''
+    # For testing, first make sure we don't mess up
+    M.validate()
+    print("Trace: ", M,"+" if polarity else "-", p)
+    if isinstance(p, Forall):
+        # first ensure the q_var is known
+        if p.var not in M.model.consts:
+            M.model.add_qvar(p.var, M.model.model.sig.sort_indices[p.sort])
+        qvar = M.model.consts[p.var]
+        if polarity:
+            # we need to remove any assumptions about the qvar that we implicitly
+            # set to ? in this recursive call.
+            return _assumptions_opt_without(_F_eval(M, p.f, True), qvar)
+        else:
+            return _F_eval_existential(M, qvar, M.model.domain(qvar), p.f, False)
+    elif isinstance(p, Exists):
+        # first ensure the q_var is known
+        if p.var not in M.model.consts:
+            M.model.add_qvar(p.var, M.model.model.sig.sort_indices[p.sort])
+        qvar = M.model.consts[p.var]
+        if polarity:
+            return _F_eval_existential(M, qvar, M.model.domain(qvar), p.f, True)
+        else:
+            return _assumptions_opt_without(_F_eval(M, p.f, False), qvar)
+    elif isinstance(p, And):
+        if polarity:
+            for c in p.c:
+                r = _F_eval(M, c, True)
+                if r is not None: return r
+            return None
+        else:
+            return _F_eval_or(M, p.c, False)
+    elif isinstance(p, Or):
+        if polarity:
+            return _F_eval_or(M, p.c, True)
+        else:
+            for c in p.c:
+                r = _F_eval(M, c, False)
+                if r is not None: return r
+            return None
+    elif isinstance(p, Not):
+        return _F_eval(M, p.f, not polarity)
     else:
-        raise RuntimeError(f'Not a clause: {f}')
-    
-def _check_partial_clause(c: Completion, literals: List[Tuple[bool, Formula]]) -> bool:
-    '''Check whether M,\sigma |- p holds, where p is a clause represented by literals.'''
-    c.validate()
-    print(f"Checking {literals} in {c}")
-    values = [c.eval_atomic(atom) for (_, atom) in literals]
-    if any(positive == truth for ((positive, _), truth) in zip(literals, values)):
-        # A literal is true in every completion, so we're done here
-        return True
-    # so no literal is always true (or we'd be done). Filter any literals that are
-    # always False. If this is all of them, we know the value is false.
-    literals_values = [((p, a), t) for ((p,a), t) in zip(literals, values) if isinstance(t, tuple)]
-    if len(literals_values) == 0: return False
-    # Now we have only mixed value literals. If there was no uncertainty in the completion,
-    # then we would have definite values. Thus we need to refine the completions so that
-    # literals take on definite values. We'll pick a fact to concretize, and try each one.
-
-    assumptions: Dict[int, int] = literals_values[0][1][0]
-    print("Old assumptions:", c, "New assumptions", Completion(c.model, assumptions))
-    
-    # pick the first new fact
-    for f, _ in assumptions.items(): # ignore the value because we need to check all possibilities anyway
-        if f in c.assumptions: continue # we're looking for new assumptions
-        fact = f
-        break
-    else:
-        assert False # there should be at least one new fact
-
-    # now split on that fact assignment and check each completion
-    for v in c.model.domain(fact):
-        if not _check_partial_clause(c.with_fact(fact, v), [l for (l, t) in literals_values]):
-            print(f"False for {c}")
-            return False
-    return True
+        # Assume it's atomic
+        v = M.eval_atomic(p)
+        if isinstance(v, bool):
+            # If v doesn't match polarity, then we don't need to add any more assumptions
+            return None if v == polarity else M.assumptions
+        # Value is mixed: if we're looking for true return the false assumptions, and vice versa
+        return v[1 if polarity else 0]
 
 def check_partial(c: Completion, f: Formula) -> bool:
-    '''Check whether M,\sigma |- p holds.
-    (M,s |- ~p) v (M',s' |- p)
-    Assumes f is a prenex formula, with a single clause.'''
-    print("Checking partial:", f)
-    if isinstance(f, Forall):
-        if f.var not in c.model.consts:
-            c.model.add_qvar(f.var, c.model.model.sig.sort_indices[f.sort])
-        # note we don't change c, which means we leave the quantified variable unspecified
-        return check_partial(c, f.f)
-    elif isinstance(f, Exists):
-        # here be dragons
-        raise NotImplemented("Existentials not supported yet")
-    else:
-        # Handle matrix
-        print("Matrix:", f)
-        literals = _expand_clause(f)
-        print("Literals:", str(literals))
-        return _check_partial_clause(c, literals)
+    print("Beginning eval", f,"...")
+    return _F_eval(c, f, True) is None
