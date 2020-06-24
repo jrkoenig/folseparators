@@ -422,4 +422,4 @@ def print_model(model: Model) -> str:
                 facts.append(f"; {call} is arbitrary")
     for constraint in model.constraints:
         facts.append(f"; constraint: {constraint}")
-    return "(model {}\n  {}\n{}\n)\n".format(model.label, elems, "\n".join(["  "+f for f in facts]))
+    return "(model {}\n  {}\n{}\n)".format(model.label, elems, "\n".join(["  "+f for f in facts]))

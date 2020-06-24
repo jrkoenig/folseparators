@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import subprocess, z3, re, itertools
-from .logic import Model, Signature, model_is_complete_wrt_sig
+from .logic import Model, Signature, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .parse import Atom, Parens, AstNode, Input, parse
 from typing import Tuple, Optional, List, Dict
 
@@ -64,7 +64,7 @@ def _eval(env: Dict[str, str], value: AstNode) -> str:
         assert False, value
 
 def _parse_model(sig: Signature, lines: List[str]) -> Model:
-    print("\n".join(lines))
+    # print("\n".join(lines))
     m = Model(sig)
 
     # First, parse the elements from the constants
@@ -89,7 +89,7 @@ def _parse_model(sig: Signature, lines: List[str]) -> Model:
             pass
         elif isinstance(item, Parens) and isinstance(item[0], Atom) and item[0].name() == 'define-fun':
             assert len(item) == 5
-            print(item)
+            # print(item)
             [_, name, types, result, value] = item.children
             assert isinstance(name, Atom)
             assert isinstance(result, Atom)
@@ -122,15 +122,15 @@ def _parse_model(sig: Signature, lines: List[str]) -> Model:
             print(item)
             assert False
 
+    assert model_is_partial_wrt_sig(m, sig)
+    
     # Perform model completion:
     for c in sig.constants.keys():
-        if c not in m.constants:
+        if m.constants[c] is None:
             sort = sig.constants[c]
             v = m.names[m.elems_of_sort[sort][0]]
             m.add_constant(c, v)
     for rel, sorts in sig.relations.items():
-        if rel not in m.relations:
-            m.relations[rel] = dict()
         rep = m.relations[rel]
         for t in itertools.product(*[m.elems_of_sort[sort] for sort in sorts]):
             if t not in rep:
@@ -138,12 +138,11 @@ def _parse_model(sig: Signature, lines: List[str]) -> Model:
     for f in sig.functions.keys():
         sorts, ret_sort = sig.functions[f]
         v = m.names[m.elems_of_sort[ret_sort][0]]
-        if f not in m.functions:
-            m.functions[f] = dict()
         for t in itertools.product(*[m.elems_of_sort[sort] for sort in sorts]):
             args = [m.names[x] for x in t]
             if t not in m.functions[f]:
                 m.add_function(f, args, v)
+    
     assert model_is_complete_wrt_sig(m, sig)
     return m
 

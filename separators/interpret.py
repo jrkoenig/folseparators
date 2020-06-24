@@ -136,6 +136,12 @@ def interpret(commands: List[AstNode]) -> FOLFile:
     
     saw_any_constraint = False
     in_sig = True
+    def ensure_end_sig() -> None:
+        nonlocal in_sig, sig
+        if in_sig:
+            sig.finalize_sorts()
+            in_sig = False
+                
     for c in commands:
         if isinstance(c, Parens) and isinstance(c[0], Atom):
             command = c[0].name()
@@ -170,18 +176,19 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                 sig.functions[n] = (function_sort[:-1], function_sort[-1])
                 
             elif command == "axiom":
-                in_sig = False
+                ensure_end_sig()
                 if len(c) != 2:
                     error_at("Invalid axiom definition", c)
                 env = Environment(sig)
                 axioms.append(formula(env, c[1]))
             elif command == "conjecture":
-                in_sig = False
+                ensure_end_sig()
                 if len(c) != 2:
                     error_at("Invalid conjecture definition", c)
                 env = Environment(sig)
                 conjectures.append(formula(env, c[1]))
             elif command == "constraint":
+                ensure_end_sig()
                 saw_any_constraint = True
                 for constraint in c[1:]:
                     if isinstance(constraint, Atom):
@@ -195,9 +202,7 @@ def interpret(commands: List[AstNode]) -> FOLFile:
                         else:
                             error_at("constraint must be M, (not M), or (implies M1 M2)", constraint)
             elif command == "model":
-                if in_sig:
-                    sig.finalize_sorts()
-                in_sig = False
+                ensure_end_sig()
                 m = Model(sig)
                 if len(c) < 2 or not isinstance(c[1], Atom):
                     error_at("Model must have label", c[1])
@@ -290,7 +295,7 @@ def interpret(commands: List[AstNode]) -> FOLFile:
     if not saw_any_constraint:
         result.constraint_pos.append("+")
         result.constraint_neg.append("-")
-        
-    if in_sig:
-        sig.finalize_sorts()
+    # make sure we finalize the signature if there are no other commands    
+    ensure_end_sig()
+
     return result
