@@ -65,7 +65,7 @@ def test_sep() -> None:
     )
     (conjecture (r a a))
     '''))
-    sep = PartialSeparator(fol.sig, [], 1)
+    sep = PartialSeparator(fol.sig, len([]), 1)
     print("SEP=", sep.separate())
     sep.add_model(fol.models[1], True)
     print("SEP=", sep.separate())
@@ -86,7 +86,7 @@ def test_sep() -> None:
         '''))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [], 1)
+        sep = PartialSeparator(fol.sig, len([]), 1)
         mini_learn(sep, conjecture, fol.axioms)
     
     fol = interpret(parse('''
@@ -100,7 +100,7 @@ def test_sep() -> None:
         '''))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [], 2)
+        sep = PartialSeparator(fol.sig, len([]), 2)
         mini_learn(sep, conjecture, fol.axioms)
 
     fol = interpret(parse('''
@@ -111,7 +111,7 @@ def test_sep() -> None:
         '''))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [(True, 'N')], 1)
+        sep = PartialSeparator(fol.sig, len([(True, 'N')]), 1)
         mini_learn(sep, conjecture, fol.axioms)
 
     fol = interpret(parse('''
@@ -124,7 +124,7 @@ def test_sep() -> None:
         '''))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [(True, 'N'), (False, 'N')], 1)
+        sep = PartialSeparator(fol.sig, len([(True, 'N'), (False, 'N')]), 1)
         mini_learn(sep, conjecture, fol.axioms)
 
     fol = interpret(parse('''
@@ -134,12 +134,12 @@ def test_sep() -> None:
         '''))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [(False, 'N'), (False, 'N')], 1)
+        sep = PartialSeparator(fol.sig, len([(False, 'N'), (False, 'N')]), 1)
         mini_learn(sep, conjecture, fol.axioms)
 
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = PartialSeparator(fol.sig, [(False, 'N'), (False, 'N')], 2)
+        sep = PartialSeparator(fol.sig, len([(False, 'N'), (False, 'N')]), 2)
         mini_learn(sep, conjecture, fol.axioms)
     
 
