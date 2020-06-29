@@ -1,0 +1,4 @@
+(sort N)
+(relation r N N)
+(conjecture (exists x N (exists y N (and (r x y) (not (= x y))))))
+        

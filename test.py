@@ -141,10 +141,48 @@ def test_sep() -> None:
         print(f"\n=== Trying to learn {conjecture} ===\n")
         sep = PartialSeparator(fol.sig, len([(False, 'N'), (False, 'N')]), 2)
         mini_learn(sep, conjecture, fol.axioms)
-    
+        
 
 def mini_learn(sep: PartialSeparator, f: Formula, axioms: List[Formula]) -> None:
     sig = sep._sig
+    env = Environment(sig)
+    
+    s = z3.Solver()
+    for sort in sig.sorts:
+        sorts_to_z3[sort] = z3.DeclareSort(sort)
+    for const, sort in sig.constants.items():
+        z3.Const(const, sorts_to_z3[sort])
+    for rel, sorts in sig.relations.items():
+        z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
+    for fun, (sorts, ret) in sig.functions.items():
+        z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
+    for ax in axioms:
+        s.add(toZ3(ax, env))
+
+    t = UnlimitedTimer()
+    with t:
+        while True:
+            p = sep.separate()
+            if p is None:
+                print("Problem is UNSEP")
+                print(f"[time] Elapsed: {t.elapsed()}")
+                return
+            print("Checking equivalence...")
+            if m := find_model_or_equivalence_cvc4(p, f, env, s, Timer(100000)):
+                if m.label == '+':
+                    print("Generalizing...")
+                    gm = generalize_model(m, And([f]), label='+')
+                    print("Adding pos constraint:\n", gm)
+                    sep.add_model(gm, True)
+                else:
+                    gm = generalize_model(m, And([Not(f)]), label='-')
+                    print("Adding neg constraint:\n", gm)
+                    sep.add_model(gm, False)
+            else:
+                print("Solved with separator:", p)
+                print(f"[time] Elapsed: {t.elapsed()}")
+                return
+def mini_learn2(sig: Signature, sep: Union[DiagonalPartialSeparator, PartialSeparator], f: Formula, axioms: List[Formula]) -> None:
     env = Environment(sig)
     
     s = z3.Solver()
@@ -190,4 +228,14 @@ def main_test() -> None:
     test_sep()
     print('Finished.')
 
-main_test()
+def learn_file() -> None:
+    fol = interpret(parse(open(sys.argv[1]).read()))
+    for conjecture in fol.conjectures:
+        print(f"\n=== Trying to learn {conjecture} ===\n")
+        #sep = PartialSeparator(fol.sig, 2, 1)
+        sep = DiagonalPartialSeparator(fol.sig)
+        mini_learn2(fol.sig, sep, conjecture, fol.axioms)
+
+
+#main_test()
+learn_file()
