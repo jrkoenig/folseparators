@@ -143,6 +143,93 @@ def test_sep() -> None:
         mini_learn(sep, conjecture, fol.axioms)
         
 
+def test_difficult_unsep() -> None:
+    fol = interpret(parse('''
+    (sort A)
+(relation f A A)
+(relation p A A A)
+(constant L1 A)
+(model +
+  ((@uc_A_0 A))
+  ; (f @uc_A_0 @uc_A_0) is arbitrary
+  (p @uc_A_0 @uc_A_0 @uc_A_0)
+)
+(model -
+  ((@uc_A_0 A) (@uc_A_1 A))
+  (f @uc_A_1 @uc_A_1)
+  ; (f @uc_A_0 @uc_A_0) is arbitrary
+  ; (f @uc_A_0 @uc_A_1) is arbitrary
+  ; (f @uc_A_1 @uc_A_0) is arbitrary
+  (not (p @uc_A_1 @uc_A_1 @uc_A_1))
+  ; (p @uc_A_0 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_0 @uc_A_1) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_1) is arbitrary
+  ; (p @uc_A_1 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_1 @uc_A_0 @uc_A_1) is arbitrary
+  ; (p @uc_A_1 @uc_A_1 @uc_A_0) is arbitrary
+)
+(model -
+  ((@uc_A_0 A) (@uc_A_1 A))
+  (f @uc_A_1 @uc_A_1)
+  ; (f @uc_A_0 @uc_A_0) is arbitrary
+  ; (f @uc_A_0 @uc_A_1) is arbitrary
+  ; (f @uc_A_1 @uc_A_0) is arbitrary
+  (not (p @uc_A_1 @uc_A_1 @uc_A_0))
+  ; (p @uc_A_0 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_0 @uc_A_1) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_1) is arbitrary
+  ; (p @uc_A_1 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_1 @uc_A_0 @uc_A_1) is arbitrary
+  ; (p @uc_A_1 @uc_A_1 @uc_A_1) is arbitrary
+)
+(model -
+  ((@uc_A_0 A))
+  (f @uc_A_0 @uc_A_0)
+  (not (p @uc_A_0 @uc_A_0 @uc_A_0))
+)
+(model -
+  ((@uc_A_0 A) (@uc_A_1 A))
+  (f @uc_A_1 @uc_A_0)
+  ; (f @uc_A_0 @uc_A_0) is arbitrary
+  ; (f @uc_A_0 @uc_A_1) is arbitrary
+  ; (f @uc_A_1 @uc_A_1) is arbitrary
+  (not (p @uc_A_1 @uc_A_0 @uc_A_1))
+  ; (p @uc_A_0 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_0 @uc_A_1) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_0) is arbitrary
+  ; (p @uc_A_0 @uc_A_1 @uc_A_1) is arbitrary
+  ; (p @uc_A_1 @uc_A_0 @uc_A_0) is arbitrary
+  ; (p @uc_A_1 @uc_A_1 @uc_A_0) is arbitrary
+  ; (p @uc_A_1 @uc_A_1 @uc_A_1) is arbitrary
+  f (1 0)
+  ~p (1 0 1)
+
+  forall x y z f(x y) -> p(x y z)
+  exists x exists y forall z p(y x x)
+)
+(model +
+  ((@uc_A_0 A) (@uc_A_1 A))
+  ; (f @uc_A_0 @uc_A_0) is arbitrary
+  ; (f @uc_A_0 @uc_A_1) is arbitrary
+  ; (f @uc_A_1 @uc_A_0) is arbitrary
+  ; (f @uc_A_1 @uc_A_1) is arbitrary
+  (p @uc_A_0 @uc_A_0 @uc_A_0)
+  (p @uc_A_0 @uc_A_0 @uc_A_1)
+  (p @uc_A_0 @uc_A_1 @uc_A_0)
+  (p @uc_A_0 @uc_A_1 @uc_A_1)
+  (p @uc_A_1 @uc_A_0 @uc_A_0)
+  (p @uc_A_1 @uc_A_0 @uc_A_1)
+  (p @uc_A_1 @uc_A_1 @uc_A_0)
+  (p @uc_A_1 @uc_A_1 @uc_A_1)
+)'''))
+    sep = PartialSeparator(fol.sig, 3, 1)
+    for m in fol.models:
+        sep.add_model(m, m.label == '+')
+    print("SEP = ", sep.separate())
+
+
 def mini_learn(sep: PartialSeparator, f: Formula, axioms: List[Formula]) -> None:
     sig = sep._sig
     env = Environment(sig)
@@ -209,11 +296,11 @@ def mini_learn2(sig: Signature, sep: Union[DiagonalPartialSeparator, PartialSepa
             if m := find_model_or_equivalence_cvc4(p, f, env, s, Timer(100000)):
                 if m.label == '+':
                     print("Generalizing...")
-                    gm = generalize_model(m, And([f]), label='+')
+                    gm = generalize_model(m, And(axioms + [f]), label='+')
                     print("Adding pos constraint:\n", gm)
                     sep.add_model(gm, True)
                 else:
-                    gm = generalize_model(m, And([Not(f)]), label='-')
+                    gm = generalize_model(m, And(axioms + [Not(f)]), label='-')
                     print("Adding neg constraint:\n", gm)
                     sep.add_model(gm, False)
             else:
@@ -232,10 +319,11 @@ def learn_file() -> None:
     fol = interpret(parse(open(sys.argv[1]).read()))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        #sep = PartialSeparator(fol.sig, 2, 1)
+        # sep = PartialSeparator(fol.sig, 3, 1)
         sep = DiagonalPartialSeparator(fol.sig)
         mini_learn2(fol.sig, sep, conjecture, fol.axioms)
 
 
 #main_test()
 learn_file()
+#test_difficult_unsep()
