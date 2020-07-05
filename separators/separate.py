@@ -1276,12 +1276,10 @@ def check_partial(c: Completion, f: Formula) -> bool:
 class CNode(object):
     def __init__(self, loc: int, i: int, c: Completion, polarity: bool) -> None:
         self.location = loc
+        self.index = i
         self.var = z3.Bool(f'v_{i}')
         self.comp = c
         self.polarity = polarity
-        self.split_fact = -1
-        self.split_children: List[CNode] = []
-        self.index = i
     def __str__(self) -> str:
         return f"M + {self.comp} |- {'' if self.polarity else '~'}cl"
 
@@ -1290,6 +1288,12 @@ SATUpdater = Callable[[int], None]
 Witness = Tuple[Optional[Assumptions], SATUpdater]
 
 class PartialSeparator(object):
+    '''Partial separator for a given prefix length and number of clauses.
+    
+    API is add_model(Model, positive) and separate() -> Optional[Formula]. This
+    class does not support removing constraints or changing the number of quantifiers
+    or clauses after construction. For a more general separator, see
+    `DiagonalPartialSeparator`.'''
     def __init__(self, sig: Signature, prefix_len: int, clauses: int):
         self._sig = sig
         self.n_sorts = len(sig.sort_names)
@@ -1447,13 +1451,15 @@ class PartialSeparator(object):
             self.nodes[key] = n
         return self.nodes[key]
 
+    def _V(self, M: Completion, loc: int, polarity: bool) -> z3.ExprRef:
+        return self._lookup(M, loc, polarity).var
 
     def _split(self, M: Completion, loc: int, polarity: bool, f: int) -> None:
         n = self._lookup(M, loc, polarity)
         if (n.index, f) not in self._splits:
             subterms = []
             for v in n.comp.model.domain(f):
-                subterms.append(self._lookup(M.with_fact(f,v), loc, polarity).var)
+                subterms.append(self._V(M.with_fact(f,v), loc, polarity))
             self.solver.add(n.var == z3.And(subterms))
             self._splits.add((n.index, f))
         
@@ -1519,7 +1525,7 @@ class PartialSeparator(object):
                 r_literal = _F_eval(M, p, polarity)
                 if r_literal is None:
                     def prove_literal(i: int) -> None:
-                        v = self._lookup(M, loc, polarity).var
+                        v = self._V(M, loc, polarity)
                         self.solver.add(z3.Implies(self._literal_var(loc - 1, p_i, p_pol), v))
                         print(f"{_I(i)} Proving {M} {loc} {polarity} with literal {p}")
                         print(f"{_I(i)}   (i.e. {z3.Implies(self._literal_var(loc - 1, p_i, p_pol), v)}")
@@ -1535,7 +1541,7 @@ class PartialSeparator(object):
             if len(ps_next) == 0:
                 # This means that all of the literals are false.
                 def prove_neg(i: int) -> None:
-                    v = self._lookup(M, loc, polarity).var
+                    v = self._V(M, loc, polarity)
                     ante = []
                     # (~L[0] \/ M |- ~l[0]) /\
                     # ...
@@ -1549,8 +1555,7 @@ class PartialSeparator(object):
                     print(f"{_I(i)} Adding proof of negative {M}, -> {z3.Not(v)}")
                 return (M.assumptions, prove_neg)
             
-            node: Optional[CNode] = None #self._lookup_opt(M, loc, polarity)
-            f = _choose_split_fact(M.assumptions, assumptions) if node is None or node.split_fact == -1 else node.split_fact
+            f = _choose_split_fact(M.assumptions, assumptions)
             # print(f"{literals}")
             # print(f"fact={f} choose={_choose_split_fact(M.assumptions, assumptions)}, M = {M.assumptions} assumptions={assumptions}")
             assert f is not None and f != -1
@@ -1561,25 +1566,23 @@ class PartialSeparator(object):
                 if r[0] is not None:
                     (assumpt, gen) = r
                     def add_splits(i:int) -> None:
-                        n = self._lookup(M, loc, polarity)
                         self._split(M, loc, polarity, fact)
                         gen(i+1)
-                        print(f"{_I(i)} Splitting {M}, using proof of {M.with_fact(fact, v)} for {n.var}")
+                        print(f"{_I(i)} Splitting {M}, using proof of {M.with_fact(fact, v)} for {self._V(M, loc, polarity)}")
                     return (assumpt, add_splits)
                 proofs.append(r[1])
             def prove_splits(i: int) -> None:
-                n = self._lookup(M, loc, polarity)
                 self._split(M, loc, polarity, fact)
                 for proof in proofs:
                     proof(i+1)
-                print(f"{_I(i)} Splitting {M}, using all proofs for {n.var}")                
+                print(f"{_I(i)} Splitting {M}, using all proofs for {self._V(M, loc, polarity)}")
             return (None, prove_splits)
         else:
             for (l_i, l_pol, l) in literals:
                 re = _F_eval(M, l, False)
                 if re is not None:
                     def prove_pos(i: int) -> None:
-                        v = self._lookup(M, loc, polarity).var
+                        v = self._V(M, loc, polarity)
                         ante = []
                         for (atom_id, atom) in enumerate(self.atoms):
                             for pol in [True, False]:
@@ -1590,7 +1593,7 @@ class PartialSeparator(object):
                         print(f"{_I(i)} Adding proof of positive for {M}, -> {z3.Not(v)}")
                     return (re, prove_pos)
             def prove_neg(i:int) -> None:
-                v = self._lookup(M, loc, polarity).var
+                v = self._V(M, loc, polarity)
                 ante = []
                 # (~L[0] \/ M |- ~l[0]) /\
                 # ...
@@ -1617,17 +1620,17 @@ class PartialSeparator(object):
                     assumpt, subproof = r
                     def proof(i:int) -> None:
                         subproof(i+1)
-                        self.solver.add(z3.Implies(self._lookup(M, loc, polarity).var, self._lookup(M, cl, polarity).var))
-                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._lookup(M, loc, polarity).var, self._lookup(M, cl, polarity).var)}")
+                        self.solver.add(z3.Implies(self._V(M, loc, polarity), self._V(M, cl, polarity)))
+                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._V(M, loc, polarity), self._V(M, cl, polarity))}")
                         print(f"{_I(i)}   (i.e. {M} {loc} {polarity} -> {M} {cl} {polarity})")
                     return (assumpt, proof)
                 proofs.append(r[1])
             def prove_all(i: int) -> None:
                 for proof in proofs:
                     proof(i+1)
-                ante = [self._lookup(M, cl, polarity).var for cl in range(1, 1 + self.n_clauses)]
-                self.solver.add(z3.Implies(z3.And(ante), self._lookup(M, loc, polarity).var))
-                print(f"{_I(i)} Proving matrix true with all clauses: {z3.Implies(z3.And(ante), self._lookup(M, loc, polarity).var)}")
+                ante = [self._V(M, cl, polarity) for cl in range(1, 1 + self.n_clauses)]
+                self.solver.add(z3.Implies(z3.And(ante), self._V(M, loc, polarity)))
+                print(f"{_I(i)} Proving matrix true with all clauses: {z3.Implies(z3.And(ante), self._V(M, loc, polarity))}")
                 print(f"{_I(i)}   (i.e. {M} {loc} {polarity}")
             return (None, prove_all)
         else:
@@ -1643,8 +1646,8 @@ class PartialSeparator(object):
                     (assumpt, subproof) = r
                     def prove_individual(i: int) -> None:
                         subproof(i+1)
-                        self.solver.add(z3.Implies(self._lookup(M, cl, polarity).var, self._lookup(M, loc, polarity).var))
-                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._lookup(M, cl, polarity).var, self._lookup(M, loc, polarity).var)}")
+                        self.solver.add(z3.Implies(self._V(M, cl, polarity), self._V(M, loc, polarity)))
+                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._V(M, cl, polarity), self._V(M, loc, polarity))}")
                         print(f"{_I(i)}   (i.e. {M} {cl} {polarity} -> {M} {loc} {polarity})")
                     return (None, prove_individual)
                 assumptions.append(r[0])
@@ -1665,14 +1668,13 @@ class PartialSeparator(object):
                     ante = []
                     for subclause, proof in cl_proofs:
                         proof(i+1)
-                        ante.append(self._lookup(M, subclause, not polarity).var)
-                    self.solver.add(z3.Implies(z3.And(ante), z3.Not(self._lookup(M, loc, polarity).var)))
-                    print(f"{_I(i)} Proving ~(M |- ~phi) =: {z3.Not(self._lookup(M, loc, polarity).var)} == {M} {loc} {polarity}")
-                    print(f"{_I(i)}   (i.e. {z3.Implies(z3.And(ante), z3.Not(self._lookup(M, loc, polarity).var))}")
+                        ante.append(self._V(M, subclause, not polarity))
+                    self.solver.add(z3.Implies(z3.And(ante), z3.Not(self._V(M, loc, polarity))))
+                    print(f"{_I(i)} Proving ~(M |- ~phi) =: {z3.Not(self._V(M, loc, polarity))} == {M} {loc} {polarity}")
+                    print(f"{_I(i)}   (i.e. {z3.Implies(z3.And(ante), z3.Not(self._V(M, loc, polarity)))}")
                 return (M.assumptions, prove_neg)
             
-            node: Optional[CNode] = None #self._lookup_opt(M, loc, polarity)
-            f = _choose_split_fact(M.assumptions, assumptions) if node is None or node.split_fact == -1 else node.split_fact
+            f = _choose_split_fact(M.assumptions, assumptions)
             assert f is not None and f != -1
             fact = f
 
@@ -1680,9 +1682,9 @@ class PartialSeparator(object):
             def add_implication(cl: int, pf: Callable[[int], None], M_prime: Completion) -> Tuple[int, Callable[[int], None]]:
                 def ff(i: int) -> None:
                     pf(i+1)
-                    self.solver.add(z3.Implies(self._lookup(M, cl, not polarity).var, self._lookup(M_prime, cl, not polarity).var))
+                    self.solver.add(z3.Implies(self._V(M, cl, not polarity), self._V(M_prime, cl, not polarity)))
                     print(f"{_I(i+1)} Adding implication between {M} {M_prime} for {cl} {not polarity}")
-                    print(f"{_I(i+1)}   (i.e. {z3.Implies(self._lookup(M, cl, not polarity).var, self._lookup(M_prime, cl, not polarity).var)})")
+                    print(f"{_I(i+1)}   (i.e. {z3.Implies(self._V(M, cl, not polarity), self._V(M_prime, cl, not polarity))})")
                 return (cl, ff)
 
             for i, v in enumerate(M.model.domain(fact)):
@@ -1695,14 +1697,14 @@ class PartialSeparator(object):
                     def add_splits(i: int) -> None:
                         self._split(M, loc, polarity, fact)
                         gen(i+1)
-                        print(f"{_I(i)} Splitting {M} (phi), using proof of {M.with_fact(fact, v)} ({self._lookup(M_prime, loc, polarity).var}) for {self._lookup(M, loc, polarity).var}")
+                        print(f"{_I(i)} Splitting {M} (phi), using proof of {M.with_fact(fact, v)} ({self._V(M_prime, loc, polarity)}) for {self._V(M, loc, polarity)}")
                     return (assumpt, add_splits)
                 split_proofs.append(r[1])
             def prove_splits(i: int) -> None:
                 self._split(M, loc, polarity, fact)
                 for proof in split_proofs:
                     proof(i+1)
-                print(f"{_I(i)} Using all subproofs for split (phi) with {self._lookup(M, loc, polarity).var}")
+                print(f"{_I(i)} Using all subproofs for split (phi) with {self._V(M, loc, polarity)}")
             return (None, prove_splits)
 
     def _E_ae(self, M: Completion, loc: int, polarity: bool, domain: List[int], missing_domain_proofs: List[Tuple[int, SATUpdater]]) -> Witness:
@@ -1720,9 +1722,9 @@ class PartialSeparator(object):
                 assumpt = _assumptions_without(assumpt, qvar)
             def proof(i:int) -> None:
                 pf(i+1)
-                self.solver.add(z3.Implies(cond_is_forall, self._lookup(M, loc, polarity).var ==
-                                                           self._lookup(M.with_fact(qvar, -1), loc + 1, polarity).var))
-                print(f"{_I(i)} Adding universal constraint: {M} {loc}: {z3.Implies(cond_is_forall, self._lookup(M, loc, polarity).var == self._lookup(M.with_fact(qvar, -1), loc + 1, polarity).var)}")
+                self.solver.add(z3.Implies(cond_is_forall, self._V(M, loc, polarity) ==
+                                                           self._V(M.with_fact(qvar, -1), loc + 1, polarity)))
+                print(f"{_I(i)} Adding universal constraint: {M} {loc}: {z3.Implies(cond_is_forall, self._V(M, loc, polarity) == self._V(M.with_fact(qvar, -1), loc + 1, polarity))}")
             return (assumpt, proof)
         else:
             # The complex case, an effective existential
@@ -1747,9 +1749,9 @@ class PartialSeparator(object):
                     def prove_individual(i:int) -> None:
                         subproof(i+1)
                         self.solver.add(z3.Implies(cond_exists, 
-                                                   z3.Implies(self._lookup(M_prime, loc + 1, polarity).var,
-                                                              self._lookup(M, loc, polarity).var)))
-                        print(f"{_I(i)} Proving existential with individual (cond & {self._lookup(M_prime, loc + 1, polarity).var}) -> {self._lookup(M, loc, polarity).var}")
+                                                   z3.Implies(self._V(M_prime, loc + 1, polarity),
+                                                              self._V(M, loc, polarity))))
+                        print(f"{_I(i)} Proving existential with individual (cond & {self._V(M_prime, loc + 1, polarity)}) -> {self._V(M, loc, polarity)}")
                         print(f"{_I(i)}   (i.e. {M_prime} {loc + 1} {polarity}) -> {M_prime} {loc} {polarity})")
                     return (None, prove_individual)
                 assumptions.append(_assumptions_without(r[0], qvar))
@@ -1772,19 +1774,17 @@ class PartialSeparator(object):
                 def prove_neg(i: int) -> None:
                     ante = []
                     for v, proof in dom_proofs:
-                        v_i = self._lookup(M.with_fact(qvar, v), loc + 1, not polarity).var
+                        v_i = self._V(M.with_fact(qvar, v), loc + 1, not polarity)
                         ante.append(v_i)
                         proof(i+1)
                     ante.append(cond_exists)
-                    self.solver.add(z3.Implies(z3.And(ante), z3.Not(self._lookup(M, loc, polarity).var)))
-                    print(f"{_I(i)} Proving disjuntion (ae) negative with antecedent: {ante} -> {z3.Not(self._lookup(M, loc, polarity).var)}")
+                    self.solver.add(z3.Implies(z3.And(ante), z3.Not(self._V(M, loc, polarity))))
+                    print(f"{_I(i)} Proving disjuntion (ae) negative with antecedent: {ante} -> {z3.Not(self._V(M, loc, polarity))}")
                     print(f"{_I(i)}   (i.e. ... -> Not({M} {loc} {polarity})")
                 return (M.assumptions, prove_neg)
             
             # print(f"_E_ae {loc} {polarity}: (not all elements false)")
-            node: Optional[CNode] = None #self._lookup_opt(M, loc, polarity)
-            f = _choose_split_fact(M.assumptions, assumptions) if node is None or node.split_fact == -1 else node.split_fact
-            # print(f"{M} {loc} {polarity} SPLIT f={f}, qvar={qvar}, node.split_fact={'?' if node is None or node.split_fact == -1 else node.split_fact}")
+            f = _choose_split_fact(M.assumptions, assumptions)
             assert f is not None and f != -1 and f != qvar
             fact = f
 
@@ -1793,9 +1793,9 @@ class PartialSeparator(object):
                 def ff(i: int) -> None:
                     pf(i+1)
                     self.solver.add(z3.Implies(cond_exists, # TODO: should this be cond_exists??
-                                               z3.Implies(self._lookup(M, loc + 1, not polarity).var,
-                                                          self._lookup(M_prime, loc + 1, not polarity).var)))
-                    print(f"{_I(i)} Adding prrof of {z3.Implies(cond_exists,z3.Implies(self._lookup(M, loc + 1, not polarity).var,self._lookup(M_prime, loc + 1, not polarity).var))}")
+                                               z3.Implies(self._V(M, loc + 1, not polarity),
+                                                          self._V(M_prime, loc + 1, not polarity))))
+                    print(f"{_I(i)} Adding prrof of {z3.Implies(cond_exists,z3.Implies(self._V(M, loc + 1, not polarity),self._V(M_prime, loc + 1, not polarity)))}")
                     print(f"{_I(i)}   (i.e. ({M} {loc + 1} {not polarity}) -> ({M_prime} {loc + 1} {not polarity})")
                 return (value, ff)
 
@@ -1808,14 +1808,14 @@ class PartialSeparator(object):
                     def add_splits(i: int) -> None:
                         self._split(M, loc, polarity, fact)
                         gen(i+1)
-                        print(f"{_I(i)} Splitting {M} (ae), using proof of {M_prime} for {self._lookup(M, loc, polarity).var}")
+                        print(f"{_I(i)} Splitting {M} (ae), using proof of {M_prime} for {self._V(M, loc, polarity)}")
                     return (assumpt, add_splits)
                 split_proofs.append(r[1])
             def prove_splits(i: int) -> None:
                 self._split(M, loc, polarity, fact)
                 for proof in split_proofs:
                     proof(i+1)
-                print(f"{_I(i)} Using all subproofs for split (ae) with {self._lookup(M, loc, polarity).var}")
+                print(f"{_I(i)} Using all subproofs for split (ae) with {self._V(M, loc, polarity)}")
                 
             return (None, prove_splits)
             assert False
