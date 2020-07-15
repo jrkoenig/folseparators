@@ -14,7 +14,7 @@
 
 from collections import defaultdict, Counter
 import itertools, copy, time, sys, re, random, statistics, typing
-from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generator, Set, Optional, cast, Type, Collection, List, Dict, DefaultDict, Iterator, TypeVar, Any, Sequence
+from typing import Tuple, TypeVar, Iterable, FrozenSet, Union, Callable, Generator, Set, Optional, cast, Type, Collection, List, Dict, DefaultDict, Iterator, Any, Sequence
 
 import z3
 
@@ -180,7 +180,7 @@ def pretty_prefix_var_names(sig: Signature, pre: Iterable[int]) -> List[str]:
         # collide as they advance in lockstep
         yield from (suffix(f"V_{i}_"+initials) for i in range(1, 1000000, skip))
     
-    c: Counter = Counter(prefix)
+    c: typing.Counter[int] = Counter(prefix)
     options = dict((sort, name_options(sig.sort_names[sort].upper(), count, sort+1)) for sort, count in c.items())
     fixed = ["" for i in prefix]
     while len(options) > 0:
@@ -1818,8 +1818,6 @@ class PartialSeparator(object):
                 print(f"{_I(i)} Using all subproofs for split (ae) with {self._V(M, loc, polarity)}")
                 
             return (None, prove_splits)
-            assert False
-            
     
 class DiagonalPartialSeparator(object):
     def __init__(self, sig: Signature):
