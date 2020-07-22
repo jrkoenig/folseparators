@@ -3,6 +3,27 @@
 
 This repository contains code to generate a first order formula which separates a set of positive and negative first order models over some given signature.
 
+**This branch represents the version available in the [artifact](https://doi.org/10.1145/3395650) of the PLDI20 paper. The artifact includes the correct version of all dependencies, including python, z3, and cvc4.**
+
+## Citation
+
+    @inproceedings{10.1145/3385412.3386018,
+    author = {Koenig, Jason R. and Padon, Oded and Immerman, Neil and Aiken, Alex},
+    title = {First-Order Quantified Separators},
+    year = {2020},
+    isbn = {9781450376136},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3385412.3386018},
+    doi = {10.1145/3385412.3386018},
+    booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
+    pages = {703–717},
+    numpages = {15},
+    keywords = {first-order logic, invariant inference},
+    location = {London, UK},
+    series = {PLDI 2020}
+    }
+
 ## Requirements
 
 This code requires `python3.7` with `z3py` installed.
@@ -59,14 +80,9 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
 
 ## Source Files
 
-- `check.py`: determine whether all of the models in a file satisfy all the axioms. Implicitly also checks that the file parses correctly.
-- `interpret.py`: performs semantic analysis of the parse result via `interpret()`. Produces `Model`s, `Formula`s and `Signature`s.
 - `learn.py`: given a signature and a conjecture, runs `Separator.separate()` and generates models until enough positive and negative models exist so that the separator gives a formula equivalent to the conjecture.
 - `logic.py`: defines logic objects like `Model`s, `Formula`s and `Signature`s.
-- `matrix.py`: generates the matrix of a formula given the satisfying formula and FO-types via `infer_matrix()`.
-- `parse.py`: parses a s-expr file into lists of lists and atoms via `parse()`. Performs both lexing and parsing but does not check well-formedness of the resulting parse tree or build logic objects.
 - `separate.py`: given a set of positive and negative models, infer a formula which separates them via a `Separator` object.
-- `experiments/make_charts.py`: generates summary charts given a `results.json` file.
 - `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `benchmark.json` file, and produces a `results.json` file.
 
 ## Data files
