@@ -1,17 +1,52 @@
 
-# First Order Logic Separators
+# First Order Quantified Separators
 
 This repository contains code to generate a first order formula which separates a set of positive and negative first order models over some given signature.
 
+**Note: See the [pldi20-artifact](https://github.com/jrkoenig/folseparators/tree/pldi20-artifact) branch for a version which matches our PLDI20 paper.**
+
+## Citation
+
+    @inproceedings{10.1145/3385412.3386018,
+    author = {Koenig, Jason R. and Padon, Oded and Immerman, Neil and Aiken, Alex},
+    title = {First-Order Quantified Separators},
+    year = {2020},
+    isbn = {9781450376136},
+    publisher = {Association for Computing Machinery},
+    address = {New York, NY, USA},
+    url = {https://doi.org/10.1145/3385412.3386018},
+    doi = {10.1145/3385412.3386018},
+    booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
+    pages = {703–717},
+    numpages = {15},
+    keywords = {invariant inference, first-order logic},
+    location = {London, UK},
+    series = {PLDI 2020}
+    }
+
 ## Requirements
 
-This code requires `python3` with `z3py` installed.
+This code requires `python3` with `z3py` installed. Additionally, if CVC4 is used then `cvc4` must be on the path.
 
-## Example Commands
+## Example Command
 
-- `python3 check.py problems/toy_lock_simple.fol`
-- `python3 learn.py conjectures/toy_lock_invar11.fol`
-- `python3 separate.py problems/every_edge_triangle.fol` (*Currently does not work*)
+`python3 -m separators conjectures/toy_lock_simple.fol`
+
+Sample output:
+
+```
+...
+prefix A x_1_0:node E x_0_0:epoch A x_1_1:node matrix (~le(x_0_0, ep(x_1_1)) | ~locked(zero, x_1_1) | x_1_0 = x_1_1)
+expanded nodes: 200/350
+prefix A x_0_0:epoch E x_1_0:node A x_1_1:node matrix (~locked(x_0_0, x_1_1) | x_1_0 = x_1_1)
+Optimize checking if there is a formula of size <= 1 (lower 0 upper 2)
+Couldn't solve problem
+Learned new possible formula:  forall E:epoch. exists N1:node. forall N2:node. (~locked(E, N2) | N1 = N2)
+Checking formula
+formula matches!
+forall E:epoch. exists N1:node. forall N2:node. (~locked(E, N2) | N1 = N2)
+{"success":true,"total_time":1.3309106826782227,"separation_time":1.1731467247009277,"counterexample_time":0.15776395797729492,"matrix_time":0.0,"model_count":6,"formula":"forall E:epoch. exists N1:node. forall N2:node. (~locked(E, N2) | N1 = N2)","formula_quantifiers":3,"error":"","sep_algo":"hybrid","action":"learn"}
+```
 
 ## File format
 The `.fol` file format is an s-expr based format for representing FO signatures, models, and formula. An example file (`problems/example.fol`) is:
@@ -59,15 +94,9 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
 
 ## Source Files
 
-- `check.py`: determine whether all of the models in a file satisfy all the axioms. Implicitly also checks that the file parses correctly.
-- `interpret.py`: performs semantic analysis of the parse result via `interpret()`. Produces `Model`s, `Formula`s and `Signature`s.
 - `learn.py`: given a signature and a conjecture, runs `Separator.separate()` and generates models until enough positive and negative models exist so that the separator gives a formula equivalent to the conjecture.
 - `logic.py`: defines logic objects like `Model`s, `Formula`s and `Signature`s.
-- `matrix.py`: generates the matrix of a formula given the satisfying formula and FO-types via `infer_matrix()`.
-- `parse.py`: parses a s-expr file into lists of lists and atoms via `parse()`. Performs both lexing and parsing but does not check well-formedness of the resulting parse tree or build logic objects.
 - `separate.py`: given a set of postive and negative models, infer a formula which separates them via a `Separator` object.
-- `experiments/describe_conjectures.py`: given a directory of conjecture `.fol` files, creates a JSON representation (in `extracted.json`) of each along with some basic statistics.
-- `experiments/make_charts.py`: generates summary charts given a `results.json` file.
 - `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `extracted.json` file, and produces a `results.json` file
 
 ## Data files
