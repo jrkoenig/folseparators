@@ -3,7 +3,7 @@
 
 This repository contains code to generate a first order formula which separates a set of positive and negative first order models over some given signature.
 
-**This branch represents the version available in the [artifact](https://doi.org/10.1145/3395650) of our [PLDI20 paper](https://dl.acm.org/doi/abs/10.1145/3385412.3386018). The artifact includes the correct version of all dependencies, including python, z3, and cvc4.**
+**This branch represents the version available in the [artifact](https://doi.org/10.1145/3395650) of our [PLDI20 paper](https://dl.acm.org/doi/abs/10.1145/3385412.3386018). The artifact includes the correct version of all dependencies, including python, z3, and cvc4. To infer invariants with separators, see the [corresponding branch](https://github.com/wilcoxjay/mypyvy/tree/pldi20-artifact) in the mypyvy project.**
 
 ## Citation
 
