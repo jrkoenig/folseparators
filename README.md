@@ -3,7 +3,7 @@
 
 This repository contains code to generate a first order formula which separates a set of positive and negative first order models over some given signature.
 
-**Note: See the [pldi20-artifact](https://github.com/jrkoenig/folseparators/tree/pldi20-artifact) branch for a version which matches our PLDI20 paper.**
+**Note: This `master` branch is experimental and is not gauranteed to be stable. See the [pldi20-artifact](https://github.com/jrkoenig/folseparators/tree/pldi20-artifact) branch for a version which matches our [PLDI20 paper](https://dl.acm.org/doi/abs/10.1145/3385412.3386018).**
 
 ## Citation
 
