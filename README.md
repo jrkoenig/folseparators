@@ -3,36 +3,36 @@
 
 This repository contains code to generate a first order formula which separates a set of positive and negative first order models over some given signature.
 
-**This branch represents the version available in the [artifact](https://doi.org/10.1145/3395650) of the PLDI20 paper. The artifact includes the correct version of all dependencies, including python, z3, and cvc4.**
+**This branch represents the version available in the [artifact](https://doi.org/10.1145/3395650) of our [PLDI20 paper](https://dl.acm.org/doi/abs/10.1145/3385412.3386018). The artifact includes the correct version of all dependencies, including python, z3, and cvc4.**
 
 ## Citation
 
     @inproceedings{10.1145/3385412.3386018,
-    author = {Koenig, Jason R. and Padon, Oded and Immerman, Neil and Aiken, Alex},
-    title = {First-Order Quantified Separators},
-    year = {2020},
-    isbn = {9781450376136},
-    publisher = {Association for Computing Machinery},
-    address = {New York, NY, USA},
-    url = {https://doi.org/10.1145/3385412.3386018},
-    doi = {10.1145/3385412.3386018},
-    booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
-    pages = {703–717},
-    numpages = {15},
-    keywords = {first-order logic, invariant inference},
-    location = {London, UK},
-    series = {PLDI 2020}
+        author = {Koenig, Jason R. and Padon, Oded and Immerman, Neil and Aiken, Alex},
+        title = {First-Order Quantified Separators},
+        year = {2020},
+        isbn = {9781450376136},
+        publisher = {Association for Computing Machinery},
+        address = {New York, NY, USA},
+        url = {https://doi.org/10.1145/3385412.3386018},
+        doi = {10.1145/3385412.3386018},
+        booktitle = {Proceedings of the 41st ACM SIGPLAN Conference on Programming Language Design and Implementation},
+        pages = {703–717},
+        numpages = {15},
+        keywords = {first-order logic, invariant inference},
+        location = {London, UK},
+        series = {PLDI 2020}
     }
 
 ## Requirements
 
-This code requires `python3.7` with `z3py` installed.
+This code requires `python3` (`>=3.7`) with `z3py` installed. Additionally, to use cvc4 (the default), you need the `cvc4` binary on your `PATH`. (Use `--no-cvc4` to disable.)
 
 ## Example Commands
 
-- `python3.7 -m separators --separate problems/every_edge_triangle.fol`
-- `python3.7 -m separators conjectures/toy_lock_invar11.fol`
-- `python3.7 -m separators --logic=universal conjectures/toy_lock_invar7.fol`
+- `python3 -m separators --separate problems/every_edge_triangle.fol`
+- `python3 -m separators conjectures/toy_lock_invar11.fol`
+- `python3 -m separators --logic=universal conjectures/toy_lock_invar7.fol`
 
 ## File format
 The `.fol` file format is an s-expr based format for representing FO signatures, models, and formula. An example file (`problems/example.fol`) is:
@@ -40,7 +40,7 @@ The `.fol` file format is an s-expr based format for representing FO signatures,
 ```
 ; Signature
 (sort A)
-(function f A A) ; last sort is return value. Must have at least 1 argument sort
+(function f A A) ; last sort is return value. Must have at least 1 argument sort. Use constants for nullary functions
 (relation p A)
 (constant a A)
 
@@ -82,7 +82,7 @@ Formula may have quantifiers. An axiom `forall x:Node. forall y:Node. (~(edge(x,
 
 - `learn.py`: given a signature and a conjecture, runs `Separator.separate()` and generates models until enough positive and negative models exist so that the separator gives a formula equivalent to the conjecture.
 - `logic.py`: defines logic objects like `Model`s, `Formula`s and `Signature`s.
-- `separate.py`: given a set of positive and negative models, infer a formula which separates them via a `Separator` object.
+- `separate.py`: given a set of positive and negative models, infer a formula which separates them via a `Separator` object. `HybridSeperator` is the version used for the experiments in the paper, and is the default.
 - `experiments/run_experiment.py`: runs `learn.py` on all of the examples in a `benchmark.json` file, and produces a `results.json` file.
 
 ## Data files
