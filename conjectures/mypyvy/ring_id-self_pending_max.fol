@@ -1,0 +1,25 @@
+; File: examples/fol/ring_id.pyv
+
+; Sig
+(sort id)
+(sort node)
+(relation btw node node node)
+(relation le id id)
+(relation leader node)
+(relation pending id node)
+(function idn node id)
+; End sig
+
+; Axioms
+(axiom (forall X id (le X X)))
+(axiom (forall X id (forall Y id (forall Z id (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+(axiom (forall X id (forall Y id (or (not (and (le X Y) (le Y X))) (= X Y)))))
+(axiom (forall X id (forall Y id (or (le X Y) (le Y X)))))
+(axiom (forall W node (forall X node (forall Y node (forall Z node (or (not (and (btw W X Y) (btw W Y Z))) (btw W X Z)))))))
+(axiom (forall W node (forall X node (forall Y node (or (not (btw W X Y)) (not (btw W Y X)))))))
+(axiom (forall W node (forall X node (forall Y node (or (btw W X Y) (btw W Y X) (= W X) (= W Y) (= X Y))))))
+(axiom (forall X node (forall Y node (forall Z node (or (not (btw X Y Z)) (btw Y Z X))))))
+(axiom (forall X node (forall Y node (or (not (= (idn X) (idn Y))) (= X Y)))))
+
+; Conjecture self_pending_max
+(conjecture (forall L node (forall N node (or (not (pending (idn L) L)) (le (idn N) (idn L))))))

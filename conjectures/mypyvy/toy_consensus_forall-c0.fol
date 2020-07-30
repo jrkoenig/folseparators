@@ -1,0 +1,18 @@
+; File: examples/fol/toy_consensus_forall.pyv
+
+; Sig
+(sort node)
+(sort quorum)
+(sort value)
+(constant voting_quorum quorum)
+(relation decided value)
+(relation member node quorum)
+(relation vote node value)
+(relation voted node)
+; End sig
+
+; Axioms
+(axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+; Conjecture c0
+(conjecture (forall V1 value (forall V2 value (or (not (and (decided V1) (decided V2))) (= V1 V2)))))

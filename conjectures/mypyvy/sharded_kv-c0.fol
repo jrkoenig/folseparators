@@ -1,0 +1,15 @@
+; File: examples/fol/sharded_kv.pyv
+
+; Sig
+(sort key)
+(sort node)
+(sort value)
+(relation owner node key)
+(relation table node key value)
+(relation transfer_msg node key value)
+; End sig
+
+; Axioms
+
+; Conjecture c0
+(conjecture (forall N1 node (forall K key (forall N2 node (or (not (and (owner N1 K) (owner N2 K))) (= N1 N2))))))

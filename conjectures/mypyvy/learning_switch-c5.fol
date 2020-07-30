@@ -1,0 +1,12 @@
+; File: examples/fol/learning_switch.pyv
+
+; Sig
+(sort node)
+(relation pending node node node node)
+(relation table node node node)
+; End sig
+
+; Axioms
+
+; Conjecture c5
+(conjecture (forall T node (forall X node (forall Y node (or (not (and (table T X Y) (not (= T Y)) (not (= X Y)))) (table T Y T))))))

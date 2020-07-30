@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import argparse, random, json
-from .learn import learn, separate
+from .learn import learn, separate, learn_partial
 from .interpret import interpret
 from .parse import parse
 from .logic import print_model, Exists, Forall, Formula
@@ -36,6 +36,7 @@ def main() -> None:
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("--separator", choices=('naive', 'v1', 'v2', 'generalized', 'hybrid'), default='hybrid', help="separator algorithm to use")
     parser.add_argument("--separate", action="store_true", default=False, help="only try to separate provided models")
+    parser.add_argument("--partial", action="store_true", default=False, help="Use experimental partial separation")
     parser.add_argument("--no-cvc4", action="store_true", default=False, help="Don't use cvc4 to generate counterexamples")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
@@ -49,6 +50,8 @@ def main() -> None:
     #success, formula, models, ctimer, stimer, mtimer, error 
     if args.separate:
         result = separate(f, timeout = args.timeout, args = args)
+    elif args.partial:
+        result = learn_partial(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args)
     else:
         result = learn(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args)
     j = {
@@ -62,7 +65,8 @@ def main() -> None:
         'formula_quantifiers': count_quantifier_prenex(result.current),
         'error': result.reason,
         'sep_algo': args.separator,
-        'action': 'separate' if args.separate else 'learn'
+        'action': 'separate' if args.separate else 'learn',
+        'partial': args.partial
     }
     
     print(json.dumps(j, separators=(',',':'), indent=None))

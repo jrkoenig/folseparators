@@ -284,28 +284,32 @@ def mini_learn2(sig: Signature, sep: Union[DiagonalPartialSeparator, PartialSepa
     for ax in axioms:
         s.add(toZ3(ax, env))
 
+    model_count = 0
     t = UnlimitedTimer()
     with t:
         while True:
-            p = sep.separate()
+            p = sep.separate(timer=t)
             if p is None:
                 print("Problem is UNSEP")
                 print(f"[time] Elapsed: {t.elapsed()}")
                 return
-            print("Checking equivalence...")
+            print(f"Checking equivalence for {p}")
             if m := find_model_or_equivalence_cvc4(p, f, env, s, Timer(100000)):
                 if m.label == '+':
                     print("Generalizing...")
                     gm = generalize_model(m, And(axioms + [f]), label='+')
                     print("Adding pos constraint:\n", gm)
                     sep.add_model(gm, True)
+                    model_count += 1
                 else:
                     gm = generalize_model(m, And(axioms + [Not(f)]), label='-')
                     print("Adding neg constraint:\n", gm)
                     sep.add_model(gm, False)
+                    model_count += 1
             else:
                 print("Solved with separator:", p)
                 print(f"[time] Elapsed: {t.elapsed()}")
+                print(f"Needed {model_count} models")
                 return
 
 
@@ -319,8 +323,8 @@ def learn_file() -> None:
     fol = interpret(parse(open(sys.argv[1]).read()))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        # sep = PartialSeparator(fol.sig, 3, 1)
-        sep = DiagonalPartialSeparator(fol.sig)
+        sep = DiagonalPartialSeparator(fol.sig, logic = 'universal')
+        #sep = PartialSeparator(fol.sig, 4, 2, logic='universal')
         mini_learn2(fol.sig, sep, conjecture, fol.axioms)
 
 

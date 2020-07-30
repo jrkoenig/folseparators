@@ -20,7 +20,7 @@ from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
-from .separate import Separator, HybridSeparator
+from .separate import Separator, HybridSeparator, DiagonalPartialSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
@@ -614,6 +614,78 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
 
     return result
 
+
+def learn_partial(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
+    result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
+    
+    S = DiagonalPartialSeparator
+        
+    separator: DiagonalPartialSeparator = S(sig, logic=args.logic) 
+
+    env = Environment(sig)
+    s = z3.Solver()
+    for sort in sig.sorts:
+        sorts_to_z3[sort] = z3.DeclareSort(sort)
+    for const, sort in sig.constants.items():
+        z3.Const(const, sorts_to_z3[sort])
+    for rel, sorts in sig.relations.items():
+        z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
+    for fun, (sorts, ret) in sig.functions.items():
+        z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
+    for ax in axioms:
+        s.add(toZ3(ax, env))
+
+    p_constraints: List[int] = []
+    n_constraints: List[int] = []
+     
+    try:
+        while True:
+            with result.counterexample_timer:
+                if not args.quiet:
+                    print ("Checking formula")
+                if not args.no_cvc4:
+                    r = find_model_or_equivalence_cvc4(result.current, formula, env, s, result.counterexample_timer)
+                else:
+                    r = find_model_or_equivalence(result.current, formula, axioms, env, s, result.counterexample_timer)
+                
+                result.counterexample_timer.check_time()
+                if r is None:
+                    if not args.quiet:
+                        print ("formula matches!")
+                        print (result.current)
+                    result.success = True
+                    return result
+            
+            if r.label == '+':
+                print("Generalizing...")
+                gr = generalize_model(r, And(axioms + [formula]), label='+')
+                separator.add_model(gr, True)
+            else:
+                gr = generalize_model(r, And(axioms + [Not(formula)]), label='-')
+                separator.add_model(gr, False)
+            result.models.append(gr)
+
+            with result.separation_timer:
+                if not args.quiet:
+                    print ("New model is:")
+                    print (r)
+                    print ("Have new model, now have", len(result.models), "models total")
+                if True:
+                    c = separator.separate(timer = result.separation_timer)
+                if c is None:
+                    result.reason = "couldn't separate models under given restrictions"
+                    break
+                if not args.quiet:
+                    print("Learned new possible formula: ", c)
+                result.current = c
+    except TimeoutException:
+        result.reason = "timeout"
+    except RuntimeError as e:
+        print("Error:", e)
+        #raise e
+        result.reason = str(e)
+
+    return result
 
 def separate(f: FOLFile, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())

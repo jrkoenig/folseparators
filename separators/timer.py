@@ -24,27 +24,28 @@ class Timer(object):
         self._elapsed: float = 0.0
         self.limit: float = limit
         self.start: float = 0.0
-        self.running: bool = False
+        self.level: int = 0
         
     def __enter__(self) -> 'Timer':
-        assert not self.running
-        self.start = time.time()
-        self.running = True
+        if self.level == 0:
+            self.start = time.time()
+        self.level += 1
         return self
 
     def __exit__(self, type: Exception, value: Any, traceback: Any) -> None:
         if type is TimeoutException:
             return
-        assert self.running
-        self._elapsed += time.time() - self.start
-        self.running = False
+        assert self.level > 0
+        self.level -= 1
+        if self.level == 0:
+            self._elapsed += time.time() - self.start
         self.check_time()
 
     def remaining(self) -> float:
         return self.limit - self.elapsed()
 
     def elapsed(self) -> float:
-        if self.running:
+        if self.level > 0:
             return self._elapsed + (time.time() - self.start)
         else:
             return self._elapsed
@@ -54,7 +55,7 @@ class Timer(object):
             raise TimeoutException()
     
     def solver_check(self, solver: Union[z3.Solver, z3.Optimize], *args: z3.ExprRef) -> z3.CheckSatResult:
-        assert self.running # only allow sat while this timer is active
+        assert self.level > 0 # only allow sat while this timer is active
         
         remaining = self.remaining()
         if remaining < 0.1: # within 100ms of timeout
@@ -71,3 +72,7 @@ class Timer(object):
 class UnlimitedTimer(Timer):
     def __init__(self) -> None:
         Timer.__init__(self, float(10000000))
+    # def solver_check(self, solver: Union[z3.Solver, z3.Optimize], *args: z3.ExprRef) -> z3.CheckSatResult:
+    #     return solver.check(*args)
+    # def check_time(self) -> None: pass
+    # def remaining(self) -> float: return float("+inf")

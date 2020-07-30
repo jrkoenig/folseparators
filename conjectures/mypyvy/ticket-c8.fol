@@ -1,0 +1,24 @@
+; File: examples/fol/ticket.pyv
+
+; Sig
+(sort thread)
+(sort ticket)
+(constant next_ticket ticket)
+(constant service ticket)
+(constant zero ticket)
+(relation le ticket ticket)
+(relation m thread ticket)
+(relation pc1 thread)
+(relation pc2 thread)
+(relation pc3 thread)
+; End sig
+
+; Axioms
+(axiom (forall X ticket (le X X)))
+(axiom (forall X ticket (forall Y ticket (forall Z ticket (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+(axiom (forall X ticket (forall Y ticket (or (not (and (le X Y) (le Y X))) (= X Y)))))
+(axiom (forall X ticket (forall Y ticket (or (le X Y) (le Y X)))))
+(axiom (forall X ticket (le zero X)))
+
+; Conjecture c8
+(conjecture (forall T1 thread (forall M ticket (forall T2 thread (or (not (and (m T1 M) (m T2 M) (not (= M zero)))) (= T1 T2))))))

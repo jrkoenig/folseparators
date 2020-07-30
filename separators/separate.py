@@ -892,6 +892,7 @@ class PartialModel(object):
         self.funcs: Dict[Tuple[Any, ...], int] = {} # keys are same as above ('f', 4)
         self.qvar_sorts: Dict[str, int] = {}
         self.fact_domains: Dict[int, List[int]] = {}
+        self.base_facts = -1
         self._compute_facts()
     def _next_fact(self, domain: List[int]) -> int:
         v = self.n_facts
@@ -914,6 +915,7 @@ class PartialModel(object):
             for t in itertools.product(*(m.elems_of_sort[sort] for sort in sig.functions[f][0])):
                 if t not in f_interp:
                     self.funcs[(f, *t)] = self._next_fact(m.elems_of_sort[result_sort])
+        self.base_facts = self.n_facts
 
     def add_qvar(self, name: str, sort: int) -> None:
         assert name not in self.consts and self.model.sig.is_free_name(name)
@@ -1089,14 +1091,14 @@ def _assumptions_opt_without(a: Optional[Assumptions], fact: int) -> Optional[As
     return _assumptions_without(a, fact) if a is not None else None
 
 def _choose_split_fact_mode(base: Assumptions, choices: Sequence[Assumptions]) -> Optional[int]:
-    options = []
+    options: typing.Counter[int] = Counter()
     for a in choices:
         for k, v in a.items():
             if k not in base or base[k] == -1:
-                options.append(k)
-    if len(options) == 0: 
-        return None
-    return int(statistics.mode(options))
+                options[k] += 1
+    for k, count in sorted(options.items(), key = lambda x: x[1], reverse=True):
+        return k
+    return None
 
 def _choose_split_fact_anti_mode(base: Assumptions, choices: Sequence[Assumptions]) -> Optional[int]:
     options: typing.Counter[int] = Counter()
@@ -1107,6 +1109,22 @@ def _choose_split_fact_anti_mode(base: Assumptions, choices: Sequence[Assumption
     for k, count in sorted(options.items(), key = lambda x: x[1]):
         return k
     return None
+
+def _choose_split_domain(base_completion: Completion, split_fact: int, choices: Sequence[Assumptions]) -> List[int]:
+    base = base_completion.assumptions
+    value_options: typing.Counter[int] = Counter()
+    for a in choices:
+        if split_fact in a and a[split_fact] != -1:
+            value_options[a[split_fact]] += 1
+    
+    domain = [v for v, count in sorted(value_options.items(), key = lambda x: x[1], reverse = True)]
+    for v in base_completion.model.domain(split_fact):
+        if v not in domain:
+            domain.append(v)
+    #domain.reverse()
+    return domain
+    
+
 
 def _choose_split_fact_orig(base: Assumptions, choices: Sequence[Assumptions]) -> Optional[int]:
     for a in choices:
@@ -1150,7 +1168,14 @@ def _choose_split_fact_reverse(base: Assumptions, choices: Sequence[Assumptions]
                 return k
     return None
 
-_choose_split_fact = _choose_split_fact_anti_mode
+_choose_split_fact = _choose_split_fact_mode
+
+def _random_completion(M: Completion, qvars: Sequence[int], R: random.Random) -> Completion:
+    a = dict(M.assumptions)
+    for f in itertools.chain(range(M.model.base_facts), qvars):
+        if f not in M.assumptions or M.assumptions[f] == -1:
+            a[f] = R.choice(M.model.domain(f))
+    return Completion(M.model, a)
 
 def _F_eval_existential(M: Completion, qvar: int, domain: Sequence[int], p: Formula, inner_polarity: bool) -> Optional[Assumptions]:
     # First try each element in order. If any work, we're done.
@@ -1272,6 +1297,8 @@ def check_partial(c: Completion, f: Formula) -> bool:
     #print("Beginning eval", f,"...")
     return _F_eval(c, f, True) is None
 
+T = typing.TypeVar('T')
+def shuffled(l: Sequence[T]) -> Sequence[T]: return random.sample(l, len(l))
 
 class CNode(object):
     def __init__(self, loc: int, i: int, c: Completion, polarity: bool) -> None:
@@ -1290,12 +1317,14 @@ Witness = Tuple[Optional[Assumptions], SATUpdater]
 class PartialSeparator(object):
     '''Partial separator for a given prefix length and number of clauses.
     
-    API is add_model(Model, positive) and separate() -> Optional[Formula]. This
+    API is add_model(Model, is_positive) and separate() -> Optional[Formula]. This
     class does not support removing constraints or changing the number of quantifiers
     or clauses after construction. For a more general separator, see
     `DiagonalPartialSeparator`.'''
-    def __init__(self, sig: Signature, prefix_len: int, clauses: int):
+    def __init__(self, sig: Signature, prefix_len: int, clauses: int, logic: str = 'fol'):
         self._sig = sig
+        self._logic = logic
+        assert self._logic in ['fol', 'universal']
         self.n_sorts = len(sig.sort_names)
         self.n_clauses = clauses
         self.n_quantifiers = prefix_len
@@ -1304,14 +1333,17 @@ class PartialSeparator(object):
         self.polarities: List[bool] = []
         self.next_node_index = 0
         self.nodes: Dict[Tuple[int, ...], CNode] = {}
+        self._random_gen = random.Random(47943452)
         
         
         # Caches
         self._splits: Set[Tuple[int, int]] = set() # (node_index, split_fact)
         self._cache_literal_var: Dict[Tuple[int, int, bool], z3.ExprRef] = {}
+        self._defined_neg_clauses: Set[int] = set()
         # pretend we have a prefix big enough for up to N variables of each sort
         self.prefix_var_names = [prefix_var_names(self._sig, [s] * self.n_quantifiers) for s in range(self.n_sorts)]
         self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for sort, vs in enumerate(self.prefix_var_names) for v in vs]))
+        self._atom_qvar_requirements: List[List[int]] = []
         self._cache_vars()
         self._constrain_vars()
         self.solver.check()
@@ -1327,50 +1359,49 @@ class PartialSeparator(object):
         self.roots.append(n)
         self.solver.add(n.var)
 
-    def separate(self) -> Optional[Formula]:
-        while True:
-            # print("Checking hardcoded solution")
-            # s = z3.Solver()
-            # for constraint in self.solver.assertions():
-            #     s.add(constraint)
-            # assumptions = [self._prefix_quant_var(-3),self._prefix_quant_var(-2),self._prefix_quant_var(-1)]
-            # r = s.check(*assumptions)
-            # print("Hardcoded? (prefix only) =", r)
-            # for atom_id, atom in enumerate(self.atoms):
-            #     for pol in [True, False]:
-            #         if (atom_id, pol) in [(9, False), (52, True)]:
-            #             assumptions += [self._literal_var(0, atom_id, pol)]
-            #         else:
-            #             assumptions += [z3.Not(self._literal_var(0, atom_id, pol))]
-            # r = s.check(*assumptions)
-            # print("Hardcoded? =", r)
-            # if r == z3.unsat:
-            #     for n in reversed(range(len(self.solver.assertions()) + 1)):
-            #         s2 = z3.Solver()
-            #         for constraint in self.solver.assertions()[:n]:
-            #             s2.add(constraint)
-            #         if s2.check(*assumptions) == z3.sat:
-            #             print("didn't need", self.solver.assertions()[n])
-            #             break
-            #     for constraint in self.solver.assertions():
-            #         print(constraint)
-            #     assert False
-            # print("Finished hardcoded.")
-        
-            # Force our hardcoded solution:
-            # self.solver.add(z3.And(assumptions))
+    def separate(self, timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        with timer:
+            while True:
+                # print("Checking hardcoded solution")
+                # s = z3.Solver()
+                # for constraint in self.solver.assertions():
+                #     s.add(constraint)
+                # assumptions = [self._prefix_quant_var(-2), self._prefix_sort_var(-2, 0),self._prefix_quant_var(-1), self._prefix_sort_var(-1, 1)]
+                # for atom_id, atom in enumerate(self.atoms):
+                #     for pol in [True, False]:
+                #         if (atom_id, pol) in [(28, False), (9, True)]:
+                #             assumptions += [self._literal_var(0, atom_id, pol)]
+                #         else:
+                #             assumptions += [z3.Not(self._literal_var(0, atom_id, pol))]
+                # r = s.check(*assumptions)
+                # print("Hardcoded? =", r)
+                # if r == z3.unsat:
+                #     for n in reversed(range(len(self.solver.assertions()) + 1)):
+                #         s2 = z3.Solver()
+                #         for constraint in self.solver.assertions()[:n]:
+                #             s2.add(constraint)
+                #         if s2.check(*assumptions) == z3.sat:
+                #             print("didn't need", self.solver.assertions()[n])
+                #             break
+                #     for constraint in self.solver.assertions():
+                #         print(constraint)
+                #     assert False
+                # print("Finished hardcoded.")
             
-            result = self.solver.check()
-            if result == z3.unsat:
-                return None
-            assert result == z3.sat
-            self.solution = self.solver.model()
-            if self._check_validity():
-                f: Formula = And([Or([a if t else Not(a) for (t, a, i) in clause]) for clause in self.solution_formula[:]])
-                for is_forall, sort, name in reversed(self.solution_prefix):
-                    f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
-                return f
-            # otherwise, _check_validity has added constraints
+                # Force our hardcoded solution:
+                # self.solver.add(z3.And(assumptions))
+                
+                result = timer.solver_check(self.solver)
+                if result == z3.unsat:
+                    return None
+                assert result == z3.sat
+                self.solution = self.solver.model()
+                if self._check_validity():
+                    f: Formula = And([Or([a if t else Not(a) for (t, a, i) in clause]) for clause in self.solution_formula[:]])
+                    for is_forall, sort, name in reversed(self.solution_prefix):
+                        f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
+                    return f
+                # otherwise, _check_validity has added constraints
     
     def _literal_var(self, clause: int, atom_index: int, polarity: bool) -> z3.ExprRef:
         '''Var represents atom with polarity is in a clause'''
@@ -1407,7 +1438,9 @@ class PartialSeparator(object):
         # Exactly one sort per quantifier
         for d in locs:
             self.solver.add(z3.PbEq([(self._prefix_sort_var(d, s), 1) for s in range(self.n_sorts)], 1))
-            #self.solver.add(self._prefix_quant_var(d))
+            if self._logic == 'universal':
+                self.solver.add(self._prefix_quant_var(d))
+            
         for d in range(-self.n_quantifiers, -1):
             for i,j in itertools.combinations(reversed(range(self.n_sorts)), 2):
                 # Prevent adjacent universals unless their sorts are in non-strict increasing order
@@ -1437,10 +1470,19 @@ class PartialSeparator(object):
                 if v not in prefix_var_lookup: continue # skip constants from signature
                 sort, i = prefix_var_lookup[v]
                 requirements[sort] = max(requirements[sort], i + 1)
+            self._atom_qvar_requirements.append(requirements)
             for cl in range(self.n_clauses):
                 reqs = z3.And([self._prefix_qvar_var(s, c) for (s, c) in enumerate(requirements) if c > 0])
                 for pol in [True, False]:
                     self.solver.add(z3.Implies(self._literal_var(cl, atom_id, pol), reqs))
+
+    def _valid_atoms(self, sorts: Sequence[int]) -> Iterable[Tuple[int, Formula]]:
+        var_counts = [0] * self.n_sorts
+        for s in sorts:
+            var_counts[s] += 1
+        for atom_id, atom in enumerate(self.atoms):
+            if all(i <= j for i,j in zip(self._atom_qvar_requirements[atom_id], var_counts)):
+                yield atom_id, atom
 
     def _lookup(self, M: Completion, loc: int, polarity: bool) -> CNode:
         a = [x for kv in sorted(M.assumptions.items()) for x in kv]
@@ -1488,7 +1530,8 @@ class PartialSeparator(object):
 
     def _check_validity(self) -> bool:
         self.solution_prefix, self.solution_formula = self._extract_formula()
-        print("Checking candidate", self.solution_prefix, self.solution_formula)
+        pp_matrix = " & ".join("(" + " | ".join(str(l) if p else str(Not(l)) for (p, l, i) in cl) + ")" for cl in self.solution_formula)
+        print("Checking candidate", " ".join(f"{'A' if is_forall else 'E'}{var}." for (is_forall, sort, var) in self.solution_prefix), pp_matrix)
         #print("Solution: ", self.solution)
         for i, root in enumerate(self.roots):
             r = self._E(root.comp, root.location, root.polarity)
@@ -1509,12 +1552,12 @@ class PartialSeparator(object):
     def _E(self, M: Completion, loc: int, polarity: bool) -> Witness:
         if loc > 0:
             literals = [(i, t, (a if t else Not(a))) for (t, a, i) in self.solution_formula[loc - 1]]
-            return self._E_cl(M, loc, polarity, literals)
+            return self._E_cl_v2(M, loc, polarity, literals)
         elif loc == 0:
-            return self._E_phi(M, loc, polarity, list(range(1, 1+self.n_clauses)), [])
+            return self._E_phi_v2(M, loc, polarity, list(range(1, 1+self.n_clauses)), [])
         elif loc < 0:
             qvar = M.model.consts[self.solution_prefix[loc + self.n_quantifiers][2]]
-            return self._E_ae(M, loc, polarity, M.model.domain(qvar), [])
+            return self._E_ae_v2(M, loc, polarity, M.model.domain(qvar), [])
         else: assert False
 
     def _E_cl(self, M: Completion, loc: int, polarity: bool, literals: List[Tuple[int, bool, Formula]]) -> Witness:
@@ -1578,35 +1621,158 @@ class PartialSeparator(object):
                 print(f"{_I(i)} Splitting {M}, using all proofs for {self._V(M, loc, polarity)}")
             return (None, prove_splits)
         else:
+            assert not polarity
+            def define_neg_clause(i: int) -> None:
+                v_index = self._lookup(M, loc, polarity).index
+                if v_index in self._defined_neg_clauses:
+                    print(f"{_I(i)} Already added definition for ~cl {self._V(M, loc, polarity)}")
+                    return
+                self._defined_neg_clauses.add(v_index)
+
+                # M |- ~cl <-> And_i (L_i -> (M |- ~l_i))
+                v = self._V(M, loc, polarity) # v = (M |- ~cl)
+                vs = []
+                for atom_id, atom in self._valid_atoms([sort for (_, sort, _) in self.solution_prefix]):
+                    for pol in [True, False]:
+                        truth_value = _F_eval(M, atom, not pol)
+                        if truth_value is not None:
+                            vs.append(z3.Not(self._literal_var(loc - 1, atom_id, pol)))
+                self.solver.add(v == z3.And(*vs))
+                print(f"{_I(i)} Adding definition for ~cl {v}")
+                pass
+
             for (l_i, l_pol, l) in literals:
                 re = _F_eval(M, l, False)
                 if re is not None:
-                    def prove_pos(i: int) -> None:
-                        v = self._V(M, loc, polarity)
-                        ante = []
-                        for (atom_id, atom) in enumerate(self.atoms):
-                            for pol in [True, False]:
-                                truth = _F_eval(M, atom, not pol)
-                                if truth is not None:
-                                    ante.append(self._literal_var(loc - 1, atom_id, pol))
-                        self.solver.add(z3.Implies(z3.Or(*ante), z3.Not(v)))
-                        print(f"{_I(i)} Adding proof of positive for {M}, -> {z3.Not(v)}")
-                    return (re, prove_pos)
-            def prove_neg(i:int) -> None:
-                v = self._V(M, loc, polarity)
-                ante = []
-                # (~L[0] \/ M |- ~l[0]) /\
-                # ...
-                # (~L[n] \/ M |- ~l[n]) -> (M |- ~cl)
-                for (atom_id, atom) in enumerate(self.atoms):
-                    for pol in [True, False]:
-                        truth = _F_eval(M, atom, not pol)
-                        if truth is not None:
-                            ante.append(z3.Not(self._literal_var(loc - 1, atom_id, pol)))
-                self.solver.add(z3.Implies(z3.And(*ante), v))
-                print(f"{_I(i)} Adding proof of negative {M}, -> {v}")
+                    # def prove_pos(i: int) -> None:
+                    #     v = self._V(M, loc, polarity)
+                    #     self.solver.add(z3.Implies(self._literal_var(loc - 1, l_i, l_pol), z3.Not(v)))
+                    #     print(f"{_I(i)} Adding proof of positive for {M}, -> {z3.Not(v)}")
+                    # def prove_pos(i: int) -> None:
+                    #     v = self._V(M, loc, polarity)
+                    #     ante = []
+                    #     for (atom_id, atom) in enumerate(self.atoms):
+                    #         for pol in [True, False]:
+                    #             truth = _F_eval(M, atom, not pol)
+                    #             if truth is not None:
+                    #                 ante.append(self._literal_var(loc - 1, atom_id, pol))
+                    #     self.solver.add(z3.Implies(z3.Or(*ante), z3.Not(v)))
+                    #     print(f"{_I(i)} Adding proof of positive for {M}, -> {z3.Not(v)}")
+                    # return (re, prove_pos)
+                    return (re, define_neg_clause)
+                    
+            # def prove_neg(i:int) -> None:
+            #     v = self._V(M, loc, polarity)
+            #     ante = []
+            #     # (~L[0] \/ M |- ~l[0]) /\
+            #     # ...
+            #     # (~L[n] \/ M |- ~l[n]) -> (M |- ~cl)
+            #     for (atom_id, atom) in enumerate(self.atoms):
+            #         for pol in [True, False]:
+            #             truth = _F_eval(M, atom, not pol)
+            #             if truth is not None:
+            #                 ante.append(z3.Not(self._literal_var(loc - 1, atom_id, pol)))
+            #     self.solver.add(z3.Implies(z3.And(*ante), v))
+            #     print(f"{_I(i)} Adding proof of negative {M}, -> {v}")
             
-            return (None, prove_neg)
+            return (None, define_neg_clause)
+
+
+
+    def _E_cl_v2(self, M: Completion, loc: int, polarity: bool, literals: List[Tuple[int, bool, Formula]]) -> Witness:
+        M.validate()
+        if polarity:
+            assumptions = []
+            for (p_i, p_pol, p) in literals:
+                r_literal = _F_eval(M, p, polarity)
+                if r_literal is None:
+                    def prove_literals(i: int) -> None:
+                        v = self._V(M, loc, polarity)
+                        vs = []
+                        for atom_id, atom in self._valid_atoms([sort for (_, sort, _) in self.solution_prefix]):
+                            for pol in [True, False]:
+                                truth_value = _F_eval(M, atom, pol)
+                                if truth_value is None:
+                                    vs.append(self._literal_var(loc - 1, atom_id, pol))
+                
+                        self.solver.add(z3.Implies(z3.Or(*vs), v))
+                        print(f"{_I(i)} Proving {M} {loc} {polarity} with literal {p} and {len(vs)-1} others")
+                        # print(f"{_I(i)}   (i.e. {z3.Implies(self._literal_var(loc - 1, p_i, p_pol), v)}")
+                    return (None, prove_literals)
+                # print(f"Got {r_literal} from {M.assumptions} ({M})")
+                assumptions.append(r_literal)
+            
+            # split_fact: Optional[int] = _choose_split_fact(M.assumptions, assumptions)
+            split_fact: Optional[int] = _choose_split_fact(M.assumptions, assumptions)
+            if split_fact is None:
+                def deferred_proof(i:int) -> None:
+                    # split M until it is a single completion M' (wrt the variables defined so far)
+                    qvars_defined = [M.model.consts[qvar_name] for (_, _, qvar_name) in self.solution_prefix]
+                    M_prime = _random_completion(M, qvars_defined, self._random_gen)
+                    # get proofs that ~(M' |- A_i) (which is equivalent to M' |- ~A_i because M' is complete), for each A_i = p[x=e_i]
+                    subvars: List[z3.ExprRef] = []
+                    subproofs: List[SATUpdater] = []
+                    for atom_id, atom in self._valid_atoms([sort for (_, sort, _) in self.solution_prefix]):
+                        for pol in [True, False]:
+                            truth_value = _F_eval(M_prime, atom, pol)
+                            # print(M_prime, atom, pol, truth_value)
+                            if truth_value is None:
+                                subvars.append(self._literal_var(loc - 1, atom_id, pol))
+
+                    self.solver.add(z3.Implies(self._V(M, loc, polarity), z3.Or(subvars)))
+                    print(f"{_I(i)} Proving cl ~{self._V(M, loc, polarity)}")
+
+                    # Add constraint M' |- ~A_i 
+                return (M.assumptions, deferred_proof)
+            
+            assert split_fact is not None and split_fact != -1
+            definite_split_fact = split_fact # this resets the type from Optional[int] to int
+            split_domain = _choose_split_domain(M, definite_split_fact, assumptions)
+            split_proofs = []
+            
+            for v in split_domain:
+                M_prime = M.with_fact(definite_split_fact, v)
+                r = self._E_cl_v2(M_prime, loc, polarity, literals)
+                if r[0] is not None:
+                    (assumpt, gen) = r
+                    def add_splits(i: int) -> None:
+                        self._split(M, loc, polarity, definite_split_fact)
+                        gen(i+1)
+                        print(f"{_I(i)} Splitting {M} (cl), using proof of {M.with_fact(definite_split_fact, v)} ({self._V(M_prime, loc, polarity)}) for {self._V(M, loc, polarity)}")
+                    return (assumpt, add_splits)
+                split_proofs.append(r[1])
+            def prove_splits(i: int) -> None:
+                self._split(M, loc, polarity, definite_split_fact)
+                for proof in split_proofs:
+                    proof(i+1)
+                print(f"{_I(i)} Using all subproofs for split (cl) with {self._V(M, loc, polarity)}")
+            return (None, prove_splits)
+        else:
+            assert not polarity
+            def define_neg_clause(i: int) -> None:
+                v_index = self._lookup(M, loc, polarity).index
+                if v_index in self._defined_neg_clauses:
+                    print(f"{_I(i)} Already added definition for ~cl {self._V(M, loc, polarity)}")
+                    return
+                self._defined_neg_clauses.add(v_index)
+
+                # M |- ~cl <-> And_i (L_i -> (M |- ~l_i))
+                v = self._V(M, loc, polarity) # v = (M |- ~cl)
+                vs = []
+                for atom_id, atom in self._valid_atoms([sort for (_, sort, _) in self.solution_prefix]):
+                    for pol in [True, False]:
+                        truth_value = _F_eval(M, atom, not pol)
+                        if truth_value is not None:
+                            vs.append(z3.Not(self._literal_var(loc - 1, atom_id, pol)))
+                self.solver.add(v == z3.And(*vs))
+                print(f"{_I(i)} Adding definition for ~cl {v}")
+                pass
+
+            for (l_i, l_pol, l) in literals:
+                re = _F_eval(M, l, False)
+                if re is not None:
+                    return (re, define_neg_clause)
+            return (None, define_neg_clause)
 
     
     def _E_phi(self, M: Completion, loc: int, polarity: bool, clauses: List[int], missing_clause_proofs: List[Tuple[int, SATUpdater]]) -> Witness:
@@ -1702,6 +1868,92 @@ class PartialSeparator(object):
                 split_proofs.append(r[1])
             def prove_splits(i: int) -> None:
                 self._split(M, loc, polarity, fact)
+                for proof in split_proofs:
+                    proof(i+1)
+                print(f"{_I(i)} Using all subproofs for split (phi) with {self._V(M, loc, polarity)}")
+            return (None, prove_splits)
+    def _E_phi_v2(self, M: Completion, loc: int, polarity: bool, clauses: List[int], missing_clause_proofs: List[Tuple[int, SATUpdater]]) -> Witness:
+        assert loc == 0
+        if polarity:
+            assert len(missing_clause_proofs) == 0
+            proofs = []
+            for cl in clauses:
+                r = self._E(M, cl, polarity)
+                if r[0] is not None:
+                    assumpt, subproof = r
+                    def proof(i:int) -> None:
+                        subproof(i+1)
+                        self.solver.add(z3.Implies(self._V(M, loc, polarity), self._V(M, cl, polarity)))
+                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._V(M, loc, polarity), self._V(M, cl, polarity))}")
+                        print(f"{_I(i)}   (i.e. {M} {loc} {polarity} -> {M} {cl} {polarity})")
+                    return (assumpt, proof)
+                proofs.append(r[1])
+            def prove_all(i: int) -> None:
+                for proof in proofs:
+                    proof(i+1)
+                ante = [self._V(M, cl, polarity) for cl in range(1, 1 + self.n_clauses)]
+                self.solver.add(z3.Implies(z3.And(ante), self._V(M, loc, polarity)))
+                print(f"{_I(i)} Proving matrix true with all clauses: {z3.Implies(z3.And(ante), self._V(M, loc, polarity))}")
+                print(f"{_I(i)}   (i.e. {M} {loc} {polarity}")
+            return (None, prove_all)
+        else:
+            # M |- ~phi = M |- ~(cl1 /\ cl2)
+            # M |- ~phi = M |- ~cl1 \/ ~cl2
+            assert (not polarity)
+            assert len(missing_clause_proofs) + len(clauses) == self.n_clauses
+            assumptions = []
+            for cl in clauses:
+                # RULE: M |- ~cl1 -> M |- ~phi
+                r = self._E(M, cl, polarity)
+                if r[0] is None:
+                    (assumpt, subproof) = r
+                    def prove_individual(i: int) -> None:
+                        subproof(i+1)
+                        self.solver.add(z3.Implies(self._V(M, cl, polarity), self._V(M, loc, polarity)))
+                        print(f"{_I(i)} Proving matrix false with clause {cl}: {z3.Implies(self._V(M, cl, polarity), self._V(M, loc, polarity))}")
+                        print(f"{_I(i)}   (i.e. {M} {cl} {polarity} -> {M} {loc} {polarity})")
+                    return (None, prove_individual)
+                assumptions.append(r[0])
+            split_fact: Optional[int] = _choose_split_fact(M.assumptions, assumptions)
+            if split_fact is None:
+                def deferred_proof(i:int) -> None:
+                    # split M until it is a single completion M' (wrt the variables defined so far)
+                    qvars_defined = [M.model.consts[qvar_name] for (_, _, qvar_name) in self.solution_prefix]
+                    M_prime = _random_completion(M, qvars_defined, self._random_gen)
+                    # get proofs that ~(M' |- A_i) (which is equivalent to M' |- ~A_i because M' is complete), for each A_i = p[x=e_i]
+                    subvars: List[z3.ExprRef] = []
+                    subproofs: List[SATUpdater] = []
+                    for cl in clauses:
+                        r = self._E(M_prime, cl, polarity)
+                        assert r[0] is not None
+                        subvars.append(self._V(M_prime, cl, polarity))
+                        subproofs.append(r[1])
+                    for pf in subproofs:
+                        pf(i+1)
+                    self.solver.add(z3.Implies(self._V(M, loc, polarity), z3.Or(subvars)))
+                    print(f"{_I(i)} Proving phi ~{self._V(M, loc, polarity)} via {z3.Implies(self._V(M, loc, polarity), z3.Or(subvars))}")
+
+                    # Add constraint M' |- ~A_i 
+                return (M.assumptions, deferred_proof)
+            
+            assert split_fact is not None and split_fact != -1
+            definite_split_fact = split_fact # this resets the type from Optional[int] to int
+            split_domain = _choose_split_domain(M, definite_split_fact, assumptions)
+            split_proofs = []
+            
+            for v in split_domain:
+                M_prime = M.with_fact(definite_split_fact, v)
+                r = self._E_phi_v2(M_prime, loc, polarity, clauses, [])
+                if r[0] is not None:
+                    (assumpt, gen) = r
+                    def add_splits(i: int) -> None:
+                        self._split(M, loc, polarity, definite_split_fact)
+                        gen(i+1)
+                        print(f"{_I(i)} Splitting {M} (phi), using proof of {M.with_fact(definite_split_fact, v)} ({self._V(M_prime, loc, polarity)}) for {self._V(M, loc, polarity)}")
+                    return (assumpt, add_splits)
+                split_proofs.append(r[1])
+            def prove_splits(i: int) -> None:
+                self._split(M, loc, polarity, definite_split_fact)
                 for proof in split_proofs:
                     proof(i+1)
                 print(f"{_I(i)} Using all subproofs for split (phi) with {self._V(M, loc, polarity)}")
@@ -1818,13 +2070,109 @@ class PartialSeparator(object):
                 print(f"{_I(i)} Using all subproofs for split (ae) with {self._V(M, loc, polarity)}")
                 
             return (None, prove_splits)
-    
+
+    def _E_ae_v2(self, M: Completion, loc: int, polarity: bool, domain: List[int], missing_domain_proofs: List[Tuple[int, SATUpdater]]) -> Witness:
+        assert loc < 0
+        
+        is_forall, sort, qvar_name = self.solution_prefix[loc+self.n_quantifiers]
+        qvar = M.model.consts[qvar_name]
+        # print(f"_E_ae {loc} {polarity}: {M}")
+        if is_forall == polarity:
+            # simple case, M |- Ax. p or M |- ~Ex. p
+            assert len(missing_domain_proofs) == 0
+            cond_is_forall = z3.And(self._prefix_sort_var(loc, sort), self._prefix_quant_var(loc) if polarity else z3.Not(self._prefix_quant_var(loc)))
+            (assumpt, pf) = self._E(M.with_fact(qvar, -1), loc + 1, polarity)
+            if assumpt is not None:
+                assumpt = _assumptions_without(assumpt, qvar)
+            def proof(i:int) -> None:
+                pf(i+1)
+                self.solver.add(z3.Implies(cond_is_forall, self._V(M, loc, polarity) ==
+                                                           self._V(M.with_fact(qvar, -1), loc + 1, polarity)))
+                print(f"{_I(i)} Adding universal constraint: {M} {loc}: {z3.Implies(cond_is_forall, self._V(M, loc, polarity) == self._V(M.with_fact(qvar, -1), loc + 1, polarity))}")
+            return (assumpt, proof)
+        else:
+            # The complex case, an effective existential
+            # First, try each element of the same polarity. If any are found, we
+            # can exit immediatly
+
+            # Otherwise, we need to split
+            
+            #assert len(missing_domain_proofs) + len(domain) == len(M.model.model.elems_of_sort_index[sort])
+            cond_exists = z3.And(self._prefix_quant_var(loc) if not polarity else z3.Not(self._prefix_quant_var(loc)),
+                                 self._prefix_sort_var(loc, sort))
+            
+            assumptions = []
+            for v in domain:
+                # M |- A  Mcex <= M : Mcex |- ~A
+
+                M_prime = M.with_fact(qvar, v)
+                r = self._E(M_prime, loc + 1, polarity)
+                if r[0] is None:
+                    (assumpt, subproof) = r
+                    def prove_individual(i:int) -> None:
+                        subproof(i+1)
+                        self.solver.add(z3.Implies(cond_exists, 
+                                                   z3.Implies(self._V(M_prime, loc + 1, polarity),
+                                                              self._V(M, loc, polarity))))
+                        print(f"{_I(i)} Proving existential with individual (cond & {self._V(M_prime, loc + 1, polarity)}) -> {self._V(M, loc, polarity)}")
+                        print(f"{_I(i)}   (i.e. {M_prime} {loc + 1} {polarity}) -> {M_prime} {loc} {polarity})")
+                    return (None, prove_individual)
+                assumptions.append(_assumptions_without(r[0], qvar))
+            split_fact: Optional[int] = _choose_split_fact(M.assumptions, assumptions)
+            if split_fact is None:
+                # We have now that M[x = e] |- ~A_i for all e in dom(x).
+                #for assumpt in assumptions:
+                #    assert assumpt.contains(M)
+                def deferred_proof(i:int) -> None:
+                    # split M until it is a single completion M' (wrt the variables defined so far)
+                    qvars_defined = [M.model.consts[qvar_name] for (_, _, qvar_name) in self.solution_prefix[:loc+self.n_quantifiers]]
+                    M_prime = _random_completion(M, qvars_defined, self._random_gen)
+                    # get proofs that ~(M' |- A_i) (which is equivalent to M' |- ~A_i because M' is complete), for each A_i = p[x=e_i]
+                    subvars: List[z3.ExprRef] = []
+                    subproofs: List[SATUpdater] = []
+                    for v in M.model.domain(qvar):
+                        r = self._E(M_prime.with_fact(qvar, v), loc + 1, polarity)
+                        assert r[0] is not None
+                        subvars.append(self._V(M_prime.with_fact(qvar, v), loc + 1, polarity))
+                        subproofs.append(r[1])
+                    for pf in subproofs:
+                        pf(i+1)
+                    self.solver.add(z3.Implies(z3.And(cond_exists, self._V(M, loc, polarity)), z3.Or(subvars)))
+                    print(f"{_I(i)} Proving ~{self._V(M, loc, polarity)} via {z3.Implies(self._V(M, loc, polarity), z3.Or(subvars))}")
+
+                    # Add constraint M' |- ~A_i 
+                return (M.assumptions, deferred_proof)
+
+            assert split_fact is not None and split_fact != -1 and split_fact != qvar
+            definite_split_fact = split_fact # this resets the type from Optional[int] to int
+            split_domain = _choose_split_domain(M, definite_split_fact, assumptions)
+            split_proofs = []
+            # for v in shuffled(M.model.domain(split_fact)):
+            for v in split_domain:
+                M_prime = M.with_fact(split_fact, v)
+                r = self._E_ae_v2(M_prime, loc, polarity, domain, [])
+                if r[0] is not None:
+                    (assumpt, gen) = r
+                    def add_splits(i: int) -> None:
+                        self._split(M, loc, polarity, definite_split_fact)
+                        gen(i+1)
+                        print(f"{_I(i)} Splitting {M} (ae), using proof of {M_prime} for {self._V(M, loc, polarity)}")
+                    return (assumpt, add_splits)
+                split_proofs.append(r[1])
+            def prove_splits(i: int) -> None:
+                self._split(M, loc, polarity, definite_split_fact)
+                for proof in split_proofs:
+                    proof(i+1)
+                print(f"{_I(i)} Using all subproofs for split (ae) with {self._V(M, loc, polarity)}")
+                
+            return (None, prove_splits)
 class DiagonalPartialSeparator(object):
-    def __init__(self, sig: Signature):
+    def __init__(self, sig: Signature, logic: str = 'fol'):
         self._sig = sig
         self.cl = 1
         self.qs = 0
-        self.sep = PartialSeparator(self._sig, self.qs, self.cl)
+        self.logic = logic
+        self.sep = PartialSeparator(self._sig, self.qs, self.cl, self.logic)
         self.models: List[Tuple[Model, bool]] = []
         
     def add_model(self, m: Model, positive: bool) -> None:
@@ -1837,17 +2185,17 @@ class DiagonalPartialSeparator(object):
         else:
             self.cl += 1
             self.qs -= 1
-        self.sep = PartialSeparator(self._sig, self.qs, self.cl)
+        self.sep = PartialSeparator(self._sig, self.qs, self.cl, self.logic)
         for (m, positive) in self.models:
             self.sep.add_model(m, positive)
-    def separate(self) -> Optional[Formula]:
+    def separate(self, timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         while True:
-            p = self.sep.separate()
+            p = self.sep.separate(timer=timer)
             if p is not None:
                 return p
             print(f"UNSEP for {self.qs} quantifiers, {self.cl} clauses")
-            if (self.qs == 3) and (self.cl == 1):
-                for m, pol in self.models:
-                    m.label = "+" if pol else "-"
-                    print(m)
+            # if (self.qs == 3) and (self.cl == 1):
+            #     for m, pol in self.models:
+            #         m.label = "+" if pol else "-"
+            #         print(m)
             self._advance()

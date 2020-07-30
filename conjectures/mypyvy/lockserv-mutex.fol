@@ -1,0 +1,15 @@
+; File: examples/fol/lockserv.pyv
+
+; Sig
+(sort node)
+(relation grant_msg node)
+(relation holds_lock node)
+(relation lock_msg node)
+(relation server_holds_lock )
+(relation unlock_msg node)
+; End sig
+
+; Axioms
+
+; Conjecture mutex
+(conjecture (forall N1 node (forall N2 node (or (not (and (holds_lock N1) (holds_lock N2))) (= N1 N2)))))
