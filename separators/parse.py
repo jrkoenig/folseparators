@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import re
-import sys
-from typing import List, Union, Tuple, Pattern, NoReturn, overload
+from typing import Any, List, Optional, Union, Tuple, Match, Pattern, NoReturn, overload
 
 class SyntaxError(Exception):
     def __init__(self, desc: str = "?"):
@@ -49,20 +48,19 @@ class Parens(object):
     def __getitem__(self, i: Union[int, slice]) -> Union[AstNode, List[AstNode]]:
         return self.children[i]
 
-
 class Input(object):
     def __init__(self, s: str):
         self.string = s
         self.index = 0
         self.line = 1
         self.column = 1
-    def matches(self, r: Pattern) -> bool:
+    def matches(self, r: Pattern[Any]) -> bool:
         return r.match(self.string[self.index:]) is not None
-    def consume(self, r: Pattern, desc: str = "expected token not found") -> str:
-        m = r.match(self.string[self.index:])
+    def consume(self, r: Pattern[str], desc: str = "expected token not found") -> str:
+        m: Optional[Match[str]] = r.match(self.string[self.index:])
         if m is None:
             self.error(desc)
-        consumed_str = m.group()
+        consumed_str: str = m.group()
         self.index += len(consumed_str)
         # Keep track of physical source lines in the original code
         lines = consumed_str.count('\n')
@@ -86,7 +84,7 @@ class Input(object):
 
 
 def parse(s: str) -> List[AstNode]:
-    ws = re.compile("^\s+")
+    ws = re.compile("^\\s+")
     lparen = re.compile("^\\(")
     rparen = re.compile("^\\)")
     semicolon = re.compile("^;.*")

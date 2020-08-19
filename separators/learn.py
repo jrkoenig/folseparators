@@ -658,10 +658,16 @@ def learn_partial(sig: Signature, axioms: List[Formula], formula: Formula, timeo
             
             if r.label == '+':
                 print("Generalizing...")
-                gr = generalize_model(r, And(axioms + [formula]), label='+')
+                if 'no-generalize' in args.expt_flags:
+                    gr = r
+                else:
+                    gr = generalize_model(r, And(axioms + [formula]), label='+')
                 separator.add_model(gr, True)
             else:
-                gr = generalize_model(r, And(axioms + [Not(formula)]), label='-')
+                if 'no-generalize' in args.expt_flags:
+                    gr = r
+                else:
+                    gr = generalize_model(r, And(axioms + [Not(formula)]), label='-')
                 separator.add_model(gr, False)
             result.models.append(gr)
 

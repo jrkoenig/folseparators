@@ -1,0 +1,25 @@
+; Random formula: forall x0:A. forall x1:A. r3(f1(x0), f1(x0))
+; Complexity: 4
+
+(sort A)
+(sort B)
+
+(relation p1 A)
+(relation p2 B)
+(relation p3 B)
+
+(relation r1 A A)
+(relation r2 A B)
+(relation r3 B B)
+
+; (relation s1 A A A)
+; (relation s2 A B B)
+; (relation s3 A A B)
+
+; (constant c1 A)
+
+(function f1 A B)
+
+
+; Conjecture:
+(conjecture (forall x0 A (forall x1 A (and (or (r3 (f1 x0) (f1 x0)))))))

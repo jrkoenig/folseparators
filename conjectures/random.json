@@ -1,0 +1,1002 @@
+[
+ {
+  "base": "random",
+  "conjecture": "r0",
+  "file": "conjectures/random/r-0.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. r2(x0, f1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r1",
+  "file": "conjectures/random/r-1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. ~p2(x0)"
+ },
+ {
+  "base": "random",
+  "conjecture": "r2",
+  "file": "conjectures/random/r-2.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (~p3(f1(x0)) | ~r3(f1(x0), f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r3",
+  "file": "conjectures/random/r-3.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (~r1(x0, x0) | ~r3(f1(x0), f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r4",
+  "file": "conjectures/random/r-4.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r1(x0, x0) | ~r3(f1(x0), f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r5",
+  "file": "conjectures/random/r-5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. r3(f1(x0), f1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r6",
+  "file": "conjectures/random/r-6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (~p2(x0) | p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r7",
+  "file": "conjectures/random/r-7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (~p3(x0) | p2(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r8",
+  "file": "conjectures/random/r-8.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (~r3(x0, x0) | ~p2(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r9",
+  "file": "conjectures/random/r-9.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (p2(x0) | ~p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r10",
+  "file": "conjectures/random/r-10.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (p2(x0) | p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r11",
+  "file": "conjectures/random/r-11.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (r3(x0, x0) | p2(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r12",
+  "file": "conjectures/random/r-12.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. ~p2(x0)"
+ },
+ {
+  "base": "random",
+  "conjecture": "r13",
+  "file": "conjectures/random/r-13.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. ~p3(x0)"
+ },
+ {
+  "base": "random",
+  "conjecture": "r14",
+  "file": "conjectures/random/r-14.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. p3(x0)"
+ },
+ {
+  "base": "random",
+  "conjecture": "r15",
+  "file": "conjectures/random/r-15.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (~p2(f1(x0)) | ~r3(f1(x0), f1(x0)) | ~p1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r16",
+  "file": "conjectures/random/r-16.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (p1(x0) | r3(f1(x0), f1(x0)) | ~r1(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r17",
+  "file": "conjectures/random/r-17.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r1(x0, x0) | ~p1(x0) | p2(f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r18",
+  "file": "conjectures/random/r-18.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r3(f1(x0), f1(x0)) | ~p1(x0) | r1(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r19",
+  "file": "conjectures/random/r-19.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (p3(f1(x0)) | ~r2(x0, f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r20",
+  "file": "conjectures/random/r-20.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (p3(f1(x1)) | ~r2(x1, f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r21",
+  "file": "conjectures/random/r-21.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (r3(f1(x1), f1(x0)) | ~p1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r22",
+  "file": "conjectures/random/r-22.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. x0 = x2"
+ },
+ {
+  "base": "random",
+  "conjecture": "r23",
+  "file": "conjectures/random/r-23.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:A. r2(x0, f1(x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r24",
+  "file": "conjectures/random/r-24.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. ~r3(x1, x2)"
+ },
+ {
+  "base": "random",
+  "conjecture": "r25",
+  "file": "conjectures/random/r-25.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (p2(x0) | r3(x0, x0) | ~p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r26",
+  "file": "conjectures/random/r-26.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (p3(x0) | ~p2(x0) | ~r3(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r27",
+  "file": "conjectures/random/r-27.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (r3(x0, x0) & ~p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r28",
+  "file": "conjectures/random/r-28.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. (~p1(x1) | ~r2(x1, f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r29",
+  "file": "conjectures/random/r-29.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:A. r3(x0, f1(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r30",
+  "file": "conjectures/random/r-30.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. (x0 = x1 | ~p3(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r31",
+  "file": "conjectures/random/r-31.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r2(x0, f1(x0)) | p1(x0) | ~r1(x0, x0) | ~p3(f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r32",
+  "file": "conjectures/random/r-32.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (~r1(x1, x0) & r1(x1, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r33",
+  "file": "conjectures/random/r-33.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (~r2(x1, f1(x0)) | p2(f1(x0)) | ~r3(f1(x0), f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r34",
+  "file": "conjectures/random/r-34.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:A. (~r3(x1, x1) | ~r1(x2, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r35",
+  "file": "conjectures/random/r-35.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. ((~p3(x0) | p2(x0)) & ~p2(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r36",
+  "file": "conjectures/random/r-36.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. ((p2(x0) | ~r3(x0, x0)) & r3(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r37",
+  "file": "conjectures/random/r-37.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. (~r1(x1, x1) | ~r3(f1(x1), x0) | p1(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r38",
+  "file": "conjectures/random/r-38.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:A. (p3(f1(x1)) | p2(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r39",
+  "file": "conjectures/random/r-39.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:A. (~p1(x2) | r2(x2, f1(x2)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r40",
+  "file": "conjectures/random/r-40.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:A. (~p2(x1) | ~r3(f1(x2), x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r41",
+  "file": "conjectures/random/r-41.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r1(x0, x0) & ~r1(x0, x0) & r1(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r42",
+  "file": "conjectures/random/r-42.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (r3(f1(x0), f1(x0)) & (p1(x0) | ~r1(x0, x0) | ~p2(f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r43",
+  "file": "conjectures/random/r-43.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (f1(x0) = f1(x1) | r3(f1(x0), f1(x0)) | ~r1(x1, x0) | p3(f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r44",
+  "file": "conjectures/random/r-44.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (x0 ~= x1 & (~p2(f1(x1)) | ~r3(f1(x0), f1(x1))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r45",
+  "file": "conjectures/random/r-45.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. (r2(x0, f1(x0)) | r3(f1(x0), f1(x1)) | ~p2(f1(x0)) | ~p3(f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r46",
+  "file": "conjectures/random/r-46.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. (~r1(x0, x0) | p3(f1(x2)) | r1(x0, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r47",
+  "file": "conjectures/random/r-47.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. (r1(x2, x0) & r3(f1(x2), f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r48",
+  "file": "conjectures/random/r-48.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. ((p3(x1) | ~p3(f1(x0))) & ~p3(f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r49",
+  "file": "conjectures/random/r-49.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r2(x0, x1) | ~r3(f1(x0), f1(x0)) | p3(x1) | ~r3(x1, f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r50",
+  "file": "conjectures/random/r-50.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r3(f1(x0), x1) | x1 ~= f1(x0) | p2(f1(x0)) | ~r2(x0, f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r51",
+  "file": "conjectures/random/r-51.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. (x2 = f1(x0) & x2 ~= f1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r52",
+  "file": "conjectures/random/r-52.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. (r3(x2, x1) | ~r3(x1, x1) | ~p3(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r53",
+  "file": "conjectures/random/r-53.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (~p3(x0) & ~r3(x0, x0) & r3(x0, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r54",
+  "file": "conjectures/random/r-54.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:B. (~p2(x1) | r3(x1, x2) | r3(x1, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r55",
+  "file": "conjectures/random/r-55.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:B. (~r3(x2, x1) | ~r3(x1, x0) | ~r3(x0, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r56",
+  "file": "conjectures/random/r-56.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (~r3(f1(x0), f1(x0)) & ~r3(f1(x0), f1(x0)) & (p2(f1(x0)) | ~r3(f1(x0), f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r57",
+  "file": "conjectures/random/r-57.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. ((~p3(f1(x1)) | ~r3(f1(x2), f1(x0))) & r3(f1(x1), f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r58",
+  "file": "conjectures/random/r-58.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. (r1(x2, x2) | p1(x1) | r3(f1(x1), f1(x1)) | r1(x1, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r59",
+  "file": "conjectures/random/r-59.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. ((p2(f1(x0)) | r3(x1, f1(x0))) & (~r3(x1, f1(x0)) | ~r3(f1(x0), f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r60",
+  "file": "conjectures/random/r-60.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r2(x0, x1) | p3(x1) | ~p1(x0) | r3(x1, f1(x0)) | ~r3(f1(x0), f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r61",
+  "file": "conjectures/random/r-61.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. ((~r1(x0, x0) | p1(x0)) & r3(f1(x0), f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r62",
+  "file": "conjectures/random/r-62.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. (~r3(f1(x0), f1(x0)) | r3(x1, x2) | r3(x2, x1) | r3(x2, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r63",
+  "file": "conjectures/random/r-63.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. ((~r3(x0, x0) | p2(x0)) & ~p3(x0) & ~p3(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r64",
+  "file": "conjectures/random/r-64.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. (x0 = f1(x1) | ~r3(f1(x1), x0) | p3(f1(x1)) | r3(x0, x0) | r2(x1, x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r65",
+  "file": "conjectures/random/r-65.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. (~p3(x0) | ~r3(x0, x0) | p3(f1(x1)) | r2(x1, f1(x1)) | p1(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r66",
+  "file": "conjectures/random/r-66.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:A. (~r2(x1, x0) | r3(x0, f1(x1)) | r3(f1(x1), f1(x2)) | ~p2(f1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r67",
+  "file": "conjectures/random/r-67.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. (~r3(x0, f1(x1)) | r2(x1, x2) | ~p1(x1) | ~p2(x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r68",
+  "file": "conjectures/random/r-68.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. (x0 = x1 | ~r3(x1, x1) | ~r3(x1, x0) | ~p2(x1) | r3(x0, x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r69",
+  "file": "conjectures/random/r-69.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. (~p2(x0) | ~p3(x1) | ~r3(x0, x1) | r3(x0, x0) | p2(x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r70",
+  "file": "conjectures/random/r-70.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. ((~p2(x0) | r3(x0, x0) | r3(x1, x0)) & ~r3(x1, x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r71",
+  "file": "conjectures/random/r-71.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:A. (x1 = f1(x2) | x0 = f1(x2) | p3(f1(x2)) | ~p2(f1(x2)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r72",
+  "file": "conjectures/random/r-72.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. forall x2:B. (~p2(x2) | ~p3(x1) | ~r3(x0, x1) | ~r3(x1, x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r73",
+  "file": "conjectures/random/r-73.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:B. (f1(x0) = f1(x1) & ~p3(x2) & ~p1(x0))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r74",
+  "file": "conjectures/random/r-74.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r2(x0, x1) | r2(x0, f1(x0)) | ~r3(x1, f1(x0)) | p3(x1) | x1 ~= f1(x0) | r3(x1, x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r75",
+  "file": "conjectures/random/r-75.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r3(f1(x0), f1(x0)) | p3(x1) | r3(x1, x1) | p2(x1) | x1 = f1(x0) | r2(x0, x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r76",
+  "file": "conjectures/random/r-76.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (~p3(x0) & (~p3(x0) | p2(x0)) & (p3(x0) | p2(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r77",
+  "file": "conjectures/random/r-77.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. (r3(x0, x0) & (p3(x0) | p2(x0)) & (~r3(x0, x0) | p2(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r78",
+  "file": "conjectures/random/r-78.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. (x2 ~= f1(x1) & (r2(x1, x0) | ~r3(x2, x2) | p3(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r79",
+  "file": "conjectures/random/r-79.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. ((~r3(x2, x0) | ~p2(x2)) & (~r3(f1(x1), x0) | ~p3(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r80",
+  "file": "conjectures/random/r-80.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. ((p3(x2) | ~r2(x1, f1(x1)) | ~r3(x2, x0)) & r3(f1(x1), x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r81",
+  "file": "conjectures/random/r-81.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:B. ((~p2(x1) | p3(x1) | p3(x0)) & (~r3(x0, x0) | x0 ~= x1))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r82",
+  "file": "conjectures/random/r-82.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. (~r3(f1(x0), f1(x0)) & (r2(x0, f1(x0)) | ~p2(f1(x0)) | p1(x0)) & (r2(x0, f1(x0)) | ~p3(f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r83",
+  "file": "conjectures/random/r-83.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. ((r1(x0, x0) | r3(f1(x0), f1(x0)) | ~p3(f1(x0))) & ~p1(x0) & (r3(f1(x0), f1(x0)) | ~r2(x0, f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r84",
+  "file": "conjectures/random/r-84.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. ((r2(x0, f1(x0)) | p1(x0) | p3(f1(x0))) & (~p3(f1(x0)) | r2(x0, f1(x0))) & ~r2(x0, f1(x0)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r85",
+  "file": "conjectures/random/r-85.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:B. ((~r2(x1, f1(x0)) | r1(x1, x1) | p2(f1(x1))) & (~r2(x0, x2) | ~r2(x0, f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r86",
+  "file": "conjectures/random/r-86.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r1(x0, x0) & r3(x1, f1(x0)) & (~r3(f1(x0), x1) | ~r2(x0, x1) | r3(x1, f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r87",
+  "file": "conjectures/random/r-87.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:A. (r3(x1, f1(x2)) & ~r2(x2, x1) & (~r2(x0, f1(x0)) | r3(f1(x0), f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r88",
+  "file": "conjectures/random/r-88.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. (~p1(x0) & (~r1(x0, x0) | r2(x0, f1(x0)) | ~r3(x2, f1(x0)) | r2(x0, x2)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r89",
+  "file": "conjectures/random/r-89.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:B. (~p2(f1(x0)) | ~p1(x0) | r3(x2, x2) | ~r2(x0, f1(x0)) | ~r3(x1, x1) | ~p3(x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r90",
+  "file": "conjectures/random/r-90.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:A. ((r2(x1, f1(x1)) | r3(f1(x1), f1(x1))) & (p3(f1(x1)) | ~p1(x1) | x1 ~= x2))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r91",
+  "file": "conjectures/random/r-91.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. (p2(x2) & (r3(f1(x1), x2) | x0 ~= f1(x1) | p2(f1(x1)) | r3(x0, f1(x1))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r92",
+  "file": "conjectures/random/r-92.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:A. ((r3(f1(x2), f1(x1)) | ~p1(x1)) & (~r2(x0, f1(x0)) | r2(x2, f1(x0)) | ~r2(x1, f1(x0)) | r1(x0, x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r93",
+  "file": "conjectures/random/r-93.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:B. ((x2 = f1(x0) | r1(x1, x0) | ~r1(x1, x1) | r2(x1, f1(x1))) & (~r1(x0, x1) | r3(f1(x1), f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r94",
+  "file": "conjectures/random/r-94.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:A. forall x2:B. ((r1(x1, x1) | r3(x2, x2)) & ~r3(f1(x1), f1(x0)) & (~p3(f1(x1)) | r2(x0, f1(x1))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r95",
+  "file": "conjectures/random/r-95.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. (r3(f1(x0), x1) & (p2(f1(x0)) | ~r1(x0, x0)) & (~r2(x0, x1) | x1 = f1(x0) | ~p3(f1(x0))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r96",
+  "file": "conjectures/random/r-96.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:A. forall x1:B. forall x2:A. (~r1(x0, x2) & (r3(f1(x0), x1) | r2(x0, f1(x0))) & (p2(f1(x2)) | f1(x0) ~= f1(x2)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r97",
+  "file": "conjectures/random/r-97.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. ((~p2(f1(x1)) | ~p3(x0) | p1(x1)) & r3(f1(x1), f1(x1)) & (r1(x1, x1) | p1(x1)))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r98",
+  "file": "conjectures/random/r-98.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. (x2 ~= f1(x1) & (p3(f1(x1)) | ~r3(f1(x1), f1(x1)) | ~r1(x1, x1)) & (r3(x2, x0) | p3(f1(x1))))"
+ },
+ {
+  "base": "random",
+  "conjecture": "r99",
+  "file": "conjectures/random/r-99.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall x0:B. forall x1:A. forall x2:B. ((~r2(x1, f1(x1)) | p2(x0)) & (~r3(x0, x2) | r3(x2, x2)) & (r3(x0, x2) | ~r3(x2, f1(x1))))"
+ }
+]

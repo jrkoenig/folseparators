@@ -1,0 +1,25 @@
+; Random formula: forall x0:B. (p3(x0) | ~p2(x0) | ~r3(x0, x0))
+; Complexity: 5
+
+(sort A)
+(sort B)
+
+(relation p1 A)
+(relation p2 B)
+(relation p3 B)
+
+(relation r1 A A)
+(relation r2 A B)
+(relation r3 B B)
+
+; (relation s1 A A A)
+; (relation s2 A B B)
+; (relation s3 A A B)
+
+; (constant c1 A)
+
+(function f1 A B)
+
+
+; Conjecture:
+(conjecture (forall x0 B (and (or (p3 x0) (not (p2 x0)) (not (r3 x0 x0))))))

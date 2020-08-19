@@ -14,14 +14,12 @@
 
 import argparse, random, json, os
 import numpy as np
-import pandas as pd
 import matplotlib
 matplotlib.use("Agg")
 
 import matplotlib.pyplot as plt
 
 
-import seaborn as sns
 from collections import Counter
 from typing import *
 import typing
@@ -30,7 +28,7 @@ def int_bins(x: List[int]) -> List[float]:
     l,h = min(x),max(x)
     return [x - 0.5 for x in range(l,h+2)]
 def intdistplot(x: Any, **kwargs: Any) -> Any:
-    return sns.distplot(x, bins = int_bins(x), **kwargs)
+    return plt.hist(x, bins = int_bins(x), **kwargs)
 
 
 def main() -> None:
@@ -49,7 +47,7 @@ def main() -> None:
         print(e)
         return
 
-    sns.set(style="white", palette="muted", color_codes=True)
+    # sns.set(style="white", palette="muted", color_codes=True)
     font = {'size':16, 'family':'serif', 'serif': ['CMU Serif']}
     plt.rc('font', **font)
     plt.rc('mathtext', fontset='cm')
@@ -90,10 +88,10 @@ def main() -> None:
     # plt.subplots_adjust(left=0.5)
     # fig.suptitle("Distribution of conjucts over protocols")
     # plt.savefig("conjunct_distribution.png")
-    _print(f"Total CPU hours {sum(r['stats']['total_time'] for r in results)/3600:.0f}\n")
+    _print(f"Total CPU hours {sum(r['stats']['total_time'] for r in results if 'stats' in r)/3600:.0f}\n")
 
     for r in results:
-        if r['killed']: continue
+        if r['killed'] or 'stats' not in r: continue
         if r['stats']['formula'] == 'false':
             print (r['base'], r['conjecture'])
 
@@ -297,7 +295,7 @@ def main() -> None:
             c_frac = 0.0
             m_frac = 0.0
             error = "?"
-        _print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}\t{r['stats']['formula_quantifiers']}")
+        _print(f"{c_frac:0.2f}\t{m_frac:0.2f}\t{q}\t{name}\t{error}\t{r['stats']['formula_quantifiers'] if 'stats' in r else '?'}")
             
 
     _print("\nFailed Conjuncts(counter frac, matrix frac, quants, name, error):")
