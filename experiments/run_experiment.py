@@ -82,7 +82,7 @@ def main() -> None:
                      "conjecture": d['conjecture'],
                      "index": i,
                      "timeout": args.timeout,
-                     "args": ['python3', '-m', 'separators'] + a + ["--timeout", str(int(args.timeout)), d['file']]}
+                     "args": ['python3', '-m', 'separators'] + a + ["--timeout", str(int(args.timeout)), d['file']] + (d['extra'] if 'extra' in d else [])}
                 executor.submit(run, r, logger)
     logger.close()
 

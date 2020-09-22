@@ -323,8 +323,8 @@ def learn_file() -> None:
     fol = interpret(parse(open(sys.argv[1]).read()))
     for conjecture in fol.conjectures:
         print(f"\n=== Trying to learn {conjecture} ===\n")
-        sep = DiagonalPartialSeparator(fol.sig, logic = 'universal')
-        #sep = PartialSeparator(fol.sig, 4, 2, logic='universal')
+        #sep = DiagonalPartialSeparator(fol.sig, logic = 'universal')
+        sep = PartialSeparator(fol.sig, 3, 1, logic='fol')
         mini_learn2(fol.sig, sep, conjecture, fol.axioms)
 
 

@@ -279,6 +279,7 @@ def symbols(f: Formula) -> Iterator[str]:
         yield from symbols_term(f.args[0])
         yield from symbols_term(f.args[1])
     elif isinstance(f, Relation):
+        yield f.rel
         for a in f.args:
             yield from symbols_term(a)
     elif isinstance(f, Forall) or isinstance(f, Exists):

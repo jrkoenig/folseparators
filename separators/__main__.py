@@ -39,6 +39,7 @@ def main() -> None:
     parser.add_argument("--partial", action="store_true", default=False, help="Use experimental partial separation")
     parser.add_argument("--no-cvc4", action="store_true", default=False, help="Don't use cvc4 to generate counterexamples")
     parser.add_argument("--expt-flags", dest="expt_flags", type=lambda x: set(x.split(',')), default=set(), help="Experimental flags")
+    parser.add_argument("--blocked-symbols", dest="blocked_symbols", type=lambda x: set(x.split(',')), default=set(), help="Experimental flags")
     parser.add_argument("-q", "--quiet", action="store_true", help="disable most output")
     args = parser.parse_args()
     

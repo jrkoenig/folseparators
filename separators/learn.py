@@ -544,7 +544,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     
     S = HybridSeparator
         
-    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)]) 
+    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)], blocked_symbols=args.blocked_symbols) 
 
     env = Environment(sig)
     s = z3.Solver()
@@ -658,23 +658,33 @@ def learn_partial(sig: Signature, axioms: List[Formula], formula: Formula, timeo
             
             if r.label == '+':
                 print("Generalizing...")
-                if 'no-generalize' in args.expt_flags:
-                    gr = r
+                gr = generalize_model(r, And(axioms + [formula]), label='+')
+                if 'generalize-both' in args.expt_flags:
+                    separator.add_model(r, True)
+                    separator.add_model(gr, True)
+                    
+                elif 'no-generalize' in args.expt_flags:
+                    separator.add_model(r, True)
                 else:
-                    gr = generalize_model(r, And(axioms + [formula]), label='+')
-                separator.add_model(gr, True)
+                    separator.add_model(gr, True)
+
             else:
-                if 'no-generalize' in args.expt_flags:
-                    gr = r
+                gr = generalize_model(r, And(axioms + [Not(formula)]), label='-')
+                if 'generalize-both' in args.expt_flags:
+                    separator.add_model(r, False)
+                    separator.add_model(gr, False)
+                    
+                elif 'no-generalize' in args.expt_flags:
+                    separator.add_model(r, False)
                 else:
-                    gr = generalize_model(r, And(axioms + [Not(formula)]), label='-')
-                separator.add_model(gr, False)
+                    separator.add_model(gr, False)
+
             result.models.append(gr)
 
             with result.separation_timer:
                 if not args.quiet:
                     print ("New model is:")
-                    print (r)
+                    print (gr)
                     print ("Have new model, now have", len(result.models), "models total")
                 if True:
                     c = separator.separate(timer = result.separation_timer)

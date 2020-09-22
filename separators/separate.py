@@ -252,7 +252,7 @@ class InstNode(object):
         return 1 + sum(c.size() for x in self.children for c in x)
 
 class HybridSeparator(Separator):
-    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], expt_flags: Set[str] = set()):
+    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
         self._quiet = quiet
         self._logic = logic
@@ -260,6 +260,7 @@ class HybridSeparator(Separator):
         self._separators: Dict[int, FixedHybridSeparator] = {}
         self._models: List[Model] = []
         self._expt_flags = expt_flags
+        self._blocked_symbols = blocked_symbols
 
     def add_model(self, model:Model) -> int:
         l = len(self._models)
@@ -273,7 +274,7 @@ class HybridSeparator(Separator):
         assert clauses > 0
         if clauses not in self._separators:
             seed = random.randint(0,2 ** 64 - 1)
-            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas, seed, self._expt_flags)
+            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas, seed, self._expt_flags, self._blocked_symbols)
             for m in self._models:
                 h.add_model(m)
             self._separators[clauses] = h
@@ -371,9 +372,10 @@ def count_prefixes(depth: int, n_sorts: int, logic: str) -> Tuple[int, int, int]
         solver.add(z3.Not(z3.And(constraint)))
 
 
+def NotUnless(x: z3.ExprRef, b: bool) -> z3.ExprRef: return x if b else z3.Not(x)
 
 class FixedHybridSeparator(object):
-    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None, expt_flags: Set[str] = set()):
+    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
         self._clauses = clauses
         self._logic = logic
@@ -404,6 +406,7 @@ class FixedHybridSeparator(object):
         self._imp_constraint_cache: Set[Tuple[int, int]] = set()
 
         self._expt_flags = expt_flags
+        self._blocked_symbols = blocked_symbols
 
         self._prefixes_seen: Dict[int, Set[Tuple[Tuple[bool, int], ...]]] = {}
         self._prefixes_seen_ae: Dict[int, Set[Tuple[bool, ...]]] = {}
@@ -443,6 +446,14 @@ class FixedHybridSeparator(object):
     def _prefix_var_definition(self, conjunct: int, depth: int) -> None:
         n_sorts = len(self._sig.sort_names)
         for d in range(self._highest_prefix[conjunct], depth):
+            if 'alternationlimit2' in self._expt_flags:
+                if d > 0:
+                    self.solver.add(z3.Implies(self._depth_var(conjunct, d),
+                        z3.PbLe([(self._prefix_quant_var(conjunct, i) != self._prefix_quant_var(conjunct, i+1), 1) for i in range(d-1)], 2)))
+            elif 'alternationlimit1' in self._expt_flags:
+                if d > 0:
+                    self.solver.add(z3.Implies(self._depth_var(conjunct, d),
+                        z3.PbLe([(self._prefix_quant_var(conjunct, i) != self._prefix_quant_var(conjunct, i+1), 1) for i in range(d-1)], 1)))
             self.solver.add(z3.PbEq([(self._prefix_sort_var(conjunct, q, d), 1) for q in range(n_sorts)], 1))
             if 0 < d:
                 for i,j in itertools.combinations(reversed(range(n_sorts)), 2):
@@ -509,11 +520,7 @@ class FixedHybridSeparator(object):
             self.solver.add(z3.Or(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")),
                                   z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
             self._atoms_defined.add(i)
-            if 'nodecisionquorum' in self._expt_flags:
-                # require the atom to not be used
-                if 'decision_quorum' in symbols(self._atoms[atom]) or 'none' in symbols(self._atoms[atom]):
-                   self.solver.add(z3.And(z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1}")),
-                                          z3.Not(z3.Bool(f"y_{conjunct}_{clause}_{atom}_{0}"))))
+            
 
         return z3.Bool(f"y_{conjunct}_{clause}_{atom}_{1 if polarity else 0}")
 
@@ -565,6 +572,7 @@ class FixedHybridSeparator(object):
         key = tuple(sort_list)
         if key not in self._atoms_by_sort:
             atms = list(atoms_of(self._sig, list(zip(prefix_var_names(self._sig, sort_list), (self._sig.sort_names[i] for i in sort_list)))))
+            atms = [a for a in atms if all(sym not in self._blocked_symbols for sym in symbols(a))]
             self._atoms_by_sort[key] = [self._atom_id(a) for a in atms]
         return self._atoms_by_sort[key]
     
@@ -637,7 +645,6 @@ class FixedHybridSeparator(object):
             if isinstance(const, Imp):
                 yield self._imp_constraint_var(const.i, const.j)
     def _prefix_assumptions(self, prefix: List[Quantifier]) -> List[z3.ExprRef]:
-        def NotUnless(x: z3.ExprRef, b: bool) -> z3.ExprRef: return x if b else z3.Not(x)
         return [self._prefix_sort_var(0, q, d) for (d,(i,q)) in enumerate(prefix)] + \
                [NotUnless(self._prefix_quant_var(0,d), is_fa)
                 for (d,(is_fa,q)) in enumerate(prefix)]
@@ -842,7 +849,7 @@ class FixedHybridSeparator(object):
         prefix_assumptions: List[z3.ExprRef] = []
 
         if depth not in self._prefixes_count:
-            self._prefixes_count[depth] = count_prefixes(depth, len(self._sig.sorts), self._logic)
+            self._prefixes_count[depth] = (0,0,0) #count_prefixes(depth, len(self._sig.sorts), self._logic)
             self._prefixes_seen[depth] = set()
             self._prefixes_seen_ae[depth] = set()
             self._prefixes_seen_sorts[depth] = set()
@@ -998,7 +1005,7 @@ class PartialModel(object):
         self.qvar_sorts[name] = sort
         self.consts[name] = self._next_fact(self.model.elems_of_sort_index[sort])
         
-    def domain(self, fact: int) -> List[int]:
+    def domain(self, fact: int) -> Sequence[int]:
         return self.fact_domains.get(fact, [])
 
     def eval_atomic(self, atomic: Formula, assumptions: Assumptions) -> Union[bool, Tuple[Assumptions, Assumptions]]:
@@ -1046,6 +1053,8 @@ class PartialModel(object):
                 definite(asmpt, a == b)
                 if can_be_true and can_be_false: 
                     return (true_assumptions, false_assumptions)
+        elif isinstance(atomic, And) and len(atomic.c) == 0: # And([]) is equivalent to True
+            return True
         else:
             assert False and "expected an atomic formula"
         # After either case, return the definite value
@@ -1244,7 +1253,7 @@ def _choose_split_fact_reverse(base: Assumptions, choices: Sequence[Assumptions]
                 return k
     return None
 
-_choose_split_fact = _choose_split_fact_mode
+_choose_split_fact = _choose_split_fact_anti_mode
 
 def _random_completion(M: Completion, qvars: Sequence[int], R: random.Random) -> Completion:
     a = dict(M.assumptions)
@@ -1397,6 +1406,9 @@ class CNode(object):
 def _I(x: int) -> str: return "~" * (2*x)
 SATUpdater = Callable[[int], None]
 Witness = Tuple[Optional[Assumptions], SATUpdater]
+QSet = Dict[int, bool] # map from atomic formula index to value, missing key = unspecified
+
+
 
 class PartialSeparator(object):
     '''Partial separator for a given prefix length and number of clauses.
@@ -1417,7 +1429,7 @@ class PartialSeparator(object):
         self.polarities: List[bool] = []
         self.next_node_index = 0
         self.nodes: Dict[Tuple[int, ...], CNode] = {}
-        self._random_gen = random.Random(47943452)
+        self._random_gen = random.Random(53452)
         
         
         # Caches
@@ -1427,6 +1439,7 @@ class PartialSeparator(object):
         # pretend we have a prefix big enough for up to N variables of each sort
         self.prefix_var_names = [prefix_var_names(self._sig, [s] * self.n_quantifiers) for s in range(self.n_sorts)]
         self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for sort, vs in enumerate(self.prefix_var_names) for v in vs]))
+        # self.atoms.append(And([])) # add "true" as an atom, and thus "true" and "false" as literals
         self.literals = [a if pol else Not(a) for a in self.atoms for pol in [True, False]]
         self._atom_qvar_requirements: List[List[int]] = []
         self._cache_vars()
@@ -1452,13 +1465,14 @@ class PartialSeparator(object):
                 # s = z3.Solver()
                 # for constraint in self.solver.assertions():
                 #     s.add(constraint)
-                # assumptions = [self._prefix_quant_var(-2), self._prefix_sort_var(-2, 0),self._prefix_quant_var(-1), self._prefix_sort_var(-1, 1)]
+                
+                # assumptions = [self._prefix_quant_var(-3), self._prefix_sort_var(-3, 1), self._prefix_quant_var(-2), self._prefix_sort_var(-2, 1), self._prefix_quant_var(-1), self._prefix_sort_var(-1, 1)]
                 # for atom_id, atom in enumerate(self.atoms):
                 #     for pol in [True, False]:
-                #         if (atom_id, pol) in [(28, False), (9, True)]:
-                #             assumptions += [self._literal_var(0, atom_id, pol)]
+                #         if (atom_id, pol) in [(43, False), (50, False), (54, False)]:
+                #             assumptions += [self._literal_var(0, self._literal_id(atom_id, pol))]
                 #         else:
-                #             assumptions += [z3.Not(self._literal_var(0, atom_id, pol))]
+                #             assumptions += [z3.Not(self._literal_var(0, self._literal_id(atom_id, pol)))]
                 # r = s.check(*assumptions)
                 # print("Hardcoded? =", r)
                 # if r == z3.unsat:
@@ -1521,6 +1535,7 @@ class PartialSeparator(object):
             for i in range(len(self.atoms)):
                 self.solver.add(z3.Or(z3.Not(self._literal_var(j, 2 * i)),
                                       z3.Not(self._literal_var(j, 2 * i + 1))))
+                # print(i, self.atoms[i])
                 # print(a,"===", self._literal_var(j, i, True), f"({i})")
                 # print(Not(a),"===", self._literal_var(j, i, False), f"({i})")
         # Exactly one sort per quantifier
@@ -1642,6 +1657,7 @@ class PartialSeparator(object):
                 # swap constraint to front
                 self.roots = [root] + self.roots[:i] + self.roots[i+1:]
                 # print("New solver is", self.solver)
+                # self.solver.add(z3.BoolVal(True))
                 return False
         return True
 
@@ -1681,6 +1697,51 @@ class PartialSeparator(object):
         # Value is mixed: if we're looking for true return the false assumptions, and vice versa
         return v[1 if polarity else 0]
 
+    def _check_qset(self, M: Completion, q: QSet, domain: Sequence[int]) -> bool:
+        for lit in domain:
+            if lit not in q:
+                return self._check_qset(M, {**q, lit: True}, domain) and self._check_qset(M, {**q, lit: False}, domain)
+        # q is complete, check that it matches some completion of M
+        remaining = []
+        assumpt = []
+        for lit in domain:
+            e = self._eval_literal(M, self._literal_id(lit, not q[lit]))
+            if e is None:
+                # this means that the literal's value is fixed in M, and doesn't match q. Thus the point q is outside M.
+                return False
+            e = self._eval_literal(M, self._literal_id(lit, q[lit]))
+            if e is not None:
+                remaining.append(lit)
+                assumpt.append(e)
+            else:
+                pass# this means that the literal's value is fixed in M, and does match q. Thus we can ignore that literal
+        if len(remaining) == 0:
+            return True
+        split_fact: Optional[int] = _choose_split_fact(M.assumptions, assumpt)
+        if split_fact is None:
+            # not 100% sure what this means yet
+            # likely unreachable, because of the check that the literal is not satisfied, so all assumptions must give some info
+            assert False
+        definite_split_fact = split_fact
+        split_domain = _choose_split_domain(M, definite_split_fact, assumpt)        
+        for v in split_domain:
+            M_prime = M.with_fact(definite_split_fact, v)
+            if self._check_qset(M_prime, q, remaining):
+                return True
+        return False
+            
+            
+
+    def _grow_qset(self, M: Completion, q: QSet, domain: Sequence[int]) -> QSet:
+        for lit in domain:
+            if lit not in q: continue
+            if self._check_qset(M, {**q, lit: not q[lit]}, domain):
+                qq = dict(q)
+                del qq[lit]
+                return self._grow_qset(M, qq, domain)
+        return q
+            
+
     def _E(self, M: Completion, loc: int, polarity: bool) -> Witness:
         if loc > 0:
             if False:
@@ -1691,7 +1752,7 @@ class PartialSeparator(object):
             return self._E_phi_v2(M, loc, polarity, list(range(1, 1+self.n_clauses)), [])
         elif loc < 0:
             qvar = M.model.consts[self.solution_prefix[loc + self.n_quantifiers][2]]
-            return self._E_ae_v2(M, loc, polarity, M.model.domain(qvar), [])
+            return self._E_ae_v2(M, loc, polarity, list(M.model.domain(qvar)), [])
         else: assert False
 
     def _E_cl(self, M: Completion, loc: int, polarity: bool, literals: List[int]) -> Witness:
@@ -1810,7 +1871,20 @@ class PartialSeparator(object):
             return (None, define_neg_clause)
 
 
-
+    def _add_cube(self, M: Completion, loc: int, polarity: bool) -> None:
+        if loc < 0 or not polarity: return
+        qvars_defined = [M.model.consts[qvar_name] for (_, _, qvar_name) in self.solution_prefix]
+        M_random = _random_completion(M, qvars_defined, self._random_gen)
+        qset = dict((l // 2, l % 2 == 0) for l in self._valid_literals() if self._eval_literal(M_random, l) is None)
+        domain = list(set(l // 2 for l in self._valid_literals()))
+        print (qset, domain)
+        assert self._check_qset(M, qset, domain)
+        qset_generalized = self._grow_qset(M, qset, domain)
+        assert self._check_qset(M, qset_generalized, domain)
+        print(f"QSet generalization: {len(qset) - len(qset_generalized)}, {[self.atoms[a] if p else Not(self.atoms[a]) for a, p in qset_generalized.items()]}")
+        for loc_i in range(1, self.n_clauses + 1):
+            self.solver.add(z3.Implies(self._V(M, loc_i, polarity), z3.Or([self._literal_var(loc_i - 1, self._literal_id(a, p)) for a, p in qset_generalized.items()])))
+        
     def _E_cl_v2(self, M: Completion, loc: int, polarity: bool, literals: List[int]) -> Witness:
         M.validate()
         if polarity:
@@ -1842,10 +1916,12 @@ class PartialSeparator(object):
                     qvars_defined = [M.model.consts[qvar_name] for (_, _, qvar_name) in self.solution_prefix]
                     generality = len([f for f in itertools.chain(range(M.model.base_facts), qvars_defined) if f not in M.assumptions or M.assumptions[f] == -1])
                     print(f"{_I(i)} Clause deferred proof, generalized facts = {generality}")
-                    for M_prime in itertools.islice(_all_completions(M, qvars_defined), 32): #[_random_completion(M, qvars_defined, self._random_gen)]: # 
-                        literal_indicators = [l for l in self._valid_literals(s for (_, s, _) in self.solution_prefix) if self._eval_literal(M, l) is None]
-                        for loc_i in range(1, self.n_clauses + 1):
-                            self.solver.add(z3.Implies(self._V(M, loc_i, polarity), z3.Or([self._literal_var(loc_i - 1, l) for l in literal_indicators])))
+                    self._add_cube(M, loc, polarity)
+                    # print(f"{_I(i)} Literals", list(self.literals[l] for l in self._valid_literals()))
+                    # for M_prime in itertools.islice(_all_completions(M, qvars_defined), 32): #[_random_completion(M, qvars_defined, self._random_gen)]: # 
+                    #     literal_indicators = [l for l in self._valid_literals() if self._eval_literal(M_prime, l) is None]
+                    #     for loc_i in range(1, self.n_clauses + 1):
+                    #         self.solver.add(z3.Implies(self._V(M, loc_i, polarity), z3.Or([self._literal_var(loc_i - 1, l) for l in literal_indicators])))
                     print(f"{_I(i)} Proving cl ~{self._V(M, loc, polarity)}")
 
                     # Add constraint M' |- ~A_i 
@@ -1864,6 +1940,8 @@ class PartialSeparator(object):
                     def add_splits(i: int) -> None:
                         self._split(M, loc, polarity, definite_split_fact)
                         gen(i+1)
+                        self._add_cube(M, loc, polarity)
+                    
                         print(f"{_I(i)} Splitting (cl), using proof of {self._V(M_prime, loc, polarity)}) for {self._V(M, loc, polarity)}")
                     return (assumpt, add_splits)
                 split_proofs.append(r[1])
@@ -2059,6 +2137,7 @@ class PartialSeparator(object):
                     for pf in subproofs:
                         pf(i+1)
                     self.solver.add(z3.Implies(self._V(M, loc, polarity), z3.Or(subvars)))
+                    self._add_cube(M, loc, polarity)
                     print(f"{_I(i)} Proving phi ~{self._V(M, loc, polarity)} via {z3.Implies(self._V(M, loc, polarity), z3.Or(subvars))}")
 
                     # Add constraint M' |- ~A_i 
@@ -2222,7 +2301,12 @@ class PartialSeparator(object):
                 pf(i+1)
                 self.solver.add(z3.Implies(cond_is_forall, self._V(M, loc, polarity) ==
                                                            self._V(M.with_fact(qvar, -1), loc + 1, polarity)))
+                # M[qvar=?] |- p => M |- (A/E)x. p
                 self.solver.add(z3.Implies(self._prefix_sort_var(loc, sort), z3.Implies(self._V(M.with_fact(qvar, -1), loc + 1, polarity), self._V(M, loc, polarity))))
+                # M[qvar=?] |- p == (M[qvar=e1] |- p) & (M[qvar=e2] |- p) & ...
+                subterms = [self._V(M.with_fact(qvar, d), loc + 1, polarity) for d in M.model.domain(qvar)]
+                self.solver.add(z3.Implies(self._prefix_sort_var(loc, sort), self._V(M.with_fact(qvar, -1), loc + 1, polarity) == z3.And(subterms)))
+                
                 if not polarity:
                     self._add_lift(M, loc, polarity)
                 print(f"{_I(i)} Adding universal constraint: {M} {loc}: {z3.Implies(cond_is_forall, self._V(M, loc, polarity) == self._V(M.with_fact(qvar, -1), loc + 1, polarity))}")
@@ -2300,8 +2384,8 @@ class PartialSeparator(object):
                     def add_splits(i: int) -> None:
                         self._split(M, loc, polarity, definite_split_fact)
                         gen(i+1)
-                        # if not polarity:
-                        #     self._add_lift(M, z3.Not(self._V(M, loc, polarity)))
+                        if not polarity:
+                            self._add_lift(M, loc, polarity)
                         print(f"{_I(i)} Splitting {self._V(M, loc, polarity)} (ae), using proof of {self._V(M_prime, loc, polarity)}")
                     return (assumpt, add_splits)
                 split_proofs.append(r[1])
