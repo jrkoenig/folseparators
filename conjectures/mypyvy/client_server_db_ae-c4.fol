@@ -1,5 +1,5 @@
 ; File: examples/fol/client_server_db_ae.pyv
-
+; Original: invariant forall I:db_request_id, N1:node, N2:node. t(I, N1) & t(I, N2) -> N1 = N2
 ; Sig
 (sort db_request_id)
 (sort node)

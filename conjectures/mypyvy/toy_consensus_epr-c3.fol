@@ -1,5 +1,5 @@
 ; File: examples/fol/toy_consensus_epr.pyv
-
+; Original: invariant forall V:value. decided(V) -> (exists Q:quorum. forall N:node. member(N, Q) -> vote(N, V))
 ; Sig
 (sort node)
 (sort quorum)

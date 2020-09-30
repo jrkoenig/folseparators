@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: invariant forall T:thread, K1:ticket, K2:ticket. m(T, K1) & m(T, K2) -> K1 = K2
 ; Sig
 (sort thread)
 (sort ticket)

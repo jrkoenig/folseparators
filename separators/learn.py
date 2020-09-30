@@ -544,7 +544,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     
     S = HybridSeparator
         
-    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)], blocked_symbols=args.blocked_symbols) 
+    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)], expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
 
     env = Environment(sig)
     s = z3.Solver()
@@ -561,7 +561,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
 
     p_constraints: List[int] = []
     n_constraints: List[int] = []
-     
+    print("Learning formula with args", sys.argv)
     try:
         while True:
             with result.counterexample_timer:
@@ -589,13 +589,18 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                 ident = separator.add_model(r)
                 result.models.append(r)
                 if r.label.startswith("+"):
+                    gr = generalize_model(r, And(axioms + [formula]), label='+')
                     p_constraints.append(ident)
                 else:
+                    gr = generalize_model(r, And(axioms + [Not(formula)]), label='+')
                     n_constraints.append(ident)
-
                 if not args.quiet:
                     print ("New model is:")
                     print (r)
+                    print("--- Generalized model is ---")
+                    print(gr)
+                    print("--- end generalized model ---")
+                
                     print ("Have new model, now have", len(result.models), "models total")
                 if True:
                     c = separator.separate(pos=p_constraints, neg=n_constraints, imp=[], max_clauses = args.max_clauses, max_depth= args.max_depth, timer = result.separation_timer, matrix_timer = result.matrix_timer)

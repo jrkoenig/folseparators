@@ -1,5 +1,5 @@
 ; File: examples/fol/consensus_epr.pyv
-
+; Original: invariant forall N:node, V:value. decided(N, V) -> leader(N)
 ; Sig
 (sort node)
 (sort quorum)

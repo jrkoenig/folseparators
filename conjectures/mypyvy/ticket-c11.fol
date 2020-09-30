@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: invariant le(service, next_ticket)
 ; Sig
 (sort thread)
 (sort ticket)

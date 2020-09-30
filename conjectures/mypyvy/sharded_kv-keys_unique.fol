@@ -1,5 +1,5 @@
 ; File: examples/fol/sharded_kv.pyv
-
+; Original: safety [keys_unique] forall N1:node, K:key, V1:value, N2:node, V2:value. table(N1, K, V1) & table(N2, K, V2) -> N1 = N2 & V1 = V2
 ; Sig
 (sort key)
 (sort node)

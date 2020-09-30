@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: invariant forall T:thread. pc3(T) -> m(T, service)
 ; Sig
 (sort thread)
 (sort ticket)

@@ -1,5 +1,5 @@
 ; File: examples/fol/firewall.pyv
-
+; Original: safety forall S:node, D:node. sent(S, D) & internal(D) -> (exists I:node. internal(I) & sent(I, S))
 ; Sig
 (sort node)
 (relation allowed_in node)

@@ -1,5 +1,5 @@
 ; File: examples/fol/client_server_ae.pyv
-
+; Original: safety forall N:node, P:response. response_received(N, P) -> (exists R:request. request_sent(N, R) & match(R, P))
 ; Sig
 (sort node)
 (sort request)

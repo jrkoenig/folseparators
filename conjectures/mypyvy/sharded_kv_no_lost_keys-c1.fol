@@ -1,5 +1,5 @@
 ; File: examples/fol/sharded_kv_no_lost_keys.pyv
-
+; Original: invariant forall K:key. (exists N:node. owner(N, K)) | (exists N:node, V:value. transfer_msg(N, K, V))
 ; Sig
 (sort key)
 (sort node)

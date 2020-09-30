@@ -1,5 +1,5 @@
 ; File: examples/fol/bosco_3t_safety.pyv
-
+; Original: safety [validity1] forall V1:value, V2:value. (forall N:node. !member_f(N) -> input(N, V1)) & V1 != V2 -> (forall M:node. !member_f(M) -> !dec(M, V2))
 ; Sig
 (sort node)
 (sort quorum_a)

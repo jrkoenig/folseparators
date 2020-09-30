@@ -1,5 +1,5 @@
 ; File: examples/fol/hybrid_reliable_broadcast_cisa.pyv
-
+; Original: invariant forall N1:node. !member_fs(N1) & !member_fa(N1) & accept(N1) -> (exists B:quorum_b. forall M:node. member_b(M, B) -> sent_msg_proj(M))
 ; Sig
 (sort node)
 (sort quorum_a)

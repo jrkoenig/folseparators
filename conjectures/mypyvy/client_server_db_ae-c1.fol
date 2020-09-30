@@ -1,5 +1,5 @@
 ; File: examples/fol/client_server_db_ae.pyv
-
+; Original: invariant forall N:node, P:response. response_sent(N, P) -> (exists R:request. request_sent(N, R) & match(R, P))
 ; Sig
 (sort db_request_id)
 (sort node)

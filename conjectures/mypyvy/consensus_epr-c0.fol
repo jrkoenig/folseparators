@@ -1,5 +1,5 @@
 ; File: examples/fol/consensus_epr.pyv
-
+; Original: safety forall N1:node, V1:value, N2:node, V2:value. decided(N1, V1) & decided(N2, V2) -> V1 = V2
 ; Sig
 (sort node)
 (sort quorum)

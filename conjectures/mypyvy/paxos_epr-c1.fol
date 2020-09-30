@@ -1,5 +1,5 @@
 ; File: examples/fol/paxos_epr.pyv
-
+; Original: invariant forall R:round, V1:value, V2:value. proposal(R, V1) & proposal(R, V2) -> V1 = V2
 ; Sig
 (sort node)
 (sort quorum)

@@ -1,5 +1,5 @@
 ; File: examples/fol/lockserv.pyv
-
+; Original: invariant forall N:node. !(grant_msg(N) & server_holds_lock)
 ; Sig
 (sort node)
 (relation grant_msg node)

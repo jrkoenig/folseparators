@@ -1,5 +1,5 @@
 ; File: examples/fol/hybrid_reliable_broadcast_cisa.pyv
-
+; Original: invariant forall N1:node. sent_msg_proj(N1) -> (exists N2:node. sent_msg(N1, N2))
 ; Sig
 (sort node)
 (sort quorum_a)

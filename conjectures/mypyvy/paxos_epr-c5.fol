@@ -1,5 +1,5 @@
 ; File: examples/fol/paxos_epr.pyv
-
+; Original: invariant forall R1:round, R2:round, V1:value, V2:value, Q:quorum. !le(R2, R1) & proposal(R2, V2) & V1 != V2 -> (exists N:node. member(N, Q) & left_round(N, R1) & !vote(N, R1, V1))
 ; Sig
 (sort node)
 (sort quorum)

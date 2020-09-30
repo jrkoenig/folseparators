@@ -1,5 +1,5 @@
 ; File: examples/fol/ring_id.pyv
-
+; Original: invariant [self_pending_max] forall L:node, N:node. pending(idn(L), L) -> le(idn(N), idn(L))
 ; Sig
 (sort id)
 (sort node)

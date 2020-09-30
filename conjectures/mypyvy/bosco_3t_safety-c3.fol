@@ -1,5 +1,5 @@
 ; File: examples/fol/bosco_3t_safety.pyv
-
+; Original: invariant forall N1:node, N2:node, V:value. !member_f(N1) -> (sent_msg(N1, N2, V) <-> input(N1, V))
 ; Sig
 (sort node)
 (sort quorum_a)
@@ -27,4 +27,4 @@
 (axiom (forall N node (forall V1 value (forall V2 value (or (not (and (not (member_f N)) (input N V1) (input N V2))) (= V1 V2))))))
 
 ; Conjecture c3
-(conjecture (forall N1 node (forall N2 node (forall V value (or (not (not (member_f N1))) (or (and (not (sent_msg N1 N2 V)) (not (input N1 V))) (and (input N1 V) (sent_msg N1 N2 V))))))))
+(conjecture (forall N1 node (forall N2 node (forall V value (or (not (not (member_f N1))) (iff (sent_msg N1 N2 V) (input N1 V)))))))

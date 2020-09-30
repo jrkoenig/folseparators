@@ -562,6 +562,28 @@ class FixedHybridSeparator(object):
         # also add constraint that there are at most 4 literals
         if 'matrixsize4' in self._expt_flags:
             self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 4)))
+        
+        term_limit = 0
+        if 'termlimit1' in self._expt_flags:
+            term_limit = 1
+        elif 'termlimit2' in self._expt_flags:
+            term_limit = 2
+        elif 'termlimit3' in self._expt_flags:
+            term_limit = 3
+        elif 'termlimit2' in self._expt_flags:
+            term_limit = 4
+        def literals_of_atom(a: int) -> z3.ExprRef:
+            return z3.Or([self._literal_var(0, c, a, p) for c in range(self._clauses) for p in [True, False]])
+        if term_limit > 0:
+            for rel in self._sig.relations.keys():
+                atoms_to_limit = []
+                for a in atoms:
+                    if rel in symbols(self._atoms[a]):
+                        atoms_to_limit.append(a)
+                self.solver.add(z3.Implies(assump, z3.PbLe([(literals_of_atom(x),1) for x in atoms_to_limit], term_limit)))
+                
+            
+            
     def _atom_id(self, a: Formula) -> int:
         if a not in self._atoms_cache:
             i = len(self._atoms)

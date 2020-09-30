@@ -1,5 +1,5 @@
 ; File: examples/fol/ring_id.pyv
-
+; Original: safety [leader_unique] forall X:node, Y:node. leader(X) & leader(Y) -> X = Y
 ; Sig
 (sort id)
 (sort node)

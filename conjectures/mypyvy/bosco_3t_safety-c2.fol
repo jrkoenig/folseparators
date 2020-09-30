@@ -1,5 +1,5 @@
 ; File: examples/fol/bosco_3t_safety.pyv
-
+; Original: invariant forall N1:node, N2:node, V:value. !member_f(N1) & !member_f(N2) & sent_msg(N1, N2, V) & rcv_msg_proj(N1, N2) -> rcv_msg(N1, N2, V)
 ; Sig
 (sort node)
 (sort quorum_a)

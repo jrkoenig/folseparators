@@ -1,5 +1,5 @@
 ; File: examples/fol/lockserv.pyv
-
+; Original: invariant forall N1:node, N2:node. grant_msg(N1) & grant_msg(N2) -> N1 = N2
 ; Sig
 (sort node)
 (relation grant_msg node)

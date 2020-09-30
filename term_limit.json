@@ -1,0 +1,4663 @@
+[
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "agreement1",
+  "file": "conjectures/mypyvy/bosco_3t_safety-agreement1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall V1:value. forall V2:value. (~((~member_f(N1) & ~member_f(N2) & dec(N1, V1) & dec(N2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2,
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "agreement2",
+  "file": "conjectures/mypyvy/bosco_3t_safety-agreement2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~((~member_f(N) & dec(N, V1) & und_cons_dec(V2))) | V1 = V2)",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall V:value. (~sent_msg(N1, N2, V) | sent_msg_proj(N1, N2))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall V:value. (~rcv_msg(N1, N2, V) | rcv_msg_proj(N1, N2))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall V:value. (~((~member_f(N1) & ~member_f(N2) & sent_msg(N1, N2, V) & rcv_msg_proj(N1, N2))) | rcv_msg(N1, N2, V))",
+  "relation_counts": [
+   2,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall V:value. (~(~member_f(N1)) | (sent_msg(N1, N2, V) <-> input(N1, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~((~member_f(N) & und_cons(N, V1) & und_cons(N, V2))) | V1 = V2)",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~member_f(N) & und_cons(N, V))) | done(N))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall N1:node. forall V:value. (~((~member_f(N2) & rcv_msg(N1, N2, V))) | sent_msg(N1, N2, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~member_f(N) & dec(N, V))) | exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~member_f(M))) | sent_msg(M, M, V)))",
+  "relation_counts": [
+   2,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c8.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~((~member_f(N) & done(N) & ~und_cons(N, V))) | ~(exists B:quorum_b. forall M:node. (~((member_b(M, B) & ~member_f(M))) | sent_msg(M, M, V))))",
+  "relation_counts": [
+   2,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/bosco_3t_safety-c9.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 4,
+  "existentials": 5,
+  "max_term_depth": 0,
+  "golden_formula": "(forall V:value. (~und_cons_dec(V) | exists N:node. (~member_f(N) & und_cons(N, V))) | exists N1:node. exists N2:node. exists V1:value. exists V2:value. (~member_f(N1) & ~member_f(N2) & und_cons(N1, V1) & und_cons(N2, V2) & V1 ~= V2))",
+  "relation_counts": [
+   3,
+   3,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit3"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "validity1",
+  "file": "conjectures/mypyvy/bosco_3t_safety-validity1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((forall N:node. (~(~member_f(N)) | input(N, V1)) & V1 ~= V2)) | forall M:node. (~(~member_f(M)) | ~dec(M, V2)))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "bosco_3t_safety",
+  "conjecture": "validity2",
+  "file": "conjectures/mypyvy/bosco_3t_safety-validity2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((forall N:node. (~(~member_f(N)) | input(N, V1)) & V1 ~= V2)) | ~und_cons_dec(V2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/cache-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:core. forall A:address. (~((~invalid(C, A) & ~modified(C, A))) | cache(C, A) = memory(A))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/cache-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((invalid(C, A) & modified(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c10",
+  "file": "conjectures/mypyvy/cache-c10.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. (~bus_read_for_ownership(C, A) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c11",
+  "file": "conjectures/mypyvy/cache-c11.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. (~bus_upgrade(C, A) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c12",
+  "file": "conjectures/mypyvy/cache-c12.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. (~bus_transfer(V) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c13",
+  "file": "conjectures/mypyvy/cache-c13.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. (~proc_read(C, A) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c14",
+  "file": "conjectures/mypyvy/cache-c14.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. forall V:value. (~proc_write(C, A, V) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c15",
+  "file": "conjectures/mypyvy/cache-c15.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall V:value. forall C2:core. (~((proc_write(C1, A, V) & bus_read_for_ownership(C2, A))) | invalid(C1, A))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c16",
+  "file": "conjectures/mypyvy/cache-c16.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall V:value. forall C2:core. (~((proc_write(C1, A, V) & bus_upgrade(C2, A))) | shared(C1, A))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c17",
+  "file": "conjectures/mypyvy/cache-c17.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. forall V:value. ~((proc_write(C, A, V) & bus_upgrade(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c18",
+  "file": "conjectures/mypyvy/cache-c18.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. forall V1:value. forall V2:value. (~((proc_write(C, A, V1) & shared(C, A))) | ~bus_transfer(V2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c19",
+  "file": "conjectures/mypyvy/cache-c19.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall C2:core. forall A2:address. (~((proc_read(C1, A1) & proc_read(C2, A2))) | (C1 = C2 & A1 = A2))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/cache-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((invalid(C, A) & exclusive(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c20",
+  "file": "conjectures/mypyvy/cache-c20.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall V1:value. forall C2:core. forall A2:address. forall V2:value. (~((proc_write(C1, A1, V1) & proc_write(C2, A2, V2))) | (C1 = C2 & A1 = A2 & V1 = V2))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c21",
+  "file": "conjectures/mypyvy/cache-c21.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall C2:core. forall A2:address. forall V:value. ~((proc_read(C1, A1) & proc_write(C2, A2, V)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c22",
+  "file": "conjectures/mypyvy/cache-c22.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall C2:core. forall A2:address. ~((proc_read(C1, A1) & bus_read_for_ownership(C2, A2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c23",
+  "file": "conjectures/mypyvy/cache-c23.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall C2:core. forall A2:address. ~((proc_read(C1, A1) & bus_upgrade(C2, A2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c24",
+  "file": "conjectures/mypyvy/cache-c24.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall V:value. forall C2:core. forall A2:address. ~((proc_write(C1, A1, V) & bus_read(C2, A2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c25",
+  "file": "conjectures/mypyvy/cache-c25.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall C2:core. forall A2:address. (~((proc_read(C1, A1) & bus_read(C2, A2))) | A1 = A2)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c26",
+  "file": "conjectures/mypyvy/cache-c26.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall V:value. forall C2:core. forall A2:address. (~((proc_write(C1, A1, V) & bus_read_for_ownership(C2, A2))) | A1 = A2)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c27",
+  "file": "conjectures/mypyvy/cache-c27.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A1:address. forall V:value. forall C2:core. forall A2:address. (~((proc_write(C1, A1, V) & bus_upgrade(C2, A2))) | A1 = A2)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c28",
+  "file": "conjectures/mypyvy/cache-c28.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. (~((proc_read(C1, A) & ~bus_read(C2, A) & C1 ~= C2)) | (shared(C2, A) | invalid(C2, A)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c29",
+  "file": "conjectures/mypyvy/cache-c29.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. (~((proc_read(C1, A) & ~bus_read(C2, A) & C1 ~= C2 & shared(C2, A))) | bus_transfer(cache(C2, A)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/cache-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((invalid(C, A) & shared(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c30",
+  "file": "conjectures/mypyvy/cache-c30.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:core. forall A:address. forall V:value. (~((proc_read(C, A) & bus_transfer(V))) | memory(A) = V)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c31",
+  "file": "conjectures/mypyvy/cache-c31.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C1:core. forall A:address. forall V:value. forall C2:core. (~((proc_read(C1, A) & bus_transfer(V) & ~invalid(C2, A))) | cache(C2, A) = V)",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c32",
+  "file": "conjectures/mypyvy/cache-c32.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall V:value. forall C2:core. (~((proc_write(C1, A, V) & invalid(C1, A) & ~bus_read_for_ownership(C2, A) & C1 ~= C2)) | invalid(C2, A))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c33",
+  "file": "conjectures/mypyvy/cache-c33.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall V:value. forall C2:core. (~((proc_write(C1, A, V) & shared(C1, A) & ~bus_upgrade(C2, A) & C1 ~= C2)) | invalid(C2, A))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c34",
+  "file": "conjectures/mypyvy/cache-c34.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall C1:core. forall A:address. forall C2:core. forall V2:value. ~((bus_transfer(V) & modified(C1, A) & (proc_read(C2, A) | proc_write(C2, A, V2))))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c35",
+  "file": "conjectures/mypyvy/cache-c35.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. ~((bus_upgrade(C1, A) & exclusive(C2, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c36",
+  "file": "conjectures/mypyvy/cache-c36.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. ~((bus_upgrade(C1, A) & modified(C2, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/cache-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((modified(C, A) & exclusive(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/cache-c5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((modified(C, A) & shared(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/cache-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. ~((exclusive(C, A) & shared(C, A)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/cache-c7.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. (~((exclusive(C1, A) & C1 ~= C2)) | invalid(C2, A))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/cache-c8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C1:core. forall A:address. forall C2:core. (~((modified(C1, A) & C1 ~= C2)) | invalid(C2, A))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "cache",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/cache-c9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:core. forall A:address. (~bus_read(C, A) | bus_in_use())",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_ae",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/client_server_ae-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall P:response. (~response_received(N, P) | exists R:request. (request_sent(N, R) & match(R, P)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_ae",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/client_server_ae-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall P:response. (~response_sent(N, P) | exists R:request. (request_sent(N, R) & match(R, P)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_db_ae",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/client_server_db_ae-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall P:response. (~response_received(N, P) | exists R:request. (request_sent(N, R) & match(R, P)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_db_ae",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/client_server_db_ae-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall P:response. (~response_sent(N, P) | exists R:request. (request_sent(N, R) & match(R, P)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_db_ae",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/client_server_db_ae-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:db_request_id. forall R:request. (~db_request_sent(I, R) | exists N:node. (t(I, N) & request_sent(N, R)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_db_ae",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/client_server_db_ae-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:db_request_id. forall P:response. (~db_response_sent(I, P) | exists R:request. (db_request_sent(I, R) & match(R, P)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "client_server_db_ae",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/client_server_db_ae-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:db_request_id. forall N1:node. forall N2:node. (~((t(I, N1) & t(I, N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/consensus_epr-c0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall V1:value. forall N2:node. forall V2:value. (~((decided(N1, V1) & decided(N2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/consensus_epr-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((leader(N1) & leader(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/consensus_epr-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~votes(N, N1) | vote_msg(N1, N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/consensus_epr-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. forall N2:node. (~((vote_msg(N, N1) & vote_msg(N, N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/consensus_epr-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~vote_msg(N, N1) | voted(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/consensus_epr-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "exists Q:quorum. forall N:node. forall M:node. (~((leader(N) & member(M, Q))) | votes(N, M))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_epr",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/consensus_epr-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~decided(N, V) | leader(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/consensus_forall-c0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall V1:value. forall N2:node. forall V2:value. (~((decided(N1, V1) & decided(N2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/consensus_forall-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((leader(N1) & leader(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/consensus_forall-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~votes(N, N1) | vote_msg(N1, N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/consensus_forall-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. forall N2:node. (~((vote_msg(N, N1) & vote_msg(N, N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/consensus_forall-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~vote_msg(N, N1) | voted(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/consensus_forall-c5.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~((leader(N) & member(N1, voting_quorum))) | votes(N, N1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_forall",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/consensus_forall-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~decided(N, V) | leader(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_wo_decide",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/consensus_wo_decide-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((leader(N1) & leader(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_wo_decide",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/consensus_wo_decide-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~votes(N, N1) | vote_msg(N1, N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_wo_decide",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/consensus_wo_decide-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. forall N2:node. (~((vote_msg(N, N1) & vote_msg(N, N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "consensus_wo_decide",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/consensus_wo_decide-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~vote_msg(N, N1) | voted(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "consensus_wo_decide",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/consensus_wo_decide-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall N1:node. (~((leader(N) & member(N1, voting_quorum))) | votes(N, N1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "firewall",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/firewall-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall S:node. forall D:node. (~((sent(S, D) & internal(D))) | exists I:node. (internal(I) & sent(I, S)))",
+  "relation_counts": [
+   2,
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "firewall",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/firewall-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall D:node. (~allowed_in(D) | exists I:node. (internal(I) & sent(I, D)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. (~sent_msg_proj(N1) | exists N2:node. sent_msg(N1, N2))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~sent_msg(N1, N2) | sent_msg_proj(N1))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall N1:node. (~((~member_fs(N2) & ~member_fa(N2) & rcv_msg(N1, N2))) | sent_msg(N1, N2))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((~member_fi(N1) & ~member_fa(N1) & sent_msg_proj(N1))) | sent_msg(N1, N2))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((~member_fs(N1) & ~member_fa(N1) & sent_msg(N1, N2) & ~rcv_init(N1))) | exists A:quorum_a. forall M:node. (~member_a(M, A) | sent_msg_proj(M)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. (~((~member_fs(N1) & ~member_fa(N1) & accept(N1))) | exists B:quorum_b. forall M:node. (~member_b(M, B) | sent_msg_proj(M)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-c6.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 2,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "(~(exists A:quorum_a. forall M:node. (~((member_a(M, A) & ~member_fs(M) & ~member_fa(M))) | sent_msg_proj(M))) | exists N:node. (~member_fs(N) & ~member_fa(N) & rcv_init(N)))",
+  "relation_counts": [
+   2,
+   2,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "hybrid_reliable_broadcast_cisa",
+  "conjecture": "unforgebility",
+  "file": "conjectures/mypyvy/hybrid_reliable_broadcast_cisa-unforgebility.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 1,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "(~(exists N:node. (~member_fs(N) & ~member_fa(N) & accept(N))) | exists M:node. (~member_fs(M) & ~member_fa(M) & rcv_init(M)))",
+  "relation_counts": [
+   2,
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/learning_switch-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:node. forall X:node. table(T, X, X)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/learning_switch-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:node. forall X:node. forall Y:node. forall Z:node. (~((table(T, X, Y) & table(T, Y, Z))) | table(T, X, Z))",
+  "relation_counts": [
+   3
+  ],
+  "extra": [
+   "--expt-flags=termlimit3"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/learning_switch-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:node. forall X:node. forall Y:node. (~((table(T, X, Y) & table(T, Y, X))) | X = Y)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/learning_switch-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:node. forall X:node. forall Y:node. forall Z:node. (~((table(T, X, Y) & table(T, X, Z))) | (table(T, Y, Z) | table(T, Z, Y)))",
+  "relation_counts": [
+   4
+  ],
+  "extra": [
+   "--expt-flags=termlimit4"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/learning_switch-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall PS:node. forall PD:node. forall S:node. forall D:node. (~((pending(PS, PD, S, D) & PS ~= S)) | table(PS, S, PS))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "learning_switch",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/learning_switch-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:node. forall X:node. forall Y:node. (~((table(T, X, Y) & T ~= Y & X ~= Y)) | table(T, Y, T))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/lockserv-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((grant_msg(N1) & grant_msg(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/lockserv-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((unlock_msg(N1) & unlock_msg(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/lockserv-c2.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((holds_lock(N1) & grant_msg(N2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/lockserv-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((holds_lock(N1) & unlock_msg(N2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/lockserv-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. ~((grant_msg(N1) & unlock_msg(N2)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/lockserv-c5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((grant_msg(N) & server_holds_lock()))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/lockserv-c6.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((holds_lock(N) & server_holds_lock()))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/lockserv-c7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. ~((unlock_msg(N) & server_holds_lock()))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "lockserv",
+  "conjecture": "mutex",
+  "file": "conjectures/mypyvy/lockserv-mutex.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. (~((holds_lock(N1) & holds_lock(N2))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/paxos_epr-c0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall R2:round. forall V2:value. (~((decision(R1, V1) & decision(R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/paxos_epr-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V1:value. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/paxos_epr-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~vote(N, R, V) | proposal(R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/paxos_epr-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V:value. (~decision(R, V) | exists Q:quorum. forall N:node. (~member(N, Q) | vote(N, R, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/paxos_epr-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/paxos_epr-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall R2:round. forall V1:value. forall V2:value. forall Q:quorum. (~((~le(R2, R1) & proposal(R2, V2) & V1 ~= V2)) | exists N:node. (member(N, Q) & left_round(N, R1) & ~vote(N, R1, V1)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/paxos_forall-c0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall R2:round. forall V2:value. (~((decision(R1, V1) & decision(R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/paxos_forall-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V1:value. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/paxos_forall-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~vote(N, R, V) | proposal(R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/paxos_forall-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall R:round. forall V:value. forall N:node. forall Q:quorum. (~((decision(R, V) & member(N, Q) & Q = decision_quorum(R, V))) | vote(N, R, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/paxos_forall-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~vote(N, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/paxos_forall-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/paxos_forall-c6.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N1:node. forall Q:quorum. forall R:round. forall V:value. forall N2:node. (~((member(N1, Q) & left_round(N1, R) & ~vote(N1, R, V) & N2 = choosable_node(R, V, Q))) | (member(N2, Q) & left_round(N2, R) & ~vote(N2, R, V)))",
+  "relation_counts": [
+   2,
+   2,
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_forall",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/paxos_forall-c7.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R1:round. forall R2:round. forall V1:value. forall V2:value. forall Q:quorum. (~((~le(R2, R1) & proposal(R2, V2) & V1 ~= V2 & N = choosable_node(R1, V1, Q))) | (member(N, Q) & left_round(N, R1) & ~vote(N, R1, V1)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c0.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall V1:value. forall R2:round. forall V2:value. (~((decision(R1, V1) & decision(R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R:round. forall V1:value. forall V2:value. (~((proposal(R, V1) & proposal(R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall V:value. (~vote(N, R, V) | proposal(R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall R:round. forall V:value. forall N:node. forall Q:quorum. (~((decision(R, V) & member(N, Q) & Q = decision_quorum(R, V))) | vote(N, R, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c4.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. ~vote(N, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c5.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((one_b(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "paxos_forall_choosable",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/paxos_forall_choosable-c6.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall R1:round. forall R2:round. forall V1:value. forall V2:value. forall Q:quorum. (~((~le(R2, R1) & proposal(R2, V2) & V1 ~= V2)) | ~choosable(R1, V1, Q))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AER_term_log",
+  "file": "conjectures/mypyvy/raft-AER_term_log.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall T:term. forall EI:index. forall ET:term. (~append_reply_msg(N, T, EI, ET) | term_at(term_log(T), EI, ET))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AE_none_means_init",
+  "file": "conjectures/mypyvy/raft-AE_none_means_init.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:term. forall OPI:option_index. forall OPT:option_term. forall EI:index. forall ET:term. forall EV:value. (~((append_msg(T, OPI, OPT, EI, ET, EV) & is_none_index(OPI))) | EI = index_zero)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AE_option_wf",
+  "file": "conjectures/mypyvy/raft-AE_option_wf.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:term. forall OPI:option_index. forall OPT:option_term. forall EI:index. forall ET:term. forall EV:value. (~append_msg(T, OPI, OPT, EI, ET, EV) | (is_none_index(OPI) <-> is_none_term(OPT)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AE_prev_term_log",
+  "file": "conjectures/mypyvy/raft-AE_prev_term_log.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T:term. forall PLI:option_index. forall PLT:option_term. forall EI:index. forall ET:term. forall EV:value. (~((append_msg(T, PLI, PLT, EI, ET, EV) & ~is_none_index(PLI))) | term_at(term_log(T), oi_index(PLI), ot_term(PLT)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AE_some_succ",
+  "file": "conjectures/mypyvy/raft-AE_some_succ.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T:term. forall OPI:option_index. forall OPT:option_term. forall EI:index. forall ET:term. forall EV:value. (~((append_msg(T, OPI, OPT, EI, ET, EV) & ~is_none_index(OPI))) | (~index_le(EI, oi_index(OPI)) & forall I:index. (~(~index_le(EI, I)) | index_le(I, oi_index(OPI)))))",
+  "relation_counts": [
+   3,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit3"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "AE_term_log",
+  "file": "conjectures/mypyvy/raft-AE_term_log.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall T:term. forall PLI:option_index. forall PLT:option_term. forall EI:index. forall ET:term. forall EV:value. (~append_msg(T, PLI, PLT, EI, ET, EV) | (term_at(term_log(T), EI, ET) & EV = value_at(term_log(T), EI)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "CI_zero_until_commit",
+  "file": "conjectures/mypyvy/raft-CI_zero_until_commit.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "(~(commit_index ~= index_zero) | committed(commit_index, commit_value))",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_none_index_not_used",
+  "file": "conjectures/mypyvy/raft-RV_none_index_not_used.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:node. forall T:term. forall OLI:option_index. forall OLT:option_term. forall I:index. (~((request_vote_msg(C, T, OLI, OLT) & is_none_index(OLI) & ~left_term(C, T) & ~started(T))) | ~index_used(current_log(C), I))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_option_wf",
+  "file": "conjectures/mypyvy/raft-RV_option_wf.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T:term. forall OLI:option_index. forall OLT:option_term. (~request_vote_msg(N, T, OLI, OLT) | (is_none_index(OLI) <-> is_none_term(OLT)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_partial_func",
+  "file": "conjectures/mypyvy/raft-RV_partial_func.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:node. forall T:term. forall OLI1:option_index. forall OLT1:option_term. forall OLI2:option_index. forall OLT2:option_term. (~((request_vote_msg(C, T, OLI1, OLT1) & request_vote_msg(C, T, OLI2, OLT2))) | (OLI1 = OLI2 & OLT1 = OLT2))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_some_index_no_bigger",
+  "file": "conjectures/mypyvy/raft-RV_some_index_no_bigger.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:node. forall T:term. forall OLI:option_index. forall OLT:option_term. forall I:index. (~((request_vote_msg(C, T, OLI, OLT) & ~is_none_index(OLI) & ~left_term(C, T) & ~started(T) & ~index_le(I, oi_index(OLI)))) | ~index_used(current_log(C), I))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_some_index_term_at",
+  "file": "conjectures/mypyvy/raft-RV_some_index_term_at.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall C:node. forall T:term. forall OLI:option_index. forall OLT:option_term. (~((request_vote_msg(C, T, OLI, OLT) & ~is_none_index(OLI) & ~left_term(C, T) & ~started(T))) | term_at(current_log(C), oi_index(OLI), ot_term(OLT)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "RV_term",
+  "file": "conjectures/mypyvy/raft-RV_term.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall C:node. forall T:term. forall OLI:option_index. forall OLT:option_term. (~request_vote_msg(C, T, OLI, OLT) | (current_term(C, T) | left_term(C, T)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "any_committed_commit_index_committed",
+  "file": "conjectures/mypyvy/raft-any_committed_commit_index_committed.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:index. forall V:value. (~committed(I, V) | committed(commit_index, commit_value))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/raft-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:index. forall V1:value. forall V2:value. (~((committed(I, V1) & committed(I, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "choosable_AER_current_log",
+  "file": "conjectures/mypyvy/raft-choosable_AER_current_log.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "forall T1:term. forall I:index. forall N:node. (~((exists Q:quorum. forall N1:node. (~member(N1, Q) | (append_reply_msg(N1, T1, I, T1) | ~left_term(N1, T1))) & append_reply_msg(N, T1, I, T1))) | term_at(current_log(N), I, T1))",
+  "relation_counts": [
+   2,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "choosable_future_term_log",
+  "file": "conjectures/mypyvy/raft-choosable_future_term_log.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "forall T1:term. forall I:index. forall T2:term. (~((term_at(term_log(T1), I, T1) & exists Q:quorum. forall N:node. (~member(N, Q) | (append_reply_msg(N, T1, I, T1) | ~left_term(N, T1))) & started(T2) & term_le(T1, T2))) | term_at(term_log(T2), I, T1))",
+  "relation_counts": [
+   2,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "choosable_vote_msg",
+  "file": "conjectures/mypyvy/raft-choosable_vote_msg.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 1,
+  "golden_formula": "forall T1:term. forall I:index. forall N:node. forall C:node. forall T2:term. (~((exists Q:quorum. forall N1:node. (~member(N1, Q) | (append_reply_msg(N1, T1, I, T1) | ~left_term(N1, T1))) & append_reply_msg(N, T1, I, T1) & vote_msg(C, T2, N) & ~term_le(T2, T1) & ~started(T2) & ~left_term(C, T2))) | term_at(current_log(C), I, T1))",
+  "relation_counts": [
+   2,
+   2,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "commit_log_no_future_entries",
+  "file": "conjectures/mypyvy/raft-commit_log_no_future_entries.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:index. forall T:term. (~term_at(commit_log, I, T) | term_le(T, commit_term))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "commit_log_uses_up_to_commit_index",
+  "file": "conjectures/mypyvy/raft-commit_log_uses_up_to_commit_index.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:index. (~committed(commit_index, commit_value) | (index_used(commit_log, I) <-> index_le(I, commit_index)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "commit_quorum",
+  "file": "conjectures/mypyvy/raft-commit_quorum.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "(~committed(commit_index, commit_value) | forall N:node. (~member(N, commit_quorum) | append_reply_msg(N, commit_term, commit_index, commit_term)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "committed_iff_in_commit_log",
+  "file": "conjectures/mypyvy/raft-committed_iff_in_commit_log.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:index. forall V:value. (committed(I, V) <-> (index_used(commit_log, I) & V = value_at(commit_log, I)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "current_log_no_future_entries",
+  "file": "conjectures/mypyvy/raft-current_log_no_future_entries.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall I:index. forall T:term. (~term_at(current_log(N), I, T) | (current_term(N, T) | left_term(N, T)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "current_term_partial_func",
+  "file": "conjectures/mypyvy/raft-current_term_partial_func.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T1:term. forall T2:term. (~((current_term(N, T1) & current_term(N, T2))) | T1 = T2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "entries_from_term_in_term_log",
+  "file": "conjectures/mypyvy/raft-entries_from_term_in_term_log.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 2,
+  "golden_formula": "forall L:log. forall I:index. forall T:term. (~((valid(L) & term_at(L, I, T))) | (index_used(term_log(T), I) & term_at(term_log(T), I, T) & value_at(term_log(T), I) = value_at(L, I)))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "index_used_downward_closed",
+  "file": "conjectures/mypyvy/raft-index_used_downward_closed.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall L:log. forall I1:index. forall I2:index. (~((valid(L) & index_used(L, I1) & index_le(I2, I1))) | index_used(L, I2))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "index_used_term_log_started",
+  "file": "conjectures/mypyvy/raft-index_used_term_log_started.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T:term. forall I:index. (~index_used(term_log(T), I) | started(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "leader_started",
+  "file": "conjectures/mypyvy/raft-leader_started.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T:term. (~leader(N, T) | started(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "leader_term_log",
+  "file": "conjectures/mypyvy/raft-leader_term_log.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall T:term. (~((leader(N, T) & current_term(N, T))) | current_log(N) = term_log(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "left_term_downward",
+  "file": "conjectures/mypyvy/raft-left_term_downward.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T1:term. forall T2:term. (~((left_term(N, T1) & ~term_le(T1, T2))) | left_term(N, T2))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "left_term_not_current",
+  "file": "conjectures/mypyvy/raft-left_term_not_current.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T:term. ~((left_term(N, T) & current_term(N, T)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "log_matching",
+  "file": "conjectures/mypyvy/raft-log_matching.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall L1:log. forall L2:log. forall I1:index. forall T1:term. forall I2:index. forall T2:term. (~((valid(L1) & valid(L2) & index_used(L1, I1) & term_at(L1, I1, T1) & index_used(L2, I1) & term_at(L2, I1, T1) & index_le(I2, I1))) | ((term_at(L1, I2, T2) <-> term_at(L2, I2, T2)) & value_at(L1, I2) = value_at(L2, I2)))",
+  "relation_counts": [
+   4,
+   2,
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit4"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "lt_current_left_term",
+  "file": "conjectures/mypyvy/raft-lt_current_left_term.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T1:term. forall T2:term. (~((current_term(N, T1) & ~term_le(T1, T2))) | left_term(N, T2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "no_future_leaders",
+  "file": "conjectures/mypyvy/raft-no_future_leaders.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T:term. (~leader(N, T) | (current_term(N, T) | left_term(N, T)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "one_leader_per_term",
+  "file": "conjectures/mypyvy/raft-one_leader_per_term.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall T:term. forall N2:node. (~((leader(N1, T) & leader(N2, T))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "started_term_leader",
+  "file": "conjectures/mypyvy/raft-started_term_leader.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T:term. (~started(T) | leader(term_leader(T), T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "term_at_commit_term",
+  "file": "conjectures/mypyvy/raft-term_at_commit_term.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "(~index_used(commit_log, commit_index) | term_at(commit_log, commit_index, commit_term))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "term_at_index_used",
+  "file": "conjectures/mypyvy/raft-term_at_index_used.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall L:log. forall I:index. forall T:term. (~((valid(L) & term_at(L, I, T))) | index_used(L, I))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "term_log_no_future_entries",
+  "file": "conjectures/mypyvy/raft-term_log_no_future_entries.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T2:term. forall I:index. forall T1:term. (~term_at(term_log(T2), I, T1) | term_le(T1, T2))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "valid_commit_log",
+  "file": "conjectures/mypyvy/raft-valid_commit_log.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "valid(commit_log)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "valid_current_log",
+  "file": "conjectures/mypyvy/raft-valid_current_log.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. valid(current_log(N))",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "valid_term_log",
+  "file": "conjectures/mypyvy/raft-valid_term_log.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall T:term. valid(term_log(T))",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "vote_msg_partial_func",
+  "file": "conjectures/mypyvy/raft-vote_msg_partial_func.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall T:term. forall N1:node. forall N3:node. (~((vote_msg(N2, T, N1) & vote_msg(N3, T, N1))) | N2 = N3)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "vote_msg_voted",
+  "file": "conjectures/mypyvy/raft-vote_msg_voted.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N2:node. forall T:term. forall N1:node. (~vote_msg(N2, T, N1) | voted(N1, T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "voters_left_term",
+  "file": "conjectures/mypyvy/raft-voters_left_term.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall T2:term. forall T1:term. (~((voted(N, T2) & ~term_le(T2, T1))) | left_term(N, T1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "raft",
+  "conjecture": "voting_quorum_vote_msg",
+  "file": "conjectures/mypyvy/raft-voting_quorum_vote_msg.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N1:node. forall T:term. (~leader(N1, T) | forall N2:node. (~member(N2, voting_quorum(T)) | vote_msg(N1, T, N2)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id",
+  "conjecture": "leader_max",
+  "file": "conjectures/mypyvy/ring_id-leader_max.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall L:node. forall N:node. (~leader(L) | le(idn(N), idn(L)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id",
+  "conjecture": "leader_unique",
+  "file": "conjectures/mypyvy/ring_id-leader_unique.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:node. forall Y:node. (~((leader(X) & leader(Y))) | X = Y)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "ring_id",
+  "conjecture": "no_bypass",
+  "file": "conjectures/mypyvy/ring_id-no_bypass.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall S:node. forall D:node. forall N:node. (~((pending(idn(S), D) & btw(S, N, D))) | le(idn(N), idn(S)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id",
+  "conjecture": "self_pending_max",
+  "file": "conjectures/mypyvy/ring_id-self_pending_max.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall L:node. forall N:node. (~pending(idn(L), L) | le(idn(N), idn(L)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "for_not_dead",
+  "file": "conjectures/mypyvy/ring_id_not_dead-for_not_dead.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 2,
+  "existentials": 2,
+  "max_term_depth": 1,
+  "golden_formula": "exists N:node. (forall X:node. le(idn(X), idn(N)) & (~sent(N) | leader(N) | exists M:node. pending(idn(N), M)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "leader_max",
+  "file": "conjectures/mypyvy/ring_id_not_dead-leader_max.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall L:node. forall N:node. (~leader(L) | le(idn(N), idn(L)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "leader_unique",
+  "file": "conjectures/mypyvy/ring_id_not_dead-leader_unique.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall X:node. forall Y:node. (~((leader(X) & leader(Y))) | X = Y)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "no_bypass",
+  "file": "conjectures/mypyvy/ring_id_not_dead-no_bypass.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall S:node. forall D:node. forall N:node. (~((pending(idn(S), D) & btw(S, N, D))) | le(idn(N), idn(S)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "not_dead",
+  "file": "conjectures/mypyvy/ring_id_not_dead-not_dead.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 2,
+  "existentials": 4,
+  "max_term_depth": 0,
+  "golden_formula": "(exists L:node. leader(L) | exists M:id. exists N:node. pending(M, N) | exists N:node. ~sent(N))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ring_id_not_dead",
+  "conjecture": "seflf_pending_max",
+  "file": "conjectures/mypyvy/ring_id_not_dead-seflf_pending_max.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall L:node. forall N:node. (~pending(idn(L), L) | le(idn(N), idn(L)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "sharded_kv",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/sharded_kv-c0.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall K:key. forall N2:node. (~((owner(N1, K) & owner(N2, K))) | N1 = N2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "sharded_kv",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/sharded_kv-c1.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall K:key. forall V:value. (~table(N, K, V) | owner(N, K))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "sharded_kv",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/sharded_kv-c2.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall K:key. forall V:value. forall N2:node. ~((transfer_msg(N1, K, V) & owner(N2, K)))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "sharded_kv",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/sharded_kv-c3.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall K:key. forall V1:value. forall N2:node. forall V2:value. (~((transfer_msg(N1, K, V1) & transfer_msg(N2, K, V2))) | (N1 = N2 & V1 = V2))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "sharded_kv",
+  "conjecture": "keys_unique",
+  "file": "conjectures/mypyvy/sharded_kv-keys_unique.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall K:key. forall V1:value. forall N2:node. forall V2:value. (~((table(N1, K, V1) & table(N2, K, V2))) | (N1 = N2 & V1 = V2))",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "sharded_kv_no_lost_keys",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/sharded_kv_no_lost_keys-c0.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 3,
+  "existentials": 4,
+  "max_term_depth": 0,
+  "golden_formula": "(exists N:node. exists K:key. exists V:value. transfer_msg(N, K, V) | forall K:key. exists N:node. owner(N, K))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "sharded_kv_no_lost_keys",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/sharded_kv_no_lost_keys-c1.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 3,
+  "existentials": 3,
+  "max_term_depth": 0,
+  "golden_formula": "forall K:key. (exists N:node. owner(N, K) | exists N:node. exists V:value. transfer_msg(N, K, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c0.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall I:inst. forall R1:round. forall R2:round. forall V1:value. forall V2:value. (~((decision(N1, I, R1, V1) & decision(N2, I, R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c1.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. (~((decision(N1, I1, R1, stop) & ~inst_le(I2, I1))) | ~decision(N2, I2, R2, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c10",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~vote(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c11",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~decision(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c12",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall M:votemap. ~one_b_msg(N, none, M)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c13",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c13.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "~active(none)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c14",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c14.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & active(R2) & ~proposal(I, R2, V))) | exists N:node. (member(N, Q) & left_round(N, R1) & ~vote(N, I, R1, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c15",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c15.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall R:round. forall I2:inst. forall V:value. (~((proposal(I1, R, stop) & ~inst_le(I2, I1))) | ~proposal(I2, R, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c16",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c16.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & ~inst_le(I2, I1) & proposal(I2, R2, V))) | exists N:node. (member(N, Q) & left_round(N, R1) & ~vote(N, I1, R1, stop)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c17",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c17.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & ~inst_le(I2, I1) & proposal(I1, R2, stop))) | exists N:node. (member(N, Q) & left_round(N, R1) & ~vote(N, I2, R1, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c18",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c18.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c19",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c19.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. (~one_b_msg(N, R, M) | joined_round(N, R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~proposal(I, R, V) | active(R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V1:value. forall V2:value. (~((proposal(I, R, V1) & proposal(I, R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall R:round. forall V:value. (~vote(N, I, R, V) | proposal(I, R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 5,
+  "existentials": 2,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~(exists N:node. decision(N, I, R, V)) | exists Q:quorum. forall N:node. (~member(N, Q) | vote(N, I, R, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c6.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R2:round. forall M:votemap. forall I:inst. forall R1:round. forall V2:value. (~((one_b_msg(N, R2, M) & maxr(M, I) = none & ~le(R2, R1))) | ~vote(N, I, R1, V2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none)) | (~le(R, maxr(M, I)) & vote(N, I, maxr(M, I), maxv(M, I))))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. forall ROTHER:round. forall VOTHER:value. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none & ~le(R, ROTHER) & ~le(ROTHER, maxr(M, I)))) | ~vote(N, I, ROTHER, VOTHER))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_epr",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/stoppable_paxos_epr-c9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall V:value. ~proposal(I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c0.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall I:inst. forall R1:round. forall R2:round. forall V1:value. forall V2:value. (~((decision(N1, I, R1, V1) & decision(N2, I, R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c1.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. (~((decision(N1, I1, R1, stop) & ~inst_le(I2, I1))) | ~decision(N2, I2, R2, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c10",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~vote(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c11",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~decision(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c12",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall M:votemap. ~one_b_msg(N, none, M)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c13",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c13.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "~active(none)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c14",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c14.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N1:node. forall Q:quorum. forall R:round. forall I:inst. forall V:value. forall N2:node. (~((member(N1, Q) & left_round(N1, R) & ~vote(N1, I, R, V) & N2 = choosable_node(I, R, V, Q))) | (member(N2, Q) & left_round(N2, R) & ~vote(N2, I, R, V)))",
+  "relation_counts": [
+   2,
+   2,
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c15",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c15.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. forall N:node. (~((N = choosable_node(I, R1, V, Q) & ~le(R2, R1) & active(R2) & ~proposal(I, R2, V))) | (member(N, Q) & left_round(N, R1) & ~vote(N, I, R1, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c16",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c16.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall R:round. forall I2:inst. forall V:value. (~((proposal(I1, R, stop) & ~inst_le(I2, I1))) | ~proposal(I2, R, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c17",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c17.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. forall N:node. (~((N = choosable_node(I1, R1, stop, Q) & ~le(R2, R1) & ~inst_le(I2, I1) & proposal(I2, R2, V))) | (member(N, Q) & left_round(N, R1) & ~vote(N, I1, R1, stop)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c18",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c18.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. forall N:node. (~((N = choosable_node(I2, R1, V, Q) & ~le(R2, R1) & ~inst_le(I2, I1) & proposal(I1, R2, stop))) | (member(N, Q) & left_round(N, R1) & ~vote(N, I2, R1, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c19",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c19.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~proposal(I, R, V) | active(R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c20",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c20.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. (~one_b_msg(N, R, M) | joined_round(N, R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V1:value. forall V2:value. (~((proposal(I, R, V1) & proposal(I, R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall R:round. forall V:value. (~vote(N, I, R, V) | proposal(I, R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. forall N:node. forall M:node. forall Q:quorum. (~((Q = decision_quorum(I, R, V) & decision(N, I, R, V) & member(M, Q))) | vote(M, I, R, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c6.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R2:round. forall M:votemap. forall I:inst. forall R1:round. forall V2:value. (~((one_b_msg(N, R2, M) & maxr(M, I) = none & ~le(R2, R1))) | ~vote(N, I, R1, V2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none)) | (~le(R, maxr(M, I)) & vote(N, I, maxr(M, I), maxv(M, I))))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. forall ROTHER:round. forall VOTHER:value. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none & ~le(R, ROTHER) & ~le(ROTHER, maxr(M, I)))) | ~vote(N, I, ROTHER, VOTHER))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall-c9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall V:value. ~proposal(I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c0.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N1:node. forall N2:node. forall I:inst. forall R1:round. forall R2:round. forall V1:value. forall V2:value. (~((decision(N1, I, R1, V1) & decision(N2, I, R2, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c1.fol",
+  "quantifiers": 7,
+  "max_quantifier_depth": 7,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N1:node. forall N2:node. forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. (~((decision(N1, I1, R1, stop) & ~inst_le(I2, I1))) | ~decision(N2, I2, R2, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c10",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c10.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~vote(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c11",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c11.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall V:value. ~decision(N, I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c12",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall M:votemap. ~one_b_msg(N, none, M)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c13",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c13.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "~active(none)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c14",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c14.fol",
+  "quantifiers": 5,
+  "max_quantifier_depth": 5,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & active(R2) & ~proposal(I, R2, V))) | ~choosable(I, R1, V, Q))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c15",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c15.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall R:round. forall I2:inst. forall V:value. (~((proposal(I1, R, stop) & ~inst_le(I2, I1))) | ~proposal(I2, R, V))",
+  "relation_counts": [
+   2,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c16",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c16.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & ~inst_le(I2, I1) & proposal(I2, R2, V))) | ~choosable(I1, R1, stop, Q))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c17",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c17.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I1:inst. forall I2:inst. forall R1:round. forall R2:round. forall V:value. forall Q:quorum. (~((~le(R2, R1) & ~inst_le(I2, I1) & proposal(I1, R2, stop))) | ~choosable(I2, R1, V, Q))",
+  "relation_counts": [
+   1,
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c18",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c18.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R2:round. forall R1:round. (~((joined_round(N, R2) & ~le(R2, R1))) | left_round(N, R1))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c19",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c19.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. (~one_b_msg(N, R, M) | joined_round(N, R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. (~proposal(I, R, V) | active(R))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c3.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall R:round. forall V1:value. forall V2:value. (~((proposal(I, R, V1) & proposal(I, R, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c4.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall I:inst. forall R:round. forall V:value. (~vote(N, I, R, V) | proposal(I, R, V))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c5.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall I:inst. forall R:round. forall V:value. forall N:node. forall M:node. forall Q:quorum. (~((Q = decision_quorum(I, R, V) & decision(N, I, R, V) & member(M, Q))) | vote(M, I, R, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c6.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R2:round. forall M:votemap. forall I:inst. forall R1:round. forall V2:value. (~((one_b_msg(N, R2, M) & maxr(M, I) = none & ~le(R2, R1))) | ~vote(N, I, R1, V2))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c7.fol",
+  "quantifiers": 4,
+  "max_quantifier_depth": 4,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none)) | (~le(R, maxr(M, I)) & vote(N, I, maxr(M, I), maxv(M, I))))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c8.fol",
+  "quantifiers": 6,
+  "max_quantifier_depth": 6,
+  "existentials": 0,
+  "max_term_depth": 1,
+  "golden_formula": "forall N:node. forall R:round. forall M:votemap. forall I:inst. forall ROTHER:round. forall VOTHER:value. (~((one_b_msg(N, R, M) & maxr(M, I) ~= none & ~le(R, ROTHER) & ~le(ROTHER, maxr(M, I)))) | ~vote(N, I, ROTHER, VOTHER))",
+  "relation_counts": [
+   2,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "stoppable_paxos_forall_choosable",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/stoppable_paxos_forall_choosable-c9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall I:inst. forall V:value. ~proposal(I, none, V)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/ticket-c0.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (pc1(T) | pc2(T) | pc3(T))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/ticket-c1.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (~pc1(T) | ~pc2(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c10",
+  "file": "conjectures/mypyvy/ticket-c10.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (~pc3(T) | m(T, service))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c11",
+  "file": "conjectures/mypyvy/ticket-c11.fol",
+  "quantifiers": 0,
+  "max_quantifier_depth": 0,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "le(service, next_ticket)",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c12",
+  "file": "conjectures/mypyvy/ticket-c12.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T1:thread. forall T2:thread. ~((~pc1(T1) & ~pc1(T2) & m(T1, zero) & m(T2, zero) & T1 ~= T2))",
+  "relation_counts": [
+   2,
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/ticket-c2.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (~pc1(T) | ~pc3(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/ticket-c3.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (~pc2(T) | ~pc3(T))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c4",
+  "file": "conjectures/mypyvy/ticket-c4.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. forall K1:ticket. forall K2:ticket. (~((m(T, K1) & m(T, K2))) | K1 = K2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c5",
+  "file": "conjectures/mypyvy/ticket-c5.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (next_ticket ~= zero | m(T, zero))",
+  "relation_counts": [
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c6",
+  "file": "conjectures/mypyvy/ticket-c6.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. forall M:ticket. (~((next_ticket ~= zero & m(T, M))) | ~le(next_ticket, M))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c7",
+  "file": "conjectures/mypyvy/ticket-c7.fol",
+  "quantifiers": 1,
+  "max_quantifier_depth": 1,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. (~((pc2(T) | pc3(T))) | next_ticket ~= zero)",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c8",
+  "file": "conjectures/mypyvy/ticket-c8.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T1:thread. forall M:ticket. forall T2:thread. (~((m(T1, M) & m(T2, M) & M ~= zero)) | T1 = T2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "c9",
+  "file": "conjectures/mypyvy/ticket-c9.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T:thread. forall M:ticket. (~((pc2(T) & m(T, M))) | le(service, M))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "ticket",
+  "conjecture": "mutex",
+  "file": "conjectures/mypyvy/ticket-mutex.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall T1:thread. forall T2:thread. (~((pc3(T1) & pc3(T2))) | T1 = T2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "toy_consensus_epr",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/toy_consensus_epr-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((decided(V1) & decided(V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "toy_consensus_epr",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/toy_consensus_epr-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~vote(N, V) | voted(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "toy_consensus_epr",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/toy_consensus_epr-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~((vote(N, V1) & vote(N, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "toy_consensus_epr",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/toy_consensus_epr-c3.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 1,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. (~decided(V) | exists Q:quorum. forall N:node. (~member(N, Q) | vote(N, V)))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "toy_consensus_forall",
+  "conjecture": "c0",
+  "file": "conjectures/mypyvy/toy_consensus_forall-c0.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V1:value. forall V2:value. (~((decided(V1) & decided(V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "toy_consensus_forall",
+  "conjecture": "c1",
+  "file": "conjectures/mypyvy/toy_consensus_forall-c1.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V:value. (~vote(N, V) | voted(N))",
+  "relation_counts": [
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ },
+ {
+  "base": "toy_consensus_forall",
+  "conjecture": "c2",
+  "file": "conjectures/mypyvy/toy_consensus_forall-c2.fol",
+  "quantifiers": 3,
+  "max_quantifier_depth": 3,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall N:node. forall V1:value. forall V2:value. (~((vote(N, V1) & vote(N, V2))) | V1 = V2)",
+  "relation_counts": [
+   2
+  ],
+  "extra": [
+   "--expt-flags=termlimit2"
+  ]
+ },
+ {
+  "base": "toy_consensus_forall",
+  "conjecture": "c3",
+  "file": "conjectures/mypyvy/toy_consensus_forall-c3.fol",
+  "quantifiers": 2,
+  "max_quantifier_depth": 2,
+  "existentials": 0,
+  "max_term_depth": 0,
+  "golden_formula": "forall V:value. forall N:node. (~((decided(V) & member(N, voting_quorum))) | vote(N, V))",
+  "relation_counts": [
+   1,
+   1,
+   1
+  ],
+  "extra": [
+   "--expt-flags=termlimit1"
+  ]
+ }
+]

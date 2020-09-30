@@ -1,5 +1,5 @@
 ; File: examples/fol/consensus_forall.pyv
-
+; Original: invariant forall N:node, N1:node, N2:node. vote_msg(N, N1) & vote_msg(N, N2) -> N1 = N2
 ; Sig
 (sort node)
 (sort quorum)

@@ -1,5 +1,5 @@
 ; File: examples/fol/learning_switch.pyv
-
+; Original: invariant forall PS:node, PD:node, S:node, D:node. pending(PS, PD, S, D) & PS != S -> table(PS, S, PS)
 ; Sig
 (sort node)
 (relation pending node node node node)

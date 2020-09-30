@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: invariant forall T:thread. next_ticket = zero -> m(T, zero)
 ; Sig
 (sort thread)
 (sort ticket)

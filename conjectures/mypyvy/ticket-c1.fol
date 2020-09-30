@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: invariant forall T:thread. !pc1(T) | !pc2(T)
 ; Sig
 (sort thread)
 (sort ticket)

@@ -1,5 +1,5 @@
 ; File: examples/fol/learning_switch.pyv
-
+; Original: safety forall T:node, X:node, Y:node, Z:node. table(T, X, Y) & table(T, Y, Z) -> table(T, X, Z)
 ; Sig
 (sort node)
 (relation pending node node node node)

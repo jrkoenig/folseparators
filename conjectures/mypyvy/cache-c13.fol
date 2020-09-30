@@ -1,0 +1,25 @@
+; File: examples/fol/cache.pyv
+; Original: invariant forall C:core, A:address. proc_read(C, A) -> bus_in_use
+; Sig
+(sort address)
+(sort core)
+(sort value)
+(relation bus_in_use )
+(relation bus_read core address)
+(relation bus_read_for_ownership core address)
+(relation bus_transfer value)
+(relation bus_upgrade core address)
+(relation exclusive core address)
+(relation invalid core address)
+(relation modified core address)
+(relation proc_read core address)
+(relation proc_write core address value)
+(relation shared core address)
+(function cache core address value)
+(function memory address value)
+; End sig
+
+; Axioms
+
+; Conjecture c13
+(conjecture (forall C core (forall A address (or (not (proc_read C A)) (bus_in_use )))))

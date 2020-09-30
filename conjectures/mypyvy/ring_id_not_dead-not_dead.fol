@@ -1,5 +1,5 @@
 ; File: examples/fol/ring_id_not_dead.pyv
-
+; Original: safety [not_dead] (exists L:node. leader(L)) | (exists M:id, N:node. pending(M, N)) | (exists N:node. !sent(N))
 ; Sig
 (sort id)
 (sort node)

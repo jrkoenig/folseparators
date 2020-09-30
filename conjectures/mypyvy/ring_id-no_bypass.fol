@@ -1,5 +1,5 @@
 ; File: examples/fol/ring_id.pyv
-
+; Original: invariant [no_bypass] forall S:node, D:node, N:node. pending(idn(S), D) & btw(S, N, D) -> le(idn(N), idn(S))
 ; Sig
 (sort id)
 (sort node)

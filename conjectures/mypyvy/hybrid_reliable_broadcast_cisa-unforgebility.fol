@@ -1,5 +1,5 @@
 ; File: examples/fol/hybrid_reliable_broadcast_cisa.pyv
-
+; Original: safety [unforgebility] (exists N:node. !member_fs(N) & !member_fa(N) & accept(N)) -> (exists M:node. !member_fs(M) & !member_fa(M) & rcv_init(M))
 ; Sig
 (sort node)
 (sort quorum_a)

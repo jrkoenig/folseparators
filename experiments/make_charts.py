@@ -64,6 +64,7 @@ def main() -> None:
         return desc_by_id[(r['base'], r['conjecture'])]
     results = json.load(args.results)
     results = [r for r in results if r['base'] != 'tlb-safety']
+    results = [r for r in results if (r['base'], r['conjecture']) in desc_by_id]
 
     summary_file = open("summary.txt", "w")
     def _print(*args: Any) -> None:

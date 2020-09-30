@@ -1,5 +1,5 @@
 ; File: examples/fol/sharded_kv.pyv
-
+; Original: invariant forall N1:node, K:key, N2:node. owner(N1, K) & owner(N2, K) -> N1 = N2
 ; Sig
 (sort key)
 (sort node)

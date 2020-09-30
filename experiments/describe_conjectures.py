@@ -13,15 +13,18 @@
 # limitations under the License.
 
 import json, os, sys
+from typing import List
+import typing
 sys.path.append(".")
-from interpret import interpret, SemanticError
-from parse import parse, SyntaxError
-from separators.logic import Formula, Exists, Forall, And, Or, Not, Relation, Equal, Term, Func, Var
+from separators.interpret import interpret, SemanticError
+from separators.parse import parse, SyntaxError
+from separators.logic import Formula, Exists, Forall, And, Or, Not, Relation, Equal, Iff, Signature, Term, Func, Var, symbols
+from collections import Counter
 
 def count_quantifiers(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return 1 + count_quantifiers(f.f)
-    if isinstance(f, (And, Or)):
+    if isinstance(f, (And, Or, Iff)):
         return sum(count_quantifiers(x) for x in f.c)
     if isinstance(f, Not):
         return count_quantifiers(f.f)
@@ -34,7 +37,7 @@ def count_existentials(f: Formula) -> int:
         return 1 + count_existentials(f.f)
     if isinstance(f, (Forall)):
         return count_existentials(f.f)
-    if isinstance(f, (And, Or)):
+    if isinstance(f, (And, Or, Iff)):
         return sum(count_existentials(x) for x in f.c)
     if isinstance(f, Not):
         return count_existentials(f.f)
@@ -46,7 +49,7 @@ def count_existentials(f: Formula) -> int:
 def max_quantifier_depth(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return 1 + max_quantifier_depth(f.f)
-    if isinstance(f, (And, Or)):
+    if isinstance(f, (And, Or, Iff)):
         return max(max_quantifier_depth(x) for x in f.c)
     if isinstance(f, Not):
         return max_quantifier_depth(f.f)
@@ -64,7 +67,7 @@ def term_depth(t: Term) -> int:
 def max_term_depth(f: Formula) -> int:
     if isinstance(f, (Exists, Forall)):
         return max_term_depth(f.f)
-    if isinstance(f, (And, Or)):
+    if isinstance(f, (And, Or, Iff)):
         return max(max_term_depth(x) for x in f.c)
     if isinstance(f, Not):
         return max_term_depth(f.f)
@@ -75,10 +78,17 @@ def max_term_depth(f: Formula) -> int:
             return 0
     assert False
 
+def count_relations(f: Formula, sig: Signature) -> List[int]:
+    counts: typing.Counter[str] = Counter()
+    for x in symbols(f):
+        if x in sig.relations:
+            counts[x] += 1
+    c = list(sorted(counts.values(), reverse=True))
+    return c
 
 def main() -> None:
-    o = open("out/extracted.json", "w")
-    p = 'conjectures/extracted'
+    o = open("out/mypyvy.json", "w")
+    p = 'conjectures/mypyvy'
     files = [os.path.join(p, f) for f in os.listdir(p)]
     files.sort()
     descs = []
@@ -86,19 +96,23 @@ def main() -> None:
         original_file = os.path.splitext(os.path.basename(f))[0]
         base = "-".join(original_file.split("-")[:-1])
         conj = original_file.split("-")[-1]
-        print(f)
+        #print(f)
         try:
-            (sig, axioms, conjectures, models) = interpret(parse(open(f).read()))
-            assert len(conjectures) == 1
+            contents = open(f).read()
+            fol = interpret(parse(contents))
+            formula = fol.conjectures[0]
+            is_safety = '\n; Original: safety ' in contents
             descs.append({'base': base,
                         'conjecture': conj,
                         'file': f,
-                        'quantifiers': count_quantifiers(conjectures[0]),
-                        'max_quantifier_depth': max_quantifier_depth(conjectures[0]),
-                        'existentials': count_existentials(conjectures[0]),
-                        'max_term_depth': max_term_depth(conjectures[0]),
-                        'golden_formula': str(conjectures[0])
+                        'quantifiers': count_quantifiers(formula),
+                        'max_quantifier_depth': max_quantifier_depth(formula),
+                        'existentials': count_existentials(formula),
+                        'max_term_depth': max_term_depth(formula),
+                        'golden_formula': str(formula),
+                        'relation_counts': count_relations(formula, fol.sig)
                         })
+            print(f"{'SAFE' if is_safety else 'INV '}\t{base}-{conj}\t\"{','.join(map(str, count_relations(formula, fol.sig)))}\"\t{str(formula)}")
         except (SyntaxError, SemanticError) as e:
             print("File ", f, "was not valid", str(e))
     json.dump(descs, o, indent=1)

@@ -1,5 +1,5 @@
 ; File: examples/fol/paxos_epr.pyv
-
+; Original: safety forall R1:round, V1:value, R2:round, V2:value. decision(R1, V1) & decision(R2, V2) -> V1 = V2
 ; Sig
 (sort node)
 (sort quorum)

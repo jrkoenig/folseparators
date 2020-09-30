@@ -1,5 +1,5 @@
 ; File: examples/fol/raft.pyv
-
+; Original: invariant [started_term_leader] forall T:term. started(T) -> leader(term_leader(T), T)
 ; Sig
 (sort index)
 (sort log)
@@ -58,8 +58,8 @@
 (axiom (forall T1 index (forall T2 index (or (index_le T1 T2) (index_le T2 T1)))))
 (axiom (forall T index (index_le index_zero T)))
 (axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
-(axiom (forall OI option_index (or (and (not (is_none_index OI)) (not (= OI none_index))) (and (= OI none_index) (is_none_index OI)))))
-(axiom (forall OT option_term (or (and (not (is_none_term OT)) (not (= OT none_term))) (and (= OT none_term) (is_none_term OT)))))
+(axiom (forall OI option_index (iff (is_none_index OI) (= OI none_index))))
+(axiom (forall OT option_term (iff (is_none_term OT) (= OT none_term))))
 (axiom (forall L log (forall I index (forall T1 term (forall T2 term (or (not (and (term_at L I T1) (term_at L I T2))) (= T1 T2)))))))
 (axiom (forall I index (not (index_used log0 I))))
 (axiom (forall I index (forall T term (not (term_at log0 I T)))))

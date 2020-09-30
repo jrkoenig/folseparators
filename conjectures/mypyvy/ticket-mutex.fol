@@ -1,5 +1,5 @@
 ; File: examples/fol/ticket.pyv
-
+; Original: safety [mutex] forall T1:thread, T2:thread. pc3(T1) & pc3(T2) -> T1 = T2
 ; Sig
 (sort thread)
 (sort ticket)

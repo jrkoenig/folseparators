@@ -1,0 +1,41 @@
+; File: examples/fol/stoppable_paxos_forall_choosable.pyv
+; Original: invariant forall N:node, I:inst, R:round, V:value. vote(N, I, R, V) -> proposal(I, R, V)
+; Sig
+(sort inst)
+(sort node)
+(sort quorum)
+(sort round)
+(sort value)
+(sort votemap)
+(constant none round)
+(constant stop value)
+(relation active round)
+(relation choosable inst round value quorum)
+(relation decision node inst round value)
+(relation inst_le inst inst)
+(relation joined_round node round)
+(relation le round round)
+(relation left_round node round)
+(relation member node quorum)
+(relation one_a round)
+(relation one_b_msg node round votemap)
+(relation proposal inst round value)
+(relation vote node inst round value)
+(function decision_quorum inst round value quorum)
+(function maxr votemap inst round)
+(function maxv votemap inst value)
+; End sig
+
+; Axioms
+(axiom (forall X round (le X X)))
+(axiom (forall X round (forall Y round (forall Z round (or (not (and (le X Y) (le Y Z))) (le X Z))))))
+(axiom (forall X round (forall Y round (or (not (and (le X Y) (le Y X))) (= X Y)))))
+(axiom (forall X round (forall Y round (or (le X Y) (le Y X)))))
+(axiom (forall X inst (inst_le X X)))
+(axiom (forall X inst (forall Y inst (forall Z inst (or (not (and (inst_le X Y) (inst_le Y Z))) (inst_le X Z))))))
+(axiom (forall X inst (forall Y inst (or (not (and (inst_le X Y) (inst_le Y X))) (= X Y)))))
+(axiom (forall X inst (forall Y inst (or (inst_le X Y) (inst_le Y X)))))
+(axiom (forall Q1 quorum (forall Q2 quorum (exists N node (and (member N Q1) (member N Q2))))))
+
+; Conjecture c4
+(conjecture (forall N node (forall I inst (forall R round (forall V value (or (not (vote N I R V)) (proposal I R V)))))))

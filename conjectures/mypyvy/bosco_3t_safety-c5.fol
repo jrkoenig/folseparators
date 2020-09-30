@@ -1,5 +1,5 @@
 ; File: examples/fol/bosco_3t_safety.pyv
-
+; Original: invariant forall N:node, V:value. !member_f(N) & und_cons(N, V) -> done(N)
 ; Sig
 (sort node)
 (sort quorum_a)

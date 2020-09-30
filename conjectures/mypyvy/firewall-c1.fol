@@ -1,5 +1,5 @@
 ; File: examples/fol/firewall.pyv
-
+; Original: invariant forall D:node. allowed_in(D) -> (exists I:node. internal(I) & sent(I, D))
 ; Sig
 (sort node)
 (relation allowed_in node)

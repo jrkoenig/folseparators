@@ -1,5 +1,5 @@
 ; File: examples/fol/consensus_epr.pyv
-
+; Original: invariant exists Q:quorum. forall N:node, M:node. leader(N) & member(M, Q) -> votes(N, M)
 ; Sig
 (sort node)
 (sort quorum)

@@ -1,5 +1,5 @@
 ; File: examples/fol/sharded_kv_no_lost_keys.pyv
-
+; Original: safety (exists N:node, K:key, V:value. transfer_msg(N, K, V)) | (forall K:key. exists N:node. owner(N, K))
 ; Sig
 (sort key)
 (sort node)

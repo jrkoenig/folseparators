@@ -1,5 +1,5 @@
 ; File: examples/fol/paxos_epr.pyv
-
+; Original: invariant forall N:node, R2:round, R1:round. one_b(N, R2) & !le(R2, R1) -> left_round(N, R1)
 ; Sig
 (sort node)
 (sort quorum)

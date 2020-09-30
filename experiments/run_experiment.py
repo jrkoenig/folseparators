@@ -51,11 +51,15 @@ def run(r: Any, logger: ResultsLogger) -> None:
             r['success'] = False
             r['stderr'] = ret.stderr
         r['killed'] = False
+        if r['log']:
+            with open(os.path.join(r['log'], f"{r['base']}-{r['conjecture']}-{r['index']}.out"), "w") as output:
+                output.write(ret.stdout)
     except subprocess.TimeoutExpired:
         r['killed'] = True
         r['success'] = False
     except Exception as e:
         print(e)
+    
     logger.add_result(r)
 
 def main() -> None:
@@ -66,6 +70,7 @@ def main() -> None:
     parser.add_argument("--cpus", type=int, default=os.cpu_count(), help="number of concurrent processes to run")
     parser.add_argument("--count", metavar='N', type=int, default = 1, help="number of times to learn each conjecture")
     parser.add_argument("--single", metavar='S', type=str, default = "", help="run only this example")
+    parser.add_argument("--log-dir", metavar='L', type=str, default = "", help="directory for log files")
     parser.add_argument("args", nargs=argparse.REMAINDER, help="arguments to learner")
     
     args = parser.parse_args()
@@ -82,7 +87,8 @@ def main() -> None:
                      "conjecture": d['conjecture'],
                      "index": i,
                      "timeout": args.timeout,
-                     "args": ['python3', '-m', 'separators'] + a + ["--timeout", str(int(args.timeout)), d['file']] + (d['extra'] if 'extra' in d else [])}
+                     "args": ['python3', '-m', 'separators'] + a + ["--timeout", str(int(args.timeout)), d['file']] + (d['extra'] if 'extra' in d else []),
+                     "log": args.log_dir}
                 executor.submit(run, r, logger)
     logger.close()
 

@@ -1,5 +1,5 @@
 ; File: examples/fol/lockserv.pyv
-
+; Original: safety [mutex] forall N1:node, N2:node. holds_lock(N1) & holds_lock(N2) -> N1 = N2
 ; Sig
 (sort node)
 (relation grant_msg node)

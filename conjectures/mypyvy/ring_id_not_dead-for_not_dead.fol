@@ -1,5 +1,5 @@
 ; File: examples/fol/ring_id_not_dead.pyv
-
+; Original: invariant [for_not_dead] exists N:node. (forall X:node. le(idn(X), idn(N))) & (!sent(N) | leader(N) | (exists M:node. pending(idn(N), M)))
 ; Sig
 (sort id)
 (sort node)

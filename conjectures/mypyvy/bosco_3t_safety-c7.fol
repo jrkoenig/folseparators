@@ -1,5 +1,5 @@
 ; File: examples/fol/bosco_3t_safety.pyv
-
+; Original: invariant forall N:node, V:value. !member_f(N) & dec(N, V) -> (exists B:quorum_b. forall M:node. member_b(M, B) & !member_f(M) -> sent_msg(M, M, V))
 ; Sig
 (sort node)
 (sort quorum_a)
