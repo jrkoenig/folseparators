@@ -17,14 +17,14 @@ def main() -> None:
     parser.add_argument("--limit", type=float, default=3600.0)
     args = parser.parse_args()
 
-    results: Dict[str, Dict[str, float]] = {}
+    results: Dict[str, Dict[str, str]] = {}
     columns: List[str] = []
     for fname in args.input:
-        base = os.path.splitext(os.path.basename(fname))[0]
-        columns.append(base)
+        series = os.path.splitext(os.path.basename(fname))[0]
+        columns.append(series)
         data = json.load(open(fname, 'r'))
         for result in data:
-            results.setdefault(result['conjecture'], {})[base] = result['stats']['separation_time']
+            results.setdefault(f"{result['base']}-{result['conjecture']}", {})[series] = str(round(result['stats']['separation_time'],0)) if result['success'] else '-'
     print(','.join(['problem', *columns]))
     for problem in sorted(results.keys(), key=natsortkey):
         rs = results[problem]

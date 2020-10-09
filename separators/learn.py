@@ -20,7 +20,7 @@ from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
-from .separate import Separator, HybridSeparator, DiagonalPartialSeparator
+from .separate import ImplicationSeparator, Separator, HybridSeparator, DiagonalPartialSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
@@ -542,7 +542,9 @@ class LearningResult(object):
 def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
-    S = HybridSeparator
+    S: Any = HybridSeparator
+    if 'impmatrix' in args.expt_flags:
+        S = ImplicationSeparator
         
     separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)], expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
 
@@ -589,10 +591,10 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
                 ident = separator.add_model(r)
                 result.models.append(r)
                 if r.label.startswith("+"):
-                    gr = generalize_model(r, And(axioms + [formula]), label='+')
+                    gr = generalize_model(r, And(axioms + [formula]), label=r.label)
                     p_constraints.append(ident)
                 else:
-                    gr = generalize_model(r, And(axioms + [Not(formula)]), label='+')
+                    gr = generalize_model(r, And(axioms + [Not(formula)]), label=r.label)
                     n_constraints.append(ident)
                 if not args.quiet:
                     print ("New model is:")
