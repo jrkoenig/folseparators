@@ -568,6 +568,8 @@ class FixedHybridSeparator(object):
         # also add constraint that there are at most 4 literals
         if 'matrixsize4' in self._expt_flags:
             self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 4)))
+        if 'matrixsize2' in self._expt_flags:
+            self.solver.add(z3.Implies(assump, z3.PbLe([(x,1) for x in literal_vars(atoms)], 2)))
         
         term_limit = 0
         if 'termlimit1' in self._expt_flags:
