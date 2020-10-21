@@ -457,6 +457,7 @@ class FixedHybridSeparator(object):
                     self.solver.add(z3.Implies(self._depth_var(conjunct, d),
                         z3.PbLe([(self._prefix_quant_var(conjunct, i) != self._prefix_quant_var(conjunct, i+1), 1) for i in range(d-1)], 2)))
             elif 'alternationlimit1' in self._expt_flags:
+                # print("Adding alternation limits!!")
                 if d > 0:
                     self.solver.add(z3.Implies(self._depth_var(conjunct, d),
                         z3.PbLe([(self._prefix_quant_var(conjunct, i) != self._prefix_quant_var(conjunct, i+1), 1) for i in range(d-1)], 1)))
@@ -893,9 +894,9 @@ class FixedHybridSeparator(object):
                 if len(prefix_assumptions) > 0:
                     prefix_assumptions = []
                 else:
-                    print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen[depth])} of {self._prefixes_count[depth][0]} prefixes")
-                    print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen_ae[depth])} of {self._prefixes_count[depth][1]} quantifiers")
-                    print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen_sorts[depth])} of {self._prefixes_count[depth][2]} sort-patterns")
+                    # print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen[depth])} of {self._prefixes_count[depth][0]} prefixes")
+                    # print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen_ae[depth])} of {self._prefixes_count[depth][1]} quantifiers")
+                    # print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen_sorts[depth])} of {self._prefixes_count[depth][2]} sort-patterns")
                     return None
             elif res == z3.sat:
                 (prefix, matrix_list) = self._extract_cnf_formula(self.solver.model(), 0, depth, self._clauses)
