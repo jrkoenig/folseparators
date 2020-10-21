@@ -61,9 +61,11 @@ class Timer(object):
         if remaining < 0.1: # within 100ms of timeout
             raise TimeoutException()
         
-        solver.set('timeout', int(remaining * 1000)) # solver timeout is in ms
+        if remaining != float('+inf'):
+            solver.set('timeout', int(remaining * 1000)) # solver timeout is in ms
         result = solver.check(*args)
-        solver.set('timeout', 0)
+        if remaining != float('+inf'):
+            solver.set('timeout', 0)
         
         if self.remaining() < 0.1: # within 100ms of timeout
             raise TimeoutException()
@@ -71,7 +73,7 @@ class Timer(object):
 
 class UnlimitedTimer(Timer):
     def __init__(self) -> None:
-        Timer.__init__(self, float(10000000))
+        Timer.__init__(self, float('+inf'))
     # def solver_check(self, solver: Union[z3.Solver, z3.Optimize], *args: z3.ExprRef) -> z3.CheckSatResult:
     #     return solver.check(*args)
     # def check_time(self) -> None: pass
