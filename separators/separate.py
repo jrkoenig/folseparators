@@ -413,11 +413,12 @@ class FixedHybridSeparator(object):
 
         self._expt_flags = expt_flags
         self._blocked_symbols = blocked_symbols
-
+        # print(f"Inside FixedHybrid Separator, blocked symbols are {blocked_symbols}")
         self._prefixes_seen: Dict[int, Set[Tuple[Tuple[bool, int], ...]]] = {}
         self._prefixes_seen_ae: Dict[int, Set[Tuple[bool, ...]]] = {}
         self._prefixes_seen_sorts: Dict[int, Set[Tuple[int, ...]]] = {}
         self._prefixes_count: Dict[int, Tuple[int,int,int]] = {}
+        self._current_prefix_assumptions: List[z3.ExprRef] = []
 
     def add_model(self, model:Model) -> int:
         l = len(self._models)
@@ -768,7 +769,7 @@ class FixedHybridSeparator(object):
             return _root_node_cache[n]
 
         def swap_to_front(c: int) -> None:
-            constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+            pass #constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
         
         for c_i in range(len(constraints)):
             c = constraints[c_i]
@@ -872,12 +873,23 @@ class FixedHybridSeparator(object):
                  constraints: List[Constraint],
                  depth: int = 0,
                  timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        def constraint_complexity(c: Constraint) -> Tuple[int, int]:
+            if isinstance(c, Pos) or isinstance(c, Neg):
+                m = self._models[c.i]
+                return (0, max([len(list(m.universe(s))) for s in self._sig.sort_names]))
+            elif isinstance(c, Imp):
+                m1,m2 = self._models[c.i], self._models[c.j]
+                s1 = max([len(list(m1.universe(s))) for s in self._sig.sort_names])
+                s2 = max([len(list(m2.universe(s))) for s in self._sig.sort_names])
+                return (0, s1 + s2)
+            else:
+                assert False
+        constraints = list(sorted(constraints, key=constraint_complexity))
         
-        constraints = list(constraints)
         self._prefix_var_definition(0, depth)
         assumptions = list(self._constraint_assumptions(constraints)) + [self._depth_var(0, depth)]
 
-        prefix_assumptions: List[z3.ExprRef] = []
+        # prefix_assumptions: List[z3.ExprRef] = []
 
         if depth not in self._prefixes_count:
             self._prefixes_count[depth] = (0,0,0) #count_prefixes(depth, len(self._sig.sorts), self._logic)
@@ -889,10 +901,10 @@ class FixedHybridSeparator(object):
         if 'showconstraints' in self._expt_flags:
             s = ', '.join([(f"+{c.i}" if isinstance(c, Pos) else f"-{c.i}" if isinstance(c, Neg) else f"{c.i}->{c.j}" if isinstance(c, Imp) else '') for c in constraints])
         while True:
-            res = timer.solver_check(self.solver, *(assumptions + prefix_assumptions))
+            res = timer.solver_check(self.solver, *(assumptions + self._current_prefix_assumptions))
             if res == z3.unsat:
-                if len(prefix_assumptions) > 0:
-                    prefix_assumptions = []
+                if len(self._current_prefix_assumptions) > 0:
+                    self._current_prefix_assumptions = []
                 else:
                     # print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen[depth])} of {self._prefixes_count[depth][0]} prefixes")
                     # print(f"UNSEP for {depth} clauses {self._clauses}: saw {len(self._prefixes_seen_ae[depth])} of {self._prefixes_count[depth][1]} quantifiers")
@@ -907,7 +919,7 @@ class FixedHybridSeparator(object):
                 prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
                 print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
                        for name, (pol, sort) in zip(prefix_vars, prefix)]),
-                       "matrix", And([Or(cl) for cl in matrix_list]))
+                       "matrix", And([Or(cl) for cl in matrix_list]), flush=True)
 
                 if self._check_formula_validity(prefix, matrix_list, constraints):
                     if True:
@@ -924,9 +936,9 @@ class FixedHybridSeparator(object):
                 
                 self._var_presence_assertions([q[1] for q in prefix])
                 # formula wasn't correct, but we expanded some nodes in the tree to show the solver why it was wrong. go back up and try again
-                print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}")
+                print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(depth+1))}", flush=True)
                 # Assume the same prefix on the next iteration, to help by focusing the solver
-                prefix_assumptions = self._prefix_assumptions(prefix)
+                self._current_prefix_assumptions = self._prefix_assumptions(prefix)
             else:
                 print(self.solver)
                 assert False # z3 should always return SAT/UNSAT on propositional formula
