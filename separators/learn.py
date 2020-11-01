@@ -15,12 +15,13 @@
 import itertools, random, json, time, sys, argparse, copy
 from collections import defaultdict
 import z3
+from z3 import Const
 
 from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
-from .separate import ImplicationSeparator, Separator, HybridSeparator, DiagonalPartialSeparator
+from .separate import Constraint, Neg, ParallelSeparator, Pos, Separator, HybridSeparator, DiagonalPartialSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
@@ -543,10 +544,10 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
     S: Any = HybridSeparator
-    if 'impmatrix' in args.expt_flags:
-        S = ImplicationSeparator
+    # if 'impmatrix' in args.expt_flags:
+    #     S = ImplicationSeparator
         
-    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=axioms+[formula, Not(formula)], expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
+    separator: Separator = S(sig, quiet=args.quiet, logic=args.logic, expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
 
     env = Environment(sig)
     s = z3.Solver()
@@ -622,6 +623,85 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
     return result
 
 
+async def learn2(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
+    result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
+    
+    separator = ParallelSeparator(sig, logic=args.logic, expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
+
+    env = Environment(sig)
+    s = z3.Solver()
+    for sort in sig.sorts:
+        sorts_to_z3[sort] = z3.DeclareSort(sort)
+    for const, sort in sig.constants.items():
+        z3.Const(const, sorts_to_z3[sort])
+    for rel, sorts in sig.relations.items():
+        z3_rel_func[rel] = z3.Function(rel, *[sorts_to_z3[x] for x in sorts], z3.BoolSort())
+    for fun, (sorts, ret) in sig.functions.items():
+        z3_rel_func[fun] = z3.Function(fun, *[sorts_to_z3[x] for x in sorts], sorts_to_z3[ret])
+    for ax in axioms:
+        s.add(toZ3(ax, env))
+
+    p_constraints: List[int] = []
+    n_constraints: List[int] = []
+    print("Learning formula with args", sys.argv)
+    try:
+        while True:
+            with result.counterexample_timer:
+                if not args.quiet:
+                    print ("Checking formula")
+                if not args.no_cvc4:
+                    r = find_model_or_equivalence_cvc4(result.current, formula, env, s, result.counterexample_timer)
+                else:
+                    r = find_model_or_equivalence(result.current, formula, axioms, env, s, result.counterexample_timer)
+                
+                result.counterexample_timer.check_time()
+                if r is None:
+                    if not args.quiet:
+                        print ("formula matches!")
+                        print (result.current)
+                        # f = open("/tmp/out.fol", "w")
+                        # f.write(str(sig))
+                        # for m in result.models:
+                        #     f.write(str(m))
+                        # f.close()
+                    result.success = True
+                    return result
+            
+            with result.separation_timer:
+                ident = separator.add_model(r)
+                result.models.append(r)
+                if r.label.startswith("+"):
+                    gr = generalize_model(r, And(axioms + [formula]), label=r.label)
+                    p_constraints.append(ident)
+                else:
+                    gr = generalize_model(r, And(axioms + [Not(formula)]), label=r.label)
+                    n_constraints.append(ident)
+                if not args.quiet:
+                    print ("New model is:")
+                    print (r)
+                    print("--- Generalized model is ---")
+                    print(gr)
+                    print("--- end generalized model ---")
+                
+                    print ("Have new model, now have", len(result.models), "models total")
+                if True:
+                    con: List[Constraint] = [Pos(x) for x in p_constraints]
+                    con.extend(Neg(x) for x in n_constraints)
+                    c = await separator.separate(con, max_alt=1, max_repeated_sorts=2)
+                if c is None:
+                    result.reason = "couldn't separate models under given restrictions"
+                    break
+                if not args.quiet:
+                    print("Learned new possible formula: ", c)
+                result.current = c
+    except TimeoutException:
+        result.reason = "timeout"
+    except RuntimeError as e:
+        print("Error:", e)
+        #raise e
+        result.reason = str(e)
+
+    return result
 def learn_partial(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
@@ -715,7 +795,7 @@ def separate(f: FOLFile, timeout: float, args: Any) -> LearningResult:
     
     S = HybridSeparator
         
-    separator: Separator = S(f.sig, quiet=args.quiet, logic=args.logic, epr_wrt_formulas=f.axioms)
+    separator: Separator = S(f.sig, quiet=args.quiet, logic=args.logic)
 
     result.models = f.models
     mapping: DefaultDict[str, List[int]] = defaultdict(list)

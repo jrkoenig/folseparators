@@ -15,7 +15,7 @@
 from collections import defaultdict, Counter
 import itertools, copy, re, random, typing
 from typing import Tuple, Iterable, Union, Callable, Set, Optional, cast, Collection, List, Dict, DefaultDict, Iterator, Any, Sequence
-
+from dataclasses import dataclass
 import z3
 
 from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars, symbols
@@ -104,7 +104,7 @@ class CollapseCache(object):
         return len(self.assignments)
 
 class Separator(object):
-    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = []):
+    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol"):
         pass
     def add_model(self, model: Model) -> int: raise NotImplemented
     def separate(self,
@@ -225,25 +225,19 @@ def vars_of(t: Union[Term,Formula]) -> Iterator[str]:
 
 Quantifier = Tuple[bool, int] # is_forall, sort_index
 
-class Constraint(object):
+@dataclass(frozen=True, order=True)
+class Constraint:
     """A separation constraint, one of `Pos(i)`, `Neg(i)`, or `Imp(i,j)`"""
-    pass
+@dataclass(frozen=True, order=True)
 class Pos(Constraint):
-    def __init__(self, i: int):
-        self.i = i
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Pos) and other.i == self.i
+    i: int
+@dataclass(frozen=True, order=True)
 class Neg(Constraint):
-    def __init__(self, i: int):
-        self.i = i
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Neg) and other.i == self.i
+    i: int
+@dataclass(frozen=True, order=True)
 class Imp(Constraint):
-    def __init__(self, i: int, j: int):
-        self.i = i
-        self.j = j
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Imp) and other.i == self.i and other.j == self.j
+    i: int
+    j: int
         
 class InstNode(object):
     """Represents an instantiated node in the tree of a particular model"""
@@ -258,11 +252,10 @@ class InstNode(object):
         return 1 + sum(c.size() for x in self.children for c in x)
 
 class HybridSeparator(Separator):
-    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
         self._quiet = quiet
         self._logic = logic
-        self._epr_wrt_formulas = epr_wrt_formulas
         self._separators: Dict[int, FixedHybridSeparator] = {}
         self._models: List[Model] = []
         self._expt_flags = expt_flags
@@ -280,7 +273,7 @@ class HybridSeparator(Separator):
         assert clauses > 0
         if clauses not in self._separators:
             seed = random.randint(0,2 ** 64 - 1)
-            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, self._epr_wrt_formulas, seed, self._expt_flags, self._blocked_symbols)
+            h = FixedHybridSeparator(self._sig, clauses, self._quiet, self._logic, seed, self._expt_flags, self._blocked_symbols)
             for m in self._models:
                 h.add_model(m)
             self._separators[clauses] = h
@@ -381,7 +374,7 @@ def count_prefixes(depth: int, n_sorts: int, logic: str) -> Tuple[int, int, int]
 def NotUnless(x: z3.ExprRef, b: bool) -> z3.ExprRef: return x if b else z3.Not(x)
 
 class FixedHybridSeparator(object):
-    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+    def __init__(self, sig: Signature, clauses: int, quiet: bool = False, logic: str = "fol", seed:Optional[int] = None, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
         self._clauses = clauses
         self._logic = logic
@@ -944,15 +937,16 @@ class FixedHybridSeparator(object):
                 assert False # z3 should always return SAT/UNSAT on propositional formula
 
 class FixedImplicationSeparator(object):
-    def __init__(self, sig: Signature, depth: int, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], seed:Optional[int] = None, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+    def __init__(self, sig: Signature, prefix: Sequence[Tuple[Optional[bool], int]], expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
-        self._depth = depth
+        self._depth = len(prefix)
+        self._prefix = list(prefix)
         self._n_sorts = len(sig.sort_names)
-        self._logic = logic
         self.solver = z3.Solver()
         self._models: List[Model] = []
         self._collapse_cache: CollapseCache = CollapseCache(sig)
         self._expt_flags = set(expt_flags)
+        self._debug = False
         
         self._node_roots: Dict[int, InstNode] = {}
         self._next_node_index = 0
@@ -963,8 +957,8 @@ class FixedImplicationSeparator(object):
 
         self._cache_literal_var: Dict[Tuple[bool, int], z3.ExprRef] = {}
         
-        self.prefix_var_names = [prefix_var_names(self._sig, [s] * self._depth) for s in range(self._n_sorts)]
-        self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for sort, vs in enumerate(self.prefix_var_names) for v in vs]))
+        self.prefix_var_names = prefix_var_names(self._sig, (s for _, s in self._prefix))
+        self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for v, (_, sort) in zip(self.prefix_var_names, self._prefix)]))
         # self.atoms.append(And([])) # add "true" as an atom, and thus "true" and "false" as literals
         self.literals = [a if pol else Not(a) for a in self.atoms for pol in [True, False]]
         self._atom_qvar_requirements: List[List[int]] = []
@@ -993,8 +987,12 @@ class FixedImplicationSeparator(object):
         # Exactly one sort per quantifier
         for d in range(self._depth):
             self.solver.add(z3.PbEq([(self._prefix_sort_var(d, s), 1) for s in range(self._n_sorts)], 1))
-            if self._logic == 'universal':
+            
+            if self._prefix[d][0] == True:
                 self.solver.add(self._prefix_quant_var(d))
+            elif self._prefix[d][0] == False:
+                self.solver.add(z3.Not(self._prefix_quant_var(d)))
+            self.solver.add(self._prefix_sort_var(d, self._prefix[d][1]))
             
         for d in range(self._depth-1):
             for i,j in itertools.combinations(reversed(range(self._n_sorts)), 2):
@@ -1006,31 +1004,6 @@ class FixedImplicationSeparator(object):
                 E_i_d = z3.And(self._prefix_sort_var(d, i), z3.Not(self._prefix_quant_var(d)))
                 E_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), z3.Not(self._prefix_quant_var(d + 1)))
                 self.solver.add(z3.Not(z3.And(E_i_d, E_j_dp1)))
-                
-        # Each x_{i}_{sort} is true when there are at least i quantified variables of sort
-        for count in range(1, 1 + self._depth):
-            for s in range(self._n_sorts):
-                self.solver.add(self._prefix_qvar_var(s, count) ==
-                                  z3.PbGe([(self._prefix_sort_var(d, s), 1) for d in range(self._depth)], count))
-        
-        # Each literal can only be present if there are a certain number of sorted quantified variables.
-        # For example, r(__x_2_1, __x_0_0) requires 2 qvars of sort 2 and 1 qvar of sort 0, as otherwise
-        # the variables such as __x_2_1 don't exist.
-        prefix_var_lookup = {}
-        for sort, vs in enumerate(self.prefix_var_names):
-            for i, v in enumerate(vs):
-                prefix_var_lookup[v] = (sort, i)
-        for atom_id, atom in enumerate(self.atoms):
-            requirements = [0] * self._n_sorts # what is the count of each sort required?
-            for v in vars_of(atom):
-                if v not in prefix_var_lookup: continue # skip constants from signature
-                sort, i = prefix_var_lookup[v]
-                requirements[sort] = max(requirements[sort], i + 1)
-            self._atom_qvar_requirements.append(requirements)
-            for ante in [True, False]:
-                reqs = z3.And([self._prefix_qvar_var(s, c) for (s, c) in enumerate(requirements) if c > 0])
-                self.solver.add(z3.Implies(self._literal_var(ante, 2 * atom_id), reqs))
-                self.solver.add(z3.Implies(self._literal_var(ante, 2 * atom_id + 1), reqs))
 
     def _literal_id(self, atom_index: int, polarity: bool) -> int:
         return 2 * atom_index + (0 if polarity else 1)
@@ -1046,10 +1019,10 @@ class FixedImplicationSeparator(object):
         '''Var is true if quantifier d has the given sort. Exactly one is true per index.'''
         assert 0 <= d < self._depth and 0 <= sort < len(self._sig.sort_names)
         return z3.Bool(f"Q_{d}_{sort}")
-    def _prefix_qvar_var(self, sort: int, count: int) -> z3.ExprRef:
-        '''Var is true whenever there are at least count qvars of sort'''
-        assert 0 < count <= self._depth and 0 <= sort < len(self._sig.sort_names)
-        return z3.Bool(f"x_{sort}_{count}")
+    # def _prefix_qvar_var(self, sort: int, count: int) -> z3.ExprRef:
+    #     '''Var is true whenever there are at least count qvars of sort'''
+    #     assert 0 < count <= self._depth and 0 <= sort < len(self._sig.sort_names)
+    #     return z3.Bool(f"x_{sort}_{count}")
     
     
     def _make_node(self, model_i: int, inst: List[int]) -> InstNode:
@@ -1074,11 +1047,10 @@ class FixedImplicationSeparator(object):
             (model_i, assignment) = self._collapse_cache.get_example(fo_type)
             
             model = self._models[model_i]
-            sort_list = [self._sig.sort_indices[model.sorts[i]] for i in assignment]
-            extra_vars = {v: e for v,e in zip(prefix_var_names(self._sig, sort_list), assignment)}
+            extra_vars = {v: e for v,e in zip(self.prefix_var_names, assignment)}
             
             literals_with_polarity = []
-            for lit in self._valid_literals(sort_list):
+            for lit in self._valid_literals():
                 polarity = check(self.literals[lit], model, extra_vars)
                 literals_with_polarity.append((lit, polarity))
             
@@ -1098,32 +1070,22 @@ class FixedImplicationSeparator(object):
             self._fo_types_defined.add(fo_type)
         return z3.Bool(f"M_{fo_type}")
 
-    def _valid_literals(self, sorts: Optional[Iterable[int]] = None) -> Iterable[int]:
-        var_counts = [0] * self._n_sorts
-        if sorts is None: # default to current prefix if not specified
-            for (_, s, _) in self.solution_prefix:
-                var_counts[s] += 1
-        else:
-            for s in sorts:
-                var_counts[s] += 1
+    def _valid_literals(self) -> Iterable[int]:
         for atom_id in range(len(self.atoms)):
-            if all(i <= j for i,j in zip(self._atom_qvar_requirements[atom_id], var_counts)):
-                yield 2 * atom_id
-                yield 2 * atom_id + 1
-
+            yield 2 * atom_id
+            yield 2 * atom_id + 1
 
     def _expand_node(self, node: InstNode, sort: int) -> None:
         if len(node.children[sort]) > 0:
             return # don't expand twice
         m_i = node.model_i
         for e in self._models[m_i].elems_of_sort_index[sort]:
-            ins = node.instantiation + [e]
             node.children[sort].append(self._make_node(node.model_i, node.instantiation + [e]))
         d = len(node.instantiation)
         var = z3.Bool(f"v_{node.index}")
         child_vars = [z3.Bool(f"v_{c.index}") for c in node.children[sort]]
-        self.solver.add(z3.Implies(z3.And(self._prefix_sort_var(d, sort), self._prefix_quant_var(d)), var == z3.And(child_vars)))
-        self.solver.add(z3.Implies(z3.And(self._prefix_sort_var(d, sort), z3.Not(self._prefix_quant_var(d))), var == z3.Or(child_vars)))
+        self.solver.add(z3.Implies(z3.And(self._prefix_quant_var(d)), var == z3.And(child_vars)))
+        self.solver.add(z3.Implies(z3.And(z3.Not(self._prefix_quant_var(d))), var == z3.Or(child_vars)))
 
     def _model_var(self, i: int) -> z3.ExprRef:
         if i not in self._node_roots:
@@ -1145,21 +1107,15 @@ class FixedImplicationSeparator(object):
 
     def _extract_formula(self) -> Tuple[List[Tuple[bool, int, str]], List[List[int]]]:
         prefix = []
-        next_var_index = [0] * self._n_sorts
         for loc in range(self._depth):
-            is_forall = True if self.solution[self._prefix_quant_var(loc)] else False
-            for s in range(self._n_sorts):
-                if z3.is_true(self.solution.eval(self._prefix_sort_var(loc, s))):
-                    sort = s
-                    break
-            else: assert False # should be exactly one var true!
-            name = self.prefix_var_names[sort][next_var_index[sort]]
-            next_var_index[sort] += 1
+            is_forall = z3.is_true(self.solution[self._prefix_quant_var(loc)])
+            sort = self._prefix[loc][1]
+            name = self.prefix_var_names[loc]
             prefix.append((is_forall, sort, name))
         phi = []
         for ante in [True, False]:
             cb = []
-            for l in self._valid_literals(sort for (is_forall, sort, name) in prefix):
+            for l in self._valid_literals():
                 if z3.is_true(self.solution.eval(self._literal_var(ante, l))):
                     cb.append(l)
             phi.append(cb)
@@ -1168,7 +1124,8 @@ class FixedImplicationSeparator(object):
     def separate(self, timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
         with timer:
             while True:
-                print(f"In implication solver (d={self._depth}) sat query...")
+                if self._debug:
+                    print(f"In implication solver (d={self._depth}) sat query...")
                 # print(self.solver)
                 result = timer.solver_check(self.solver)
                 if result == z3.unsat:
@@ -1177,7 +1134,8 @@ class FixedImplicationSeparator(object):
                 self.solution = self.solver.model()
                 self.solution_prefix, self.solution_matrix = self._extract_formula()
                 
-                print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
+                if self._debug:
+                    print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
                        for (pol, sort, name) in self.solution_prefix]),
                        "matrix", And([self.literals[i] for i in self.solution_matrix[0]]), "->", And([self.literals[i] for i in self.solution_matrix[1]]))
                 if self._check_formula_validity([(ifa, sort) for (ifa, sort, _) in self.solution_prefix], self.solution_matrix, self.constraints):
@@ -1186,7 +1144,8 @@ class FixedImplicationSeparator(object):
                         f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
                     return f
                 # otherwise, _check_formula_validity has added constraints
-                print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(self._depth + 1))}")
+                if self._debug:
+                    print(f"expanded nodes: {self._next_node_index}/{sum(len(model.elems) ** d for model in self._models for d in range(self._depth + 1))}")
                 
                 
     def _imp_matrix_value(self, matrix_list: List[List[int]], model: Model, mapping: Dict[str, int] = {}) \
@@ -1221,27 +1180,6 @@ class FixedImplicationSeparator(object):
         if A == True and B == False:
             return False
         return None
-
-        # all_clause_true, any_clause_unk = True, False
-        # for clause in matrix_list:
-        #     cl_true, cl_unk = False, False
-        #     for atom in clause:
-        #         if all((v in mapping or v in model.constants) for v in vars_of(atom)):
-        #             if check(atom, model, mapping):
-        #                 cl_true = True # atom is defined and is true
-        #                 break # clause is true, we don't need to keep looking
-        #             else:
-        #                 pass # atom was defined but false so we can't conclude anything
-        #         else:
-        #             cl_unk = True # atom was unknown
-        #     all_clause_true = all_clause_true and cl_true
-        #     any_clause_unk = any_clause_unk or (cl_unk and not cl_true)
-        # if all_clause_true:
-        #     return True
-        # elif not any_clause_unk:
-        #     return False
-        # else:
-        #     return None
 
     def _check_formula_validity(self, prefix: List[Quantifier], matrix_list: List[List[int]],
                                 constraints: List[Constraint]) -> bool:
@@ -1293,7 +1231,8 @@ class FixedImplicationSeparator(object):
             return _root_node_cache[n]
 
         def swap_to_front(c: int) -> None:
-            constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+            # constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+            pass
         
         for c_i in range(len(constraints)):
             c = constraints[c_i]
@@ -1330,89 +1269,212 @@ class FixedImplicationSeparator(object):
                     return False
         return True
 
-class ImplicationSeparator(Separator):
+# class ImplicationSeparator(Separator):
+#     pass
+#     def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+#         self._sig = sig
+#         self._quiet = quiet
+#         self._logic = logic
+#         self._models: List[Model] = []
+#         self._expt_flags = expt_flags
+#         self._blocked_symbols = blocked_symbols
+#         self._constraints: List[Constraint] = []
+#         self._separator = self._get_separator(0)
+#         self._depth = 5
+    
+#     def add_model(self, model:Model) -> int:
+#         l = len(self._models)
+#         self._models.append(model)
+#         h_l = self._separator.add_model(model)
+#         assert h_l == l
+#         return l
+
+#     def _get_separator(self, depth: int) -> FixedImplicationSeparator:
+#         assert depth >= 0
+#         seed = random.randint(0,2 ** 64 - 1)
+#         h = FixedImplicationSeparator(self._sig, depth, self._quiet, self._logic, seed, self._expt_flags, self._blocked_symbols)
+#         for m in self._models:
+#             h.add_model(m)
+#         return h
+
+#     def _add_constraints(self, pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> None:
+#         for i in pos:
+#             if Pos(i) not in self._constraints:
+#                 self._separator.add_constraint(Pos(i))
+#                 self._constraints.append(Pos(i))
+        
+#         for i in neg:
+#             if Neg(i) not in self._constraints:
+#                 self._separator.add_constraint(Neg(i))
+#                 self._constraints.append(Neg(i))
+
+#         for (i,j) in imp:
+#             if Imp(i,j) not in self._constraints:
+#                 self._separator.add_constraint(Imp(i,j))
+#                 self._constraints.append(Imp(i,j))
+            
+#     def _is_constraints_subset(self, pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> bool:
+#         for c in self._constraints:
+#             if isinstance(c, Pos):
+#                 if c.i not in pos:
+#                     return False
+#             elif isinstance(c, Neg):
+#                 if c.i not in neg:
+#                     return False
+#             elif isinstance(c, Imp):
+#                 if (c.i, c.j) not in imp:
+#                     return False
+#         return True
+
+
+#     def separate(self,
+#                  pos: Collection[int],
+#                  neg: Collection[int],
+#                  imp: Collection[Tuple[int, int]],
+#                  max_depth: int = 1000000,
+#                  max_clauses: int = 1000000,
+#                  max_complexity: int = 1000000,
+#                  timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        
+#         # first, check if the user has retracted any constraints. If so, we need to fully reset.
+#         if not self._is_constraints_subset(pos, neg, imp):
+#             self._depth = 0
+#             self._separator = self._get_separator(self._depth)
+#             self._constraints = []
+#         self._add_constraints(pos, neg, imp)
+#         while True:
+#             formula = self._separator.separate(timer)
+#             if formula is not None: return formula
+        
+#             self._depth += 1
+#             self._separator = self._get_separator(self._depth)
+#             self._constraints = []
+#             self._add_constraints(pos, neg, imp)
+
+class ParallelSeparator:
     pass
-    def __init__(self, sig: Signature, quiet: bool = False, logic: str = "fol", epr_wrt_formulas: List[Formula] = [], expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+    def __init__(self, sig: Signature, logic: str = "fol", expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
-        self._quiet = quiet
+        self._solver = z3.Solver()
         self._logic = logic
-        self._epr_wrt_formulas = epr_wrt_formulas
-        self._models: List[Model] = []
         self._expt_flags = expt_flags
         self._blocked_symbols = blocked_symbols
-        self._constraints: List[Constraint] = []
-        self._separator = self._get_separator(0)
-        self._depth = 0
     
-    def add_model(self, model:Model) -> int:
+        self._models: List[Model] = []
+        self._depths_defined: Set[int] = set()
+
+    def add_model(self, model: Model) -> int:
         l = len(self._models)
         self._models.append(model)
-        h_l = self._separator.add_model(model)
-        assert h_l == l
         return l
-
-    def _get_separator(self, depth: int) -> FixedImplicationSeparator:
-        assert depth >= 0
-        seed = random.randint(0,2 ** 64 - 1)
-        h = FixedImplicationSeparator(self._sig, depth, self._quiet, self._logic, self._epr_wrt_formulas, seed, self._expt_flags, self._blocked_symbols)
-        for m in self._models:
-            h.add_model(m)
-        return h
-
-    def _add_constraints(self, pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> None:
-        for i in pos:
-            if Pos(i) not in self._constraints:
-                self._separator.add_constraint(Pos(i))
-                self._constraints.append(Pos(i))
+    
+    def _depth_var(self, d: int) -> z3.ExprRef: return z3.Bool(f"D_{d}")
+    def _prefix_quant_var(self, d: int) -> z3.ExprRef: return z3.Bool(f"AE_{d}")
+    def _prefix_sort_var(self, d: int, sort: int) -> z3.ExprRef: return z3.Bool(f"Q_{d}_{sort}")
+    def _prefix_vars(self, prefix: Sequence[Tuple[bool, int]]) -> z3.ExprRef:
+        return z3.And(self._depth_var(len(prefix)),
+                      *(NotUnless(self._prefix_quant_var(d), prefix[d][0]) for d in range(len(prefix))),
+                      *(self._prefix_sort_var(d, prefix[d][1]) for d in range(len(prefix))))
+    def _constraint_var(self, c: Constraint) -> z3.ExprRef:
+        if isinstance(c, Pos):
+            return z3.Bool(f"Pos_{c.i}")
+        elif isinstance(c, Neg):
+            return z3.Bool(f"Neg_{c.i}")
+        elif isinstance(c, Imp):
+            return z3.Bool(f"Imp_{c.i}_{c.j}")
+        assert False
+    def _ensure_depth(self, depth: int) -> None:
+        if depth in self._depths_defined:
+            return
         
-        for i in neg:
-            if Neg(i) not in self._constraints:
-                self._separator.add_constraint(Neg(i))
-                self._constraints.append(Neg(i))
-
-        for (i,j) in imp:
-            if Imp(i,j) not in self._constraints:
-                self._separator.add_constraint(Imp(i,j))
-                self._constraints.append(Imp(i,j))
-            
-    def _is_constraints_subset(self, pos: Collection[int], neg: Collection[int], imp: Collection[Tuple[int, int]]) -> bool:
-        for c in self._constraints:
-            if isinstance(c, Pos):
-                if c.i not in pos:
-                    return False
-            elif isinstance(c, Neg):
-                if c.i not in neg:
-                    return False
-            elif isinstance(c, Imp):
-                if (c.i, c.j) not in imp:
-                    return False
-        return True
-
-
-    def separate(self,
-                 pos: Collection[int],
-                 neg: Collection[int],
-                 imp: Collection[Tuple[int, int]],
-                 max_depth: int = 1000000,
-                 max_clauses: int = 1000000,
-                 max_complexity: int = 1000000,
-                 timer: Timer = UnlimitedTimer(), matrix_timer: Timer = UnlimitedTimer()) -> Optional[Formula]:
+        def D(e: z3.ExprRef) -> z3.ExprRef:
+            return z3.Implies(self._depth_var(depth), e)
+        for d in range(depth):
+            self._solver.add(D(z3.PbEq([(self._prefix_sort_var(d, s), 1) for s in range(len(self._sig.sorts))], 1)))
         
-        # first, check if the user has retracted any constraints. If so, we need to fully reset.
-        if not self._is_constraints_subset(pos, neg, imp):
-            self._depth = 0
-            self._separator = self._get_separator(self._depth)
-            self._constraints = []
-        self._add_constraints(pos, neg, imp)
+        for d in range(depth-1):
+            for i,j in itertools.combinations(reversed(range(len(self._sig.sorts))), 2):
+                # Prevent adjacent universals unless their sorts are in non-strict increasing order
+                A_i_d = z3.And(self._prefix_sort_var(d, i), self._prefix_quant_var(d))
+                A_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), self._prefix_quant_var(d + 1))
+                self._solver.add(D(z3.Not(z3.And(A_i_d, A_j_dp1))))
+                # Same for existentials
+                E_i_d = z3.And(self._prefix_sort_var(d, i), z3.Not(self._prefix_quant_var(d)))
+                E_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), z3.Not(self._prefix_quant_var(d + 1)))
+                self._solver.add(D(z3.Not(z3.And(E_i_d, E_j_dp1))))
+                
+        self._depths_defined.add(depth)
+
+    def _alternation_leq(self, depth: int, alts: int) -> z3.ExprRef:
+        return z3.PbLe([(self._prefix_quant_var(d-1) != self._prefix_quant_var(d), 1) for d in range(1, depth)], alts)
+    def _max_repeated_sorts_leq(self, depth: int, rep: int) -> z3.ExprRef:
+        return z3.And(*(z3.PbLe([(self._prefix_sort_var(d, s), 1) for d in range(1, depth)], rep) for s in range(len(self._sig.sorts))))
+
+    def get_prefix(self, constraints: Collection[Constraint], max_depth: int, max_alt: int, max_repeated_sorts: int) -> Optional[Tuple[Tuple[bool, int], ...]]:
+        const_expr = [self._constraint_var(c) for c in constraints]
+        depth = 0
+        while depth <= max_depth:
+            self._ensure_depth(depth)
+            r = self._solver.check(*const_expr, self._depth_var(depth), self._alternation_leq(depth, max_alt), self._max_repeated_sorts_leq(depth, max_repeated_sorts))
+            if r == z3.sat:
+                m = self._solver.model()
+                prefix = []
+                for d in range(depth):
+                    AE = z3.is_true(m.eval(self._prefix_quant_var(d), model_completion=True))
+                    sort = next(s for s in range(len(self._sig.sort_names)) if z3.is_true(m.eval(self._prefix_sort_var(d, s), model_completion=True)))
+                    prefix.append((AE, sort))
+                return tuple(prefix)
+            depth += 1
+        return None
+
+
+    async def separate(self, constraints: Collection[Constraint], max_depth: int = 1000, max_alt: int = 1000, max_repeated_sorts: int = 1000) -> Optional[Formula]:
         while True:
-            formula = self._separator.separate(timer)
-            if formula is not None: return formula
-        
-            self._depth += 1
-            self._separator = self._get_separator(self._depth)
-            self._constraints = []
-            self._add_constraints(pos, neg, imp)
-        
+            prefix = self.get_prefix(constraints, max_depth, max_alt, max_repeated_sorts)
+            if prefix is None:
+                return None
+            print(f"Trying {prefix}")
+            sep = FixedImplicationSeparator(self._sig, prefix, self._expt_flags, self._blocked_symbols)
+            sep_constraints: List[Constraint] = []
+            to_sep_model_num: Dict[int, int] = {}
+            def to_sep(i: int) -> int:
+                if i not in to_sep_model_num:
+                    j = sep.add_model(self._models[i])
+                    to_sep_model_num[i] = j
+                return to_sep_model_num[i]
+                
+            while True:
+                candidate = sep.separate()
+                if candidate is None:
+                    print(f"Used {len(sep_constraints)} constraints ({sep_constraints})")
+                    self._solver.add(z3.Not(z3.And(self._prefix_vars(prefix), *(self._constraint_var(c) for c in sep_constraints))))
+                    break
+                # Check candidate satisfies all the constraints. If so, we're done.
+                satisfies_constraints = True
+                for c in constraints:
+                    if isinstance(c, Pos):
+                        if not check(candidate, self._models[c.i]):
+                            sep.add_constraint(Pos(to_sep(c.i)))
+                            sep_constraints.append(c)
+                            satisfies_constraints = False
+                            break
+                    if isinstance(c, Neg):
+                        if check(candidate, self._models[c.i]):
+                            sep.add_constraint(Neg(to_sep(c.i)))
+                            sep_constraints.append(c)
+                            satisfies_constraints = False
+                            break
+                    if isinstance(c, Imp):
+                        if check(candidate, self._models[c.i]) and not check(candidate, self._models[c.j]):
+                            sep.add_constraint(Imp(to_sep(c.i), to_sep(c.j)))
+                            sep_constraints.append(c)
+                            satisfies_constraints = False
+                            break
+                if satisfies_constraints:
+                    return candidate
+                # Otherwise, we added constraints to sep, so loop around to separate() again
+
+
 def _decompose(f: Formula) -> Tuple[List[Tuple[bool, str, str]], List[List[Formula]]]:
     prefix: List[Tuple[bool, str, str]] = []
     while isinstance(f, (Forall, Exists)):

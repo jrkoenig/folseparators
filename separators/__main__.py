@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse, json, sys
-from .learn import learn, separate, learn_partial
+import argparse, json, sys, asyncio
+from .learn import learn, learn2, separate, learn_partial
 from .interpret import interpret
 from .parse import parse
 from .logic import print_model, Exists, Forall, Formula
@@ -39,6 +39,7 @@ def main() -> None:
     parser.add_argument("--separator", choices=('naive', 'v1', 'v2', 'generalized', 'hybrid'), default='hybrid', help="separator algorithm to use")
     parser.add_argument("--separate", action="store_true", default=False, help="only try to separate provided models")
     parser.add_argument("--partial", action="store_true", default=False, help="Use experimental partial separation")
+    parser.add_argument("--parallel", action="store_true", default=False, help="Use experimental partial separation")
     parser.add_argument("--no-cvc4", action="store_true", default=False, help="Don't use cvc4 to generate counterexamples")
     parser.add_argument("--expt-flags", dest="expt_flags", type=lambda x: set(x.split(',')), default=set(), help="Experimental flags")
     parser.add_argument("--blocked-symbols", dest="blocked_symbols", type=lambda x: set(x.split(',')), default=set(), help="Experimental flags")
@@ -57,6 +58,8 @@ def main() -> None:
         result = separate(f, timeout = args.timeout, args = args)
     elif args.partial:
         result = learn_partial(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args)
+    elif args.parallel:
+        result = asyncio.run(learn2(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args))
     else:
         result = learn(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args)
     j = {
