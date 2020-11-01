@@ -21,7 +21,7 @@ from .interpret import interpret, FOLFile
 from .parse import parse
 from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
 from .check import check
-from .separate import Constraint, Neg, ParallelSeparator, Pos, Separator, HybridSeparator, DiagonalPartialSeparator
+from .separate import Constraint, Neg, ParallelSeparator, Pos, PrefixConstraints, Separator, HybridSeparator, DiagonalPartialSeparator
 from .timer import Timer, UnlimitedTimer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
@@ -626,7 +626,7 @@ def learn(sig: Signature, axioms: List[Formula], formula: Formula, timeout: floa
 async def learn2(sig: Signature, axioms: List[Formula], formula: Formula, timeout: float, args: Any) -> LearningResult:
     result = LearningResult(False, Or([]), Timer(timeout), Timer(timeout), UnlimitedTimer())
     
-    separator = ParallelSeparator(sig, logic=args.logic, expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
+    separator = ParallelSeparator(sig, expt_flags=args.expt_flags, blocked_symbols=args.blocked_symbols) 
 
     env = Environment(sig)
     s = z3.Solver()
@@ -687,7 +687,7 @@ async def learn2(sig: Signature, axioms: List[Formula], formula: Formula, timeou
                 if True:
                     con: List[Constraint] = [Pos(x) for x in p_constraints]
                     con.extend(Neg(x) for x in n_constraints)
-                    c = await separator.separate(con, max_alt=1, max_repeated_sorts=2)
+                    c = await separator.separate(con, pc=PrefixConstraints(max_alt=1, max_repeated_sorts=3, logic=args.logic))
                 if c is None:
                     result.reason = "couldn't separate models under given restrictions"
                     break
