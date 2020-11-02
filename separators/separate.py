@@ -971,7 +971,7 @@ class FixedImplicationSeparator(object):
         self._cache_vars()
         self._constrain_vars()
         self.solver.check()
-        self.solution = self.solver.model()
+        self.solution: z3.ModelRef = self.solver.model()
         self.solution_prefix, self.solution_matrix = self._extract_formula()
         
     def _cache_vars(self) -> None:
@@ -1418,6 +1418,13 @@ class ParallelSeparator:
         return z3.PbLe([(self._prefix_quant_var(d-1) != self._prefix_quant_var(d), 1) for d in range(1, depth)], alts)
     def _max_repeated_sorts_leq(self, depth: int, rep: int) -> z3.ExprRef:
         return z3.And(*(z3.PbLe([(self._prefix_sort_var(d, s), 1) for d in range(0, depth)], rep) for s in range(len(self._sig.sorts))))
+    def _logic_expr(self, depth: int, logic: str) -> z3.ExprRef:
+        if logic == 'universal':
+            return z3.And(*(self._prefix_quant_var(d) for d in range(0, depth)))
+        elif logic == 'fol':
+            return z3.BoolVal(True)
+        else:
+            assert False
 
     def get_prefix(self, constraints: Collection[Constraint], pc: PrefixConstraints) -> Optional[Tuple[Tuple[Optional[bool], int], ...]]:
         const_expr = [self._constraint_var(c) for c in constraints]
@@ -1426,6 +1433,7 @@ class ParallelSeparator:
             self._ensure_depth(depth)
             r = self._prefix_solver.check(*const_expr,
                                    self._depth_var(depth),
+                                   self._logic_expr(depth, pc.logic),
                                    self._alternation_leq(depth, pc.max_alt),
                                    self._max_repeated_sorts_leq(depth, pc.max_repeated_sorts))
             if r == z3.sat:
