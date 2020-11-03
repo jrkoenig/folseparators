@@ -687,7 +687,7 @@ async def learn2(sig: Signature, axioms: List[Formula], formula: Formula, timeou
                 if True:
                     con: List[Constraint] = [Pos(x) for x in p_constraints]
                     con.extend(Neg(x) for x in n_constraints)
-                    c = await separator.separate(con, pc=PrefixConstraints(max_alt=1, max_repeated_sorts=3, logic=args.logic))
+                    c = separator.separate(con, pc=PrefixConstraints(max_alt=1, max_repeated_sorts=2, logic=args.logic))
                 if c is None:
                     result.reason = "couldn't separate models under given restrictions"
                     break
