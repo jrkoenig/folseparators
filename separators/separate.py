@@ -944,7 +944,7 @@ class Logic(Enum):
 
 @dataclass
 class PrefixConstraints:
-    logic: Logic = Logic.FOL # Can be 'fol', 'universal', 'epr'
+    logic: Logic = Logic.FOL
     min_depth: int = 0 # Minimal depth of quantification
     max_depth: int = 1000 # Maximum depth of quantification
     max_alt: int = 1000 # Maximum number of quantifier alternations
@@ -999,7 +999,7 @@ class FixedImplicationSeparator(object):
         for d in range(self._depth):
             self.solver.add(z3.PbEq([(self._prefix_sort_var(d, s), 1) for s in range(self._n_sorts)], 1))
             
-            if self._prefix[d][0] == True or self._prefix_constraints.logic == 'universal':
+            if self._prefix[d][0] == True or self._prefix_constraints.logic == Logic.Universal:
                 self.solver.add(self._prefix_quant_var(d))
             elif self._prefix[d][0] == False:
                 self.solver.add(z3.Not(self._prefix_quant_var(d)))
