@@ -1,0 +1,6 @@
+(sort N)
+(relation p N)
+(relation q N)
+(relation r N)
+(relation t N)
+(conjecture (exists x N (or (and (p x) (q x)) (and (r x) (t x)))))
