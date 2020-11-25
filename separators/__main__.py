@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import argparse, json, sys, asyncio
-from .learn import learn, learn2, separate, learn_partial
+from .learn import learn, learn2, separate
 from .interpret import interpret
 from .parse import parse
-from .logic import print_model, Exists, Forall, Formula
+from .logic import Exists, Forall, Formula
 
 import z3
 
@@ -38,7 +38,6 @@ def main() -> None:
     parser.add_argument("--logic", choices=('fol', 'epr', 'universal', 'existential'), default="fol", help="restrict form of quantifier to given logic (fol is unrestricted)")
     parser.add_argument("--separator", choices=('naive', 'v1', 'v2', 'generalized', 'hybrid'), default='hybrid', help="separator algorithm to use")
     parser.add_argument("--separate", action="store_true", default=False, help="only try to separate provided models")
-    parser.add_argument("--partial", action="store_true", default=False, help="Use experimental partial separation")
     parser.add_argument("--parallel", action="store_true", default=False, help="Use experimental partial separation")
     parser.add_argument("--no-cvc4", action="store_true", default=False, help="Don't use cvc4 to generate counterexamples")
     parser.add_argument("--expt-flags", dest="expt_flags", type=lambda x: set(x.split(',')), default=set(), help="Experimental flags")
@@ -56,8 +55,6 @@ def main() -> None:
     #success, formula, models, ctimer, stimer, mtimer, error 
     if args.separate:
         result = separate(f, timeout = args.timeout, args = args)
-    elif args.partial:
-        result = learn_partial(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args)
     elif args.parallel:
         result = asyncio.run(learn2(f.sig, f.axioms, f.conjectures[0], timeout = args.timeout, args = args))
     else:
@@ -67,14 +64,12 @@ def main() -> None:
         'total_time': result.counterexample_timer.elapsed() + result.separation_timer.elapsed(),
         'separation_time': result.separation_timer.elapsed(),
         'counterexample_time': result.counterexample_timer.elapsed(),
-        'matrix_time': result.matrix_timer.elapsed(),
         'model_count': len(result.models),
         'formula': str(result.current),
         'formula_quantifiers': count_quantifier_prenex(result.current),
         'error': result.reason,
         'sep_algo': args.separator,
-        'action': 'separate' if args.separate else 'learn',
-        'partial': args.partial
+        'action': 'separate' if args.separate else 'learn'
     }
     
     print(json.dumps(j, separators=(',',':'), indent=None))
