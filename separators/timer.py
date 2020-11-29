@@ -54,7 +54,7 @@ class Timer(object):
         if self.remaining() < 0:
             raise TimeoutException()
     
-    def solver_check(self, solver: Union[z3.Solver, z3.Optimize], *args: z3.ExprRef) -> z3.CheckSatResult:
+    def solver_check(self, solver: z3.Solver, *args: z3.ExprRef) -> z3.CheckSatResult:
         assert self.level > 0 # only allow sat while this timer is active
         
         remaining = self.remaining()

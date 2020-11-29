@@ -21,8 +21,10 @@ import z3
 
 from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars, symbols
 from .check import check
-from .matrix import K_function_unrolling
 from .timer import Timer, UnlimitedTimer
+
+# Unrolling constant
+K_function_unrolling = 1
 
 # Support things:
 Quantifier = Tuple[bool, int] # (is_forall, sort_index)
