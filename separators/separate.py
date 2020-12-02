@@ -1081,12 +1081,16 @@ class FixedImplicationSeparator(object):
         return (prefix, phi)
 
     def separate(self, minimize: bool = False) -> Optional[Formula]:
+        force_forall = [self._prefix_quant_var(d) for d in range(self._depth)]
         while True:
             if self._debug:
                 print(f"In implication solver (d={self._depth}) sat query...")
             # print(self.solver)
-            result = self.solver.check()
+            result = self.solver.check(*force_forall)
             if result == z3.unsat:
+                if len(force_forall) > 0:
+                    force_forall.pop()
+                    continue
                 return None
             assert result == z3.sat
             self.solution = self.solver.model()
