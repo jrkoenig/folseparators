@@ -1460,7 +1460,8 @@ class PrefixSolver:
         
         self._depths_defined: Set[int] = set()
         self._reservations: Dict[int, z3.ExprRef] = {}
-        self._reservation_index: int = 0
+        self._reservations_by_depth: DefaultDict[int, Set[int]] = defaultdict(set)
+        self._reservation_next_index: int = 0
 
         self._logic_conds: Dict[Tuple[int, Logic], z3.ExprRef] = {}
         self._alt_conds: Dict[Tuple[int, int], z3.ExprRef] = {}
@@ -1470,12 +1471,13 @@ class PrefixSolver:
         
     
     def _depth_var(self, d: int) -> z3.ExprRef: return z3.Bool(f"D_{d}")
-    def _prefix_quant_var(self, d: int) -> z3.ExprRef: return z3.Bool(f"AE_{d}")
-    def _prefix_sort_var(self, d: int, sort: int) -> z3.ExprRef: return z3.Bool(f"Q_{d}_{sort}")
+    def _prefix_quant_var(self, d: int, i:int) -> z3.ExprRef: return z3.Bool(f"AE_{d}_{i}")
+    def _prefix_sort_var(self, d: int, i: int, sort: int) -> z3.ExprRef: return z3.Bool(f"Q_{d}_{i}_{sort}")
+    def _prefix_expr(self, d: int, i: int, fa: bool, sort: int) -> z3.ExprRef:
+        return z3.And(self._prefix_sort_var(d, i, sort), NotUnless(self._prefix_quant_var(d, i), fa))
     def _prefix_vars(self, prefix: Sequence[Tuple[Optional[bool], int]]) -> z3.ExprRef:
-        return z3.And(self._depth_var(len(prefix)),
-                      *(NotUnless(self._prefix_quant_var(d), cast(bool, prefix[d][0])) for d in range(len(prefix)) if prefix[d][0] is not None),
-                      *(self._prefix_sort_var(d, prefix[d][1]) for d in range(len(prefix))))
+        return z3.And(*(NotUnless(self._prefix_quant_var(len(prefix), i), cast(bool, prefix[i][0])) for i in range(len(prefix)) if prefix[i][0] is not None),
+                      *(self._prefix_sort_var(len(prefix), i, prefix[i][1]) for i in range(len(prefix))))
     def _constraint_var(self, c: Constraint) -> z3.ExprRef:
         if isinstance(c, Pos):
             return z3.Bool(f"Pos_{c.i}")
@@ -1486,34 +1488,49 @@ class PrefixSolver:
         assert False
 
     def _ensure_depth(self, depth: int) -> None:
+        # print(f"ensuring depth {depth}")
         if depth in self._depths_defined:
             return
-        
-        def D(e: z3.ExprRef) -> z3.ExprRef:
-            return z3.Implies(self._depth_var(depth), e)
-        for d in range(depth):
-            self._prefix_solver.add(D(z3.PbEq([(self._prefix_sort_var(d, s), 1) for s in range(len(self._sig.sorts))], 1)))
-        
-        for d in range(depth-1):
-            for i,j in itertools.combinations(reversed(range(len(self._sig.sorts))), 2):
-                # Prevent adjacent universals unless their sorts are in non-strict increasing order
-                A_i_d = z3.And(self._prefix_sort_var(d, i), self._prefix_quant_var(d))
-                A_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), self._prefix_quant_var(d + 1))
-                self._prefix_solver.add(D(z3.Not(z3.And(A_i_d, A_j_dp1))))
-                # Same for existentials
-                E_i_d = z3.And(self._prefix_sort_var(d, i), z3.Not(self._prefix_quant_var(d)))
-                E_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), z3.Not(self._prefix_quant_var(d + 1)))
-                self._prefix_solver.add(D(z3.Not(z3.And(E_i_d, E_j_dp1))))
-                
         self._depths_defined.add(depth)
+        
+        for j in range(depth):
+            self._prefix_solver.add(z3.PbEq([(self._prefix_sort_var(depth, j, s), 1) for s in range(len(self._sig.sorts))], 1))
+        
+        for i in range(1, depth):
+            for j,k in itertools.combinations(reversed(range(len(self._sig.sorts))), 2):
+                # Prevent adjacent universals unless their sorts are in non-strict increasing order
+                # A_i_d = z3.And(self._prefix_sort_var(i, j), self._prefix_quant_var(i))
+                # A_j_dp1 = z3.And(self._prefix_sort_var(i + 1, k), self._prefix_quant_var(i + 1))
+                # self._prefix_solver.add(z3.Not(z3.And(A_i_d, A_j_dp1)))
+                self._prefix_solver.add(z3.Not(z3.And(self._prefix_expr(depth, i - 1, True, j), self._prefix_expr(depth, i, True, k))))
+                # Same for existentials
+                # E_i_d = z3.And(self._prefix_sort_var(i, j), z3.Not(self._prefix_quant_var(i)))
+                # E_j_dp1 = z3.And(self._prefix_sort_var(i + 1, k), z3.Not(self._prefix_quant_var(i + 1)))
+                # self._prefix_solver.add(z3.Not(z3.And(E_i_d, E_j_dp1)))
+                self._prefix_solver.add(z3.Not(z3.And(self._prefix_expr(depth, i - 1, False, j), self._prefix_expr(depth, i, False, k))))
+                
+        if depth > 0:
+            self._ensure_depth(depth-1)
+            self._prefix_solver.add(z3.Implies(self._depth_var(depth-1), self._depth_var(depth)))
+            disjuncts = []
+            for i in range(depth):
+                higher = list(range(depth)[:i]) + list(range(depth)[i+1:])
+                lower = list(range(depth-1))
+                assert len(higher) == len(lower)
+                conj = []
+                for h,l in zip(higher, lower):
+                    conj.append(self._prefix_quant_var(depth-1, l) == self._prefix_quant_var(depth, h))
+                    conj.extend(self._prefix_sort_var(depth-1, l, s) == self._prefix_sort_var(depth, h, s) for s in range(len(self._sig.sorts)))
+                disjuncts.append(z3.And(*conj))
+            self._prefix_solver.add(z3.Or(*disjuncts))
 
     def _alternation_leq(self, depth: int, alts: int) -> z3.ExprRef:
-        return z3.PbLe([(self._prefix_quant_var(d-1) != self._prefix_quant_var(d), 1) for d in range(1, depth)], alts)
+        return z3.PbLe([(self._prefix_quant_var(depth, i-1) != self._prefix_quant_var(depth, i), 1) for i in range(1, depth)], alts)
     def _max_repeated_sorts_leq(self, depth: int, rep: int) -> z3.ExprRef:
-        return z3.And(*(z3.PbLe([(self._prefix_sort_var(d, s), 1) for d in range(0, depth)], rep) for s in range(len(self._sig.sorts))))
+        return z3.And(*(z3.PbLe([(self._prefix_sort_var(depth, i, s), 1) for i in range(depth)], rep) for s in range(len(self._sig.sorts))))
     def _logic_expr(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if pc.logic == Logic.Universal:
-            return z3.And(*(self._prefix_quant_var(d) for d in range(0, depth)))
+            return z3.And(*(self._prefix_quant_var(depth, d) for d in range(0, depth)))
         elif pc.logic == Logic.FOL:
             return z3.BoolVal(True)
         elif pc.logic == Logic.EPR:
@@ -1522,9 +1539,15 @@ class PrefixSolver:
             for (sort_i, sort_j) in pc.disallowed_quantifier_edges:
                 for d_i, d_j in itertools.combinations(range(depth), 2):
                     # Disallow Ax: sort_i. ... Ey: sort_j.
-                    ps.append(z3.Not(z3.And(self._prefix_quant_var(d_i), z3.Not(self._prefix_quant_var(d_j)), self._prefix_sort_var(d_i, sort_i), self._prefix_sort_var(d_j, sort_j))))
+                    ps.append(z3.Not(z3.And(self._prefix_quant_var(depth, d_i),
+                                            z3.Not(self._prefix_quant_var(depth, d_j)),
+                                            self._prefix_sort_var(depth, d_i, sort_i),
+                                            self._prefix_sort_var(depth, d_j, sort_j))))
                     # Disallow Ex: sort_i. ... Ay: sort_j.
-                    ps.append(z3.Not(z3.And(z3.Not(self._prefix_quant_var(d_i)), self._prefix_quant_var(d_j), self._prefix_sort_var(d_i, sort_i), self._prefix_sort_var(d_j, sort_j))))
+                    ps.append(z3.Not(z3.And(z3.Not(self._prefix_quant_var(depth, d_i)),
+                                            self._prefix_quant_var(depth, d_j),
+                                            self._prefix_sort_var(depth, d_i, sort_i),
+                                            self._prefix_sort_var(depth, d_j, sort_j))))
                     
             return z3.And(*ps)
         else:
@@ -1533,24 +1556,24 @@ class PrefixSolver:
     def _alt_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.max_alt) not in self._alt_conds:
             v = z3.Bool(f"Alt_{pc.max_alt}")
-            self._prefix_solver.add(z3.Implies(z3.And(self._depth_var(depth), v), self._alternation_leq(depth, pc.max_alt)))
+            self._prefix_solver.add(v == self._alternation_leq(depth, pc.max_alt))
             self._alt_conds[(depth, pc.max_alt)] = v
         return self._alt_conds[(depth, pc.max_alt)]
     def _logic_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.logic) not in self._logic_conds:
             v = z3.Bool(f"Logic_{pc.logic.name}")
-            self._prefix_solver.add(z3.Implies(z3.And(self._depth_var(depth), v), self._logic_expr(depth, pc)))
+            self._prefix_solver.add(v == self._logic_expr(depth, pc))
             self._logic_conds[(depth, pc.logic)] = v
         return self._logic_conds[(depth, pc.logic)]
     def _repeat_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.max_repeated_sorts) not in self._max_repeat_conds:
             v = z3.Bool(f"MaxRepeat_{pc.max_repeated_sorts}")
-            self._prefix_solver.add(z3.Implies(z3.And(self._depth_var(depth), v), self._max_repeated_sorts_leq(depth, pc.max_repeated_sorts)))
+            self._prefix_solver.add(v == self._max_repeated_sorts_leq(depth, pc.max_repeated_sorts))
             self._max_repeat_conds[(depth, pc.max_repeated_sorts)] = v
         return self._max_repeat_conds[(depth, pc.max_repeated_sorts)]
     
     def _pc_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
-        return z3.And(self._depth_var(depth), self._alt_vars(depth, pc), self._logic_vars(depth, pc), self._repeat_vars(depth, pc))
+        return z3.And(self._alt_vars(depth, pc), self._logic_vars(depth, pc), self._repeat_vars(depth, pc))
 
     def _extract_prefix(self, depth: int) -> Prefix:
         m = self._prefix_solver.model()
@@ -1558,11 +1581,10 @@ class PrefixSolver:
         for d in range(depth):
             #AE = z3.is_true(m.eval(self._prefix_quant_var(d), model_completion=True))
             AE = None
-            sort = next(s for s in range(len(self._sig.sort_names)) if z3.is_true(m.eval(self._prefix_sort_var(d, s), model_completion=True)))
+            sort = next(s for s in range(len(self._sig.sort_names)) if z3.is_true(m.eval(self._prefix_sort_var(depth, d, s), model_completion=True)))
             prefix.append((AE, sort))
         return tuple(prefix)
     def get_prefix(self, constraints: Collection[Constraint], pc: PrefixConstraints) -> Optional[Prefix]:
-        # Ch
         if pc.logic == Logic.EPR:
             if self._epr_edges_seen is None: self._epr_edges_seen = list(pc.disallowed_quantifier_edges)
             assert pc.disallowed_quantifier_edges == self._epr_edges_seen
@@ -1573,24 +1595,32 @@ class PrefixSolver:
             if depth > pc.max_repeated_sorts * len(self._sig.sorts):
                 return None
             self._ensure_depth(depth)
-            r = self._prefix_solver.check(*constr_expr,
-                                          *self._reservations.values(),
+            # print(f"check({depth}): ", self._prefix_solver, *constr_expr,
+            #                               *(self._reservations[i] for i in self._reservations_by_depth[depth]),
+            #                               self._pc_vars(depth, pc))
+            r = self._prefix_solver.check(self._depth_var(depth), *constr_expr,
+                                          *(self._reservations[i] for i in self._reservations_by_depth[depth]),
                                           self._pc_vars(depth, pc))
+            # print(f"r = {r}")
             if r == z3.sat:
                 return self._extract_prefix(depth)
             depth += 1
         return None
     def reserve(self, prefix: Prefix, pc: PrefixConstraints) -> int:
-        i = self._reservation_index
-        self._reservation_index += 1
+        i = self._reservation_next_index
+        self._reservation_next_index += 1
         self._reservations[i] = z3.Not(z3.And(self._prefix_vars(prefix), self._logic_vars(len(prefix), pc), self._alt_vars(len(prefix), pc)))
+        self._reservations_by_depth[len(prefix)].add(i)
         return i
 
     def unreserve(self, ident: int) -> None:
+        for d, res in self._reservations_by_depth.items():
+            res.discard(ident)
         del self._reservations[ident]
 
+
     def unsep(self, constraints: Collection[Constraint], pc: PrefixConstraints, prefix: Prefix) -> None:
-        self._prefix_solver.add(z3.Not(z3.And(self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
+        self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
 
 
 def _decompose(f: Formula) -> Tuple[List[Tuple[bool, str, str]], List[List[Formula]]]:
