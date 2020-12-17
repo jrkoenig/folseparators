@@ -1451,6 +1451,7 @@ class ParallelSeparator:
 
 
 Prefix = Tuple[Tuple[Optional[bool], int], ...]
+PrefixStr = Tuple[Tuple[Optional[bool], str], ...]
 class PrefixSolver:
     def __init__(self, sig: Signature, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
@@ -1499,30 +1500,24 @@ class PrefixSolver:
         for i in range(1, depth):
             for j,k in itertools.combinations(reversed(range(len(self._sig.sorts))), 2):
                 # Prevent adjacent universals unless their sorts are in non-strict increasing order
-                # A_i_d = z3.And(self._prefix_sort_var(i, j), self._prefix_quant_var(i))
-                # A_j_dp1 = z3.And(self._prefix_sort_var(i + 1, k), self._prefix_quant_var(i + 1))
-                # self._prefix_solver.add(z3.Not(z3.And(A_i_d, A_j_dp1)))
                 self._prefix_solver.add(z3.Not(z3.And(self._prefix_expr(depth, i - 1, True, j), self._prefix_expr(depth, i, True, k))))
                 # Same for existentials
-                # E_i_d = z3.And(self._prefix_sort_var(i, j), z3.Not(self._prefix_quant_var(i)))
-                # E_j_dp1 = z3.And(self._prefix_sort_var(i + 1, k), z3.Not(self._prefix_quant_var(i + 1)))
-                # self._prefix_solver.add(z3.Not(z3.And(E_i_d, E_j_dp1)))
                 self._prefix_solver.add(z3.Not(z3.And(self._prefix_expr(depth, i - 1, False, j), self._prefix_expr(depth, i, False, k))))
                 
-        if depth > 0:
-            self._ensure_depth(depth-1)
-            self._prefix_solver.add(z3.Implies(self._depth_var(depth-1), self._depth_var(depth)))
-            disjuncts = []
-            for i in range(depth):
-                higher = list(range(depth)[:i]) + list(range(depth)[i+1:])
-                lower = list(range(depth-1))
-                assert len(higher) == len(lower)
-                conj = []
-                for h,l in zip(higher, lower):
-                    conj.append(self._prefix_quant_var(depth-1, l) == self._prefix_quant_var(depth, h))
-                    conj.extend(self._prefix_sort_var(depth-1, l, s) == self._prefix_sort_var(depth, h, s) for s in range(len(self._sig.sorts)))
-                disjuncts.append(z3.And(*conj))
-            self._prefix_solver.add(z3.Or(*disjuncts))
+        # if depth > 0:
+        #     self._ensure_depth(depth-1)
+        #     self._prefix_solver.add(z3.Implies(self._depth_var(depth-1), self._depth_var(depth)))
+        #     disjuncts = []
+        #     for i in range(depth):
+        #         higher = list(range(depth)[:i]) + list(range(depth)[i+1:])
+        #         lower = list(range(depth-1))
+        #         assert len(higher) == len(lower)
+        #         conj = []
+        #         for h,l in zip(higher, lower):
+        #             conj.append(self._prefix_quant_var(depth-1, l) == self._prefix_quant_var(depth, h))
+        #             conj.extend(self._prefix_sort_var(depth-1, l, s) == self._prefix_sort_var(depth, h, s) for s in range(len(self._sig.sorts)))
+        #         disjuncts.append(z3.And(*conj))
+        #     self._prefix_solver.add(z3.Or(*disjuncts))
 
     def _alternation_leq(self, depth: int, alts: int) -> z3.ExprRef:
         return z3.PbLe([(self._prefix_quant_var(depth, i-1) != self._prefix_quant_var(depth, i), 1) for i in range(1, depth)], alts)
@@ -1584,6 +1579,13 @@ class PrefixSolver:
             sort = next(s for s in range(len(self._sig.sort_names)) if z3.is_true(m.eval(self._prefix_sort_var(depth, d, s), model_completion=True)))
             prefix.append((AE, sort))
         return tuple(prefix)
+    def is_feasible(self, constraints: Collection[Constraint], prefix: PrefixStr) -> bool:
+        constr_expr = [self._constraint_var(c) for c in constraints]
+        depth = len(prefix)
+        self._ensure_depth(depth)
+        pre = tuple((ifa, self._sig.sort_indices[s]) for (ifa, s) in prefix)
+        r = self._prefix_solver.check(self._depth_var(depth), *constr_expr, self._prefix_vars(pre))
+        return r == z3.sat
     def get_prefix(self, constraints: Collection[Constraint], pc: PrefixConstraints) -> Optional[Prefix]:
         if pc.logic == Logic.EPR:
             if self._epr_edges_seen is None: self._epr_edges_seen = list(pc.disallowed_quantifier_edges)
@@ -1617,7 +1619,6 @@ class PrefixSolver:
         for d, res in self._reservations_by_depth.items():
             res.discard(ident)
         del self._reservations[ident]
-
 
     def unsep(self, constraints: Collection[Constraint], pc: PrefixConstraints, prefix: Prefix) -> None:
         self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
