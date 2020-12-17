@@ -1550,19 +1550,19 @@ class PrefixSolver:
 
     def _alt_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.max_alt) not in self._alt_conds:
-            v = z3.Bool(f"Alt_{pc.max_alt}")
+            v = z3.Bool(f"Alt_{depth}_{pc.max_alt}")
             self._prefix_solver.add(v == self._alternation_leq(depth, pc.max_alt))
             self._alt_conds[(depth, pc.max_alt)] = v
         return self._alt_conds[(depth, pc.max_alt)]
     def _logic_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.logic) not in self._logic_conds:
-            v = z3.Bool(f"Logic_{pc.logic.name}")
+            v = z3.Bool(f"Logic_{depth}_{pc.logic.name}")
             self._prefix_solver.add(v == self._logic_expr(depth, pc))
             self._logic_conds[(depth, pc.logic)] = v
         return self._logic_conds[(depth, pc.logic)]
     def _repeat_vars(self, depth: int, pc: PrefixConstraints) -> z3.ExprRef:
         if (depth, pc.max_repeated_sorts) not in self._max_repeat_conds:
-            v = z3.Bool(f"MaxRepeat_{pc.max_repeated_sorts}")
+            v = z3.Bool(f"MaxRepeat_{depth}_{pc.max_repeated_sorts}")
             self._prefix_solver.add(v == self._max_repeated_sorts_leq(depth, pc.max_repeated_sorts))
             self._max_repeat_conds[(depth, pc.max_repeated_sorts)] = v
         return self._max_repeat_conds[(depth, pc.max_repeated_sorts)]
