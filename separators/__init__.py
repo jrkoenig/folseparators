@@ -14,5 +14,5 @@
 
 from . import logic, separate, timer
 from .logic import Formula, Signature, Model
-from .separate import Separator, ParallelSeparator, HybridSeparator, Constraint, Neg, Pos, Imp
+from .separate import Separator, HybridSeparator, Constraint, Neg, Pos, Imp
 from .timer import UnlimitedTimer
