@@ -219,7 +219,7 @@ class CollapseCache(object):
         self.all_assignments: DefaultDict[int, List[AssignmentId]] = defaultdict(list)
     def add_model(self, model: Model) -> None:
         self.models.append(model)
-    def get(self, index: int, asgn: List[int]) -> int:
+    def get(self, index: int, asgn: Sequence[int]) -> int:
         N = len(self.models[index].sorts)
         assignment = tuple(asgn)
         # ensure elems are integers referring to elements of model index
@@ -1263,6 +1263,354 @@ class FixedImplicationSeparator(object):
                     return False
         return True
 
+class InstNode2(object):
+    """Represents an instantiated node in the tree of a particular model"""
+    __slots__ = ['index', 'instantiation', 'children', 'fo_type', 'model_i', 'var']
+    def __init__(self, index: int, instantiation: Tuple[int, ...], fo_type: int, model_i: int, var: z3.ExprRef):
+        self.index = index
+        self.instantiation = instantiation
+        self.children: Tuple[InstNode2, ...] = ()
+        self.fo_type = fo_type
+        self.model_i = model_i
+        self.var = var
+    def size(self) -> int:
+        return 1 + sum(c.size() for c in self.children)
+
+
+class FixedImplicationSeparatorPyCryptoSat(object):
+    def __init__(self, sig: Signature, prefix: Sequence[Tuple[Optional[bool], int]], pc: PrefixConstraints, k_cubes: int = 1, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+        self._sig = sig
+        self._depth = len(prefix)
+        self._prefix = list(prefix)
+        self._prefix_constraints = pc
+        self._n_sorts = len(sig.sort_names)
+        self.solver = z3.Solver()
+        self._models: List[Model] = []
+        self._collapse_cache: CollapseCache = CollapseCache(sig)
+        self._expt_flags = set(expt_flags)
+        self._debug = False
+        self._k_cubes = k_cubes
+        
+        self._node_roots: Dict[int, InstNode2] = {}
+        self._next_var_index = 1
+        self._node_count = 0
+        self.constraints: List[Constraint] = []
+
+        self._fo_type_vars: Dict[int, z3.ExprRef] = {}
+        self.prefix_var_names = pretty_prefix_var_names(self._sig, (s for _, s in self._prefix))
+        self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for v, (_, sort) in zip(self.prefix_var_names, self._prefix)]))
+        # self.atoms.append(And([])) # add "true" as an atom, and thus "true" and "false" as literals
+        self.literals = [a if pol else Not(a) for a in self.atoms for pol in [True, False]]
+        
+
+        self._literal_vars: Dict[Tuple[int, int], z3.ExprRef] = {}
+        for cube in range(1 + self._k_cubes):
+            for a in range(len(self.atoms)):
+                for p in [True, False]:
+                    self._literal_vars[(cube, self._literal_id(a, p))] = self._new_var()
+        self._prefix_quant_vars: List[z3.ExprRef] = [self._new_var() for d in range(self._depth)]
+        
+        self._constrain_vars()
+        self.solver.check()
+        self.solution: z3.ModelRef = self.solver.model()
+        self.solution_prefix, self.solution_matrix = self._extract_formula()
+
+    def _new_var(self) -> z3.ExprRef:
+        i = self._next_var_index
+        self._next_var_index += 1
+        return z3.Bool(f"var_{i}")
+
+    def _literal_id(self, atom_index: int, polarity: bool) -> int:
+        return 2 * atom_index + (0 if polarity else 1)
+
+    def _constrain_vars(self) -> None:
+        # Each atom can appear positively or negatively but not both
+        for i in range(len(self.atoms)):
+            for c in range(1+self._k_cubes):
+                self.solver.add(z3.Or(z3.Not(self._literal_vars[(c, self._literal_id(i, True))]),
+                                      z3.Not(self._literal_vars[(c, self._literal_id(i, False))])))
+
+        # Add forall/exists restrictions
+        for d in range(self._depth):
+            assert (self._prefix[d][0] is not None)  
+            if self._prefix[d][0] == True or self._prefix_constraints.logic == Logic.Universal:
+                self.solver.add(self._prefix_quant_vars[d])
+            elif self._prefix[d][0] == False:
+                self.solver.add(z3.Not(self._prefix_quant_vars[d]))
+            else:
+                assert False
+
+        # if self._prefix_constraints.max_alt < 1000:
+        #     self.solver.add(z3.PbLe([(self._prefix_quant_vars[d-1] != self._prefix_quant_vars[d], 1) for d in range(1, self._depth)],
+        #                             self._prefix_constraints.max_alt))
+        
+        # for d in range(self._depth-1):
+        #     for i,j in itertools.combinations(reversed(range(self._n_sorts)), 2):
+        #         # Prevent adjacent universals unless their sorts are in non-strict increasing order
+        #         A_i_d = z3.And(self._prefix_sort_var(d, i), self._prefix_quant_var(d))
+        #         A_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), self._prefix_quant_var(d + 1))
+        #         self.solver.add(z3.Not(z3.And(A_i_d, A_j_dp1)))
+        #         # Same for existentials
+        #         E_i_d = z3.And(self._prefix_sort_var(d, i), z3.Not(self._prefix_quant_var(d)))
+        #         E_j_dp1 = z3.And(self._prefix_sort_var(d + 1, j), z3.Not(self._prefix_quant_var(d + 1)))
+        #         self.solver.add(z3.Not(z3.And(E_i_d, E_j_dp1)))
+
+        # for (sort_i, sort_j) in self._prefix_constraints.disallowed_quantifier_edges:
+        #     for d_i, d_j in itertools.combinations(range(self._depth), 2):
+        #         # Disallow Ax: sort_i. ... Ey: sort_j.
+        #         self.solver.add(z3.Not(z3.And(self._prefix_quant_var(d_i), z3.Not(self._prefix_quant_var(d_j)), self._prefix_sort_var(d_i, sort_i), self._prefix_sort_var(d_j, sort_j))))
+        #         # Disallow Ex: sort_i. ... Ay: sort_j.
+        #         self.solver.add(z3.Not(z3.And(z3.Not(self._prefix_quant_var(d_i)), self._prefix_quant_var(d_j), self._prefix_sort_var(d_i, sort_i), self._prefix_sort_var(d_j, sort_j))))
+
+
+    def _fo_type_var(self, fo_type: int) -> z3.ExprRef:
+        if fo_type not in self._fo_type_vars:
+            self._fo_type_vars[fo_type] = self._new_var()
+            (model_i, assignment) = self._collapse_cache.get_example(fo_type)
+            
+            model = self._models[model_i]
+            extra_vars = {v: e for v,e in zip(self.prefix_var_names, assignment)}
+            
+            literals_with_polarity = []
+            for lit in range(2 * len(self.atoms)):
+                polarity = check(self.literals[lit], model, extra_vars)
+                literals_with_polarity.append((lit, polarity))
+            
+            # This is for a implication expression
+            ante = z3.Or([self._literal_vars[(0, lit)] for (lit, p) in literals_with_polarity if not p])
+            cnsq = [z3.And([z3.Not(self._literal_vars[(1 + i, lit)]) for (lit, p) in literals_with_polarity if not p]) for i in range(self._k_cubes)]
+            self.solver.add(self._fo_type_vars[fo_type] == z3.Or(ante, *cnsq))
+            
+        return self._fo_type_vars[fo_type]
+    
+    def _make_node(self, model_i: int, inst: Tuple[int, ...]) -> InstNode2:
+        fo_type = self._collapse_cache.get(model_i, inst)
+        node = InstNode2(self._next_var_index, inst, fo_type, model_i, self._new_var())
+        self._node_count += 1
+        # At the right depth, this node is exactly the FO type
+        if len(inst) == self._depth:
+            self.solver.add(node.var == self._fo_type_var(node.fo_type))
+        return node
+
+    def _expand_node(self, node: InstNode2, sort: int) -> None:
+        if len(node.children) > 0:
+            return # don't expand twice
+        m_i = node.model_i
+        node.children = tuple(self._make_node(node.model_i, (*node.instantiation, e)) 
+                              for e in self._models[m_i].elems_of_sort_index[sort])
+        d = len(node.instantiation)
+        child_vars = [c.var for c in node.children]
+        if self._prefix[d][0] is None:
+            self.solver.add(z3.Implies(self._prefix_quant_vars[d], node.var == z3.And(child_vars)))
+            self.solver.add(z3.Implies(z3.Not(self._prefix_quant_vars[d]), node.var == z3.Or(child_vars)))
+        else:
+            self.solver.add(node.var == (z3.And if self._prefix[d][0] else z3.Or)(child_vars))
+        
+    def _model_var(self, i: int) -> z3.ExprRef:
+        if i not in self._node_roots:
+            self._node_roots[i] = self._make_node(i, ())
+        return self._node_roots[i].var
+
+    def add_model(self, model:Model) -> int:
+        l = len(self._models)
+        self._models.append(model)
+        self._collapse_cache.add_model(model)
+        return l
+    def add_constraint(self, c: Constraint) -> None:
+        if isinstance(c, Pos):
+            self.solver.add(self._model_var(c.i))
+        elif isinstance(c, Neg):
+            self.solver.add(z3.Not(self._model_var(c.i)))
+        elif isinstance(c, Imp):
+            self.solver.add(z3.Implies(self._model_var(c.i), self._model_var(c.j)))
+        self.constraints.append(c)
+
+    def _extract_formula(self) -> Tuple[List[Tuple[bool, int, str]], List[List[int]]]:
+        prefix = []
+        for d in range(self._depth):
+            is_forall = z3.is_true(self.solution[self._prefix_quant_vars[d]])
+            sort = self._prefix[d][1]
+            name = self.prefix_var_names[d]
+            prefix.append((is_forall, sort, name))
+        phi = []
+        for ante in range(1 + self._k_cubes):
+            cb = []
+            for l in range(2 * len(self.atoms)):
+                if z3.is_true(self.solution.eval(self._literal_vars[(ante, l)])):
+                    cb.append(l)
+            phi.append(cb)
+        return (prefix, phi)
+
+    def separate(self, minimize: bool = False) -> Optional[Formula]:
+        # force_forall = [self._prefix_quant_vars[d] for d in range(self._depth)]
+        while True:
+            if self._debug:
+                print(f"In implication solver (d={self._depth}) sat query...")
+            # print(self.solver)
+            # result = self.solver.check(*force_forall)
+            result = self.solver.check()
+            if result == z3.unsat:
+                # if len(force_forall) > 0:
+                #     force_forall.pop()
+                #     continue
+                return None
+            assert result == z3.sat
+            self.solution = self.solver.model()
+            # print(self.solution)
+            self.solution_prefix, self.solution_matrix = self._extract_formula()
+            
+            if self._debug:
+                print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
+                    for (pol, sort, name) in self.solution_prefix]),
+                    "matrix", And([self.literals[i] for i in self.solution_matrix[0]]), "->", "|".join(str(And([self.literals[i] for i in cube])) for cube in self.solution_matrix[1:]))
+            
+            if self._check_formula_validity([(ifa, sort) for (ifa, sort, _) in self.solution_prefix], self.solution_matrix, self.constraints):
+                while minimize and self._local_minimize(): pass
+                ante = [] if len(self.solution_matrix[0]) == 0 else [self.literals[i^1] for i in self.solution_matrix[0]]
+                f: Formula = Or([*ante, *(And([self.literals[i] for i in cube]) for cube in self.solution_matrix[1:])])
+                vars_used = set(free_vars(f))
+                # print(f"Vars used: {vars_used} in {f}")
+                for is_forall, sort, name in reversed(self.solution_prefix):
+                    if name in vars_used:
+                        f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
+                # print(f"Post simplification: {f}")
+                return f
+            # otherwise, _check_formula_validity has added constraints
+            if self._debug:
+                print(f"expanded nodes: {self._node_count}/{sum(len(model.elems) ** d for model in self._models for d in range(self._depth + 1))}")
+                
+    def _local_minimize(self) -> bool:
+        prefix_restrictions = [NotUnless(self._prefix_quant_vars[d], ifa) for d, (ifa, _, _) in enumerate(self.solution_prefix)]
+        not_present_literals: List[z3.ExprRef] = []
+        present_literals: List[z3.ExprRef] = []
+        for (ante, l), v in self._literal_vars.items():
+            if not z3.is_true(self.solution.eval(v)):
+                not_present_literals.append(z3.Not(v))
+            else:
+                present_literals.append(v)
+
+        ret = self.solver.check(*prefix_restrictions, *not_present_literals, z3.PbLe([(v,1) for v in present_literals], len(present_literals) - 1))
+        if ret == z3.sat:
+            if self._debug:
+                print(f"Found smaller solution")
+            self.solution = self.solver.model()
+            self.solution_prefix, self.solution_matrix = self._extract_formula()
+            return True
+        return False
+        
+
+    def _truth_value_conjunction(self, conj: List[int], model: Model, mapping: Dict[str, int]) -> Optional[bool]:
+        all_true = True
+        for lit in conj:
+            is_defined = all((v in mapping or v in model.constants) for v in vars_of(self.literals[lit]))
+            v = check(self.literals[lit], model, mapping) if is_defined else None
+            if v != True:
+                all_true = False
+            if v == False:
+                return False
+        # all literals are either unknown or true, because we would have early returned otherwise
+        if all_true: return True
+        # We must have at least one unknown, because not all are true
+        return None
+
+    def _imp_matrix_value(self, matrix_list: List[List[int]], model: Model, mapping: Dict[str, int] = {}) -> Optional[bool]:
+        """Returns `True`/`False` if the matrix's value is determined on model, or `None` if it is not determined"""
+        [ante, *cnsq] = matrix_list
+        A = self._truth_value_conjunction(ante, model, mapping)
+        if A == False:
+            return True
+        Bs = []
+        for cube in cnsq:
+            B = self._truth_value_conjunction(cube, model, mapping)
+            if B == True:
+                return True
+            Bs.append(B)
+        if A == True and all(B == False for B in Bs):
+            return False
+        return None
+
+    def _check_formula_validity(self, prefix: List[Quantifier], matrix_list: List[List[int]],
+                                constraints: List[Constraint]) -> bool:
+        depth = len(prefix)
+        matrix = Or([Not(And([self.literals[i] for i in matrix_list[0]])), *(And([self.literals[i] for i in cube]) for cube in matrix_list[1:])])
+        # prefix_vars = prefix_var_names(self._sig, [q[1] for q in prefix])
+
+        _matrix_value_cache: Dict[int, Optional[bool]] = {}
+        def matrix_value_fo_type(fo_type: int) -> Optional[bool]:
+            if fo_type not in _matrix_value_cache:
+                (model_i, assignment) = self._collapse_cache.get_example(fo_type)
+                mapping = {v: e for v,e in zip(self.prefix_var_names, assignment)}
+                _matrix_value_cache[fo_type] = self._imp_matrix_value(matrix_list, self._models[model_i], mapping)
+            return _matrix_value_cache[fo_type]
+
+        def check_assignment(asgn: Tuple[int, ...], model: Model) -> bool:
+            if len(asgn) == depth:
+                return check(matrix, model, {v: e for v,e in zip(self.prefix_var_names, asgn)})
+            else:
+                (is_forall, sort) = prefix[len(asgn)]
+                univ = model.elems_of_sort[self._sig.sort_names[sort]]
+                return (all if is_forall else any)(check_assignment((*asgn, e), model) for e in univ)
+
+        def expand_to_prove(n: InstNode2, expected: bool) -> bool:
+            matrix_value = matrix_value_fo_type(n.fo_type)
+            if len(n.instantiation) == depth:
+                assert matrix_value is not None
+                return expected is matrix_value
+            # we aren't at the base, but check the rest of the quantifiers and return if they match
+            if matrix_value is expected or check_assignment(n.instantiation, self._models[n.model_i]) == expected:
+                return True
+
+            is_forall, sort = prefix[len(n.instantiation)]
+            self._expand_node(n, sort)
+            for c in n.children:
+                expand_to_prove(c, expected)
+            return False
+
+        _root_node_cache: Dict[int, bool] = {}
+        def root_node_value(n: int) -> bool:
+            if n not in _root_node_cache:
+                _root_node_cache[n] = check_assignment((), self._models[n])
+            return _root_node_cache[n]
+
+        def swap_to_front(c: int) -> None:
+            constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+            # pass
+        
+        for c_i in range(len(constraints)):
+            c = constraints[c_i]
+            if isinstance(c, Pos):
+                if not root_node_value(c.i):
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[c.i], True)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[c.i].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded + in {c.i}, {s}/{max}")
+                    return False
+            elif isinstance(c, Neg):
+                if root_node_value(c.i):
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[c.i], False)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[c.i].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded - in {c.i}, {s}/{max}")
+                    return False
+            elif isinstance(c, Imp):
+                if root_node_value(c.i) and not root_node_value(c.j):
+                    swap_to_front(c_i)
+                    expand_to_prove(self._node_roots[c.i], False)
+                    expand_to_prove(self._node_roots[c.j], True)
+                    if 'showexpansions' in self._expt_flags:
+                        s = self._node_roots[c.i].size()
+                        max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded x-> in {c.i}, {s}/{max}")
+                        s = self._node_roots[c.j].size()
+                        max = sum(len(self._models[c.j].elems) ** d for d in range(len(prefix)+1))
+                        print(f"Expanded ->x in {c.j}, {s}/{max}")
+                    return False
+        return True
+
 # class ParallelSeparator:
 #     pass
 #     def __init__(self, sig: Signature, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
@@ -1574,8 +1922,8 @@ class PrefixSolver:
         m = self._prefix_solver.model()
         prefix = []
         for d in range(depth):
-            #AE = z3.is_true(m.eval(self._prefix_quant_var(d), model_completion=True))
-            AE = None
+            AE = z3.is_true(m.eval(self._prefix_quant_var(depth, d), model_completion=True))
+            # AE = None
             sort = next(s for s in range(len(self._sig.sort_names)) if z3.is_true(m.eval(self._prefix_sort_var(depth, d, s), model_completion=True)))
             prefix.append((AE, sort))
         return tuple(prefix)
@@ -1621,7 +1969,10 @@ class PrefixSolver:
         del self._reservations[ident]
 
     def unsep(self, constraints: Collection[Constraint], pc: PrefixConstraints, prefix: Prefix) -> None:
-        self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
+        if all(q[0] is not None for q in prefix):
+            self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
+        else:
+            self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
 
 
 # def _decompose(f: Formula) -> Tuple[List[Tuple[bool, str, str]], List[List[Formula]]]:
