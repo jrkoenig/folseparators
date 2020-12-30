@@ -1424,11 +1424,20 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         elif isinstance(c, Imp):
             self.solver.add(z3.Implies(self._model_var(c.i), self._model_var(c.j)))
         self.constraints.append(c)
+    def block_last_separator(self) -> None:
+        cl = []
+        for ante in range(1 + self._k_cubes):
+            for l in range(2 * len(self.atoms)):
+                if z3.is_true(self.solution.eval(self._literal_vars[(ante, l)])):
+                    cl.append(self._literal_vars[(ante, l)])
+        self.solver.add(z3.Not(z3.And(*cl)))
+        
 
     def _extract_formula(self) -> Tuple[List[Tuple[bool, int, str]], List[List[int]]]:
         prefix = []
         for d in range(self._depth):
-            is_forall = z3.is_true(self.solution[self._prefix_quant_vars[d]])
+            prefix_ifa = self._prefix[d][0]
+            is_forall = z3.is_true(self.solution[self._prefix_quant_vars[d]]) if prefix_ifa is None else prefix_ifa
             sort = self._prefix[d][1]
             name = self.prefix_var_names[d]
             prefix.append((is_forall, sort, name))
@@ -1489,7 +1498,7 @@ class FixedImplicationSeparatorPyCryptoSat(object):
             else:
                 present_literals.append(v)
 
-        ret = self.solver.check(*prefix_restrictions, *not_present_literals, z3.PbLe([(v,1) for v in present_literals], len(present_literals) - 1))
+        ret = self.solver.check(*prefix_restrictions, *not_present_literals, z3.Not(z3.And(*present_literals)))
         if ret == z3.sat:
             if self._debug:
                 print(f"Found smaller solution")
@@ -1959,7 +1968,10 @@ class PrefixSolver:
     def reserve(self, prefix: Prefix, pc: PrefixConstraints) -> int:
         i = self._reservation_next_index
         self._reservation_next_index += 1
-        self._reservations[i] = z3.Not(z3.And(self._prefix_vars(prefix), self._logic_vars(len(prefix), pc), self._alt_vars(len(prefix), pc)))
+        if all(q[0] is not None for q in prefix):
+            self._reservations[i] = z3.Not(z3.And(self._depth_var(len(prefix)), self._prefix_vars(prefix)))
+        else:
+            self._reservations[i] = z3.Not(z3.And(self._prefix_vars(prefix), self._logic_vars(len(prefix), pc), self._alt_vars(len(prefix), pc)))
         self._reservations_by_depth[len(prefix)].add(i)
         return i
 
@@ -1970,6 +1982,7 @@ class PrefixSolver:
 
     def unsep(self, constraints: Collection[Constraint], pc: PrefixConstraints, prefix: Prefix) -> None:
         if all(q[0] is not None for q in prefix):
+            # print("UNSEP with prefix vars only")
             self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
         else:
             self._prefix_solver.add(z3.Not(z3.And(self._depth_var(len(prefix)), self._pc_vars(len(prefix), pc), self._prefix_vars(prefix), *(self._constraint_var(c) for c in constraints))))
