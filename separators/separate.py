@@ -1278,11 +1278,11 @@ class InstNode2(object):
 
 
 class FixedImplicationSeparatorPyCryptoSat(object):
-    def __init__(self, sig: Signature, prefix: Sequence[Tuple[Optional[bool], int]], pc: PrefixConstraints, k_cubes: int = 1, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
+    def __init__(self, sig: Signature, prefix: Sequence[Tuple[Optional[bool], int]], pc: PrefixConstraints = PrefixConstraints(), k_cubes: int = 1, expt_flags: Set[str] = set(), blocked_symbols: List[str] = []):
         self._sig = sig
         self._depth = len(prefix)
         self._prefix = list(prefix)
-        self._prefix_constraints = pc
+        # self._prefix_constraints = pc
         self._n_sorts = len(sig.sort_names)
         self.solver = z3.Solver()
         self._models: List[Model] = []
@@ -1332,13 +1332,9 @@ class FixedImplicationSeparatorPyCryptoSat(object):
 
         # Add forall/exists restrictions
         for d in range(self._depth):
-            assert (self._prefix[d][0] is not None)  
-            if self._prefix[d][0] == True or self._prefix_constraints.logic == Logic.Universal:
-                self.solver.add(self._prefix_quant_vars[d])
-            elif self._prefix[d][0] == False:
-                self.solver.add(z3.Not(self._prefix_quant_vars[d]))
-            else:
-                assert False
+            ifa = self._prefix[d][0]
+            assert (ifa is not None)  
+            self.solver.add(NotUnless(self._prefix_quant_vars[d], ifa))
 
         # if self._prefix_constraints.max_alt < 1000:
         #     self.solver.add(z3.PbLe([(self._prefix_quant_vars[d-1] != self._prefix_quant_vars[d], 1) for d in range(1, self._depth)],
@@ -1423,7 +1419,7 @@ class FixedImplicationSeparatorPyCryptoSat(object):
             self.solver.add(z3.Not(self._model_var(c.i)))
         elif isinstance(c, Imp):
             self.solver.add(z3.Implies(self._model_var(c.i), self._model_var(c.j)))
-        self.constraints.append(c)
+        self.constraints.insert(0, c)
     def block_last_separator(self) -> None:
         cl = []
         for ante in range(1 + self._k_cubes):
@@ -1582,7 +1578,9 @@ class FixedImplicationSeparatorPyCryptoSat(object):
             return _root_node_cache[n]
 
         def swap_to_front(c: int) -> None:
-            constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
+            if c > 0:
+                constraints[c - 1], constraints[c] = constraints[c], constraints[c - 1]
+            #constraints[:] = [constraints[c]] + constraints[:c] + constraints[c+1:]
             # pass
         
         for c_i in range(len(constraints)):
