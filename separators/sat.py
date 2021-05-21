@@ -100,8 +100,7 @@ class Reduction:
             x = self._fresh()
             self._reduce(e, x)
             return x
-        print(e)
-        assert False
+        assert False, e
 
     def _reduce(self, e: Expr, v: _LitConst) -> None:
         if isinstance(e, Val):
@@ -117,31 +116,35 @@ class Reduction:
             else:
                 self.clauses.extend([x, -v, 0, -x, v, 0])
         elif isinstance(e, And):
-            if v is True:
-                for c in e.c:
-                    self._reduce(c, True)
-            elif v is False:
-                self._reduce(Or(*(Not(c) for c in e.c)), True)
+            if isinstance(v, bool):
+                if v:
+                    for c in e.c:
+                        self._reduce(c, True)
+                else:
+                    self._reduce(Or(*(Not(c) for c in e.c)), True)
             else:
                 xs = [self._reduce_none(c) for c in e.c]
                 for x in xs:
                     self._add_clause([-v, x])
-                self._add_clause([v, *(-x for x in  xs)])
+                self._add_clause([v, *(_neg_of_litconst(x) for x in xs)])
         elif isinstance(e, Or):
-            if v is True:
-                self._add_clause([self._reduce_none(c) for c in e.c])
-            elif v is False:
-                self._reduce(And(*(Not(c) for c in e.c)), True)
+            # print(f"Reducing Or ({e}) against {v}")
+            if isinstance(v, bool):
+                if v:
+                    self._add_clause([self._reduce_none(c) for c in e.c])
+                else:
+                    self._reduce(And(*(Not(c) for c in e.c)), True)
             else:
                 xs = [self._reduce_none(c) for c in e.c]
                 for x in xs:
-                    self._add_clause([-x, v])
+                    self._add_clause([_neg_of_litconst(x), v])
                 self._add_clause([-v, *xs])
         elif isinstance(e, Not):
             self._reduce(e.a, _neg_of_litconst(v))
         elif isinstance(e, Iff):
             if isinstance(v, bool):
                 x = self._reduce_none(e.a)
+                # print("Iff x is", x, 'b is', e.b)
                 self._reduce(e.b, x if v else _neg_of_litconst(x))
             else:
                 assert False

@@ -13,18 +13,19 @@
 # limitations under the License.
 
 from collections import defaultdict, Counter
-import itertools, copy, re, random, typing
+import itertools, copy, re, random, typing, sys, functools
 from typing import Tuple, Iterable, Union, Set, Optional, cast, Collection, List, Dict, DefaultDict, Iterator, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 import z3
+from z3.z3 import Bool
 import separators.sat as sat
 try:
     import pycryptosat
 except ModuleNotFoundError:
     pass
 
-from .logic import Forall, Exists, Equal, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars, symbols
+from .logic import Forall, Exists, Equal, Iff, Relation, And, Or, Not, Formula, Term, Var, Func, Model, Signature, rename_free_vars, free_vars, symbols
 from .check import check
 from .timer import Timer, UnlimitedTimer
 
@@ -166,6 +167,10 @@ def vars_of(t: Union[Term,Formula]) -> Iterator[str]:
     elif isinstance(t, Equal):
         for c in t.args:
             yield from vars_of(c)
+    elif isinstance(t, And) and len(t.c) == 0:
+        return
+    elif isinstance(t, Or) and len(t.c) == 0:
+        return
     else: assert False
 
 
@@ -1637,16 +1642,43 @@ class InstNode3(object):
     def size(self) -> int:
         return 1 + sum(c.size() for c in self.children)
 
+def value_of(e: Formula) -> Optional[bool]:
+    if isinstance(e, And) and all(value_of(c) is True for c in e.c):
+        return True
+    if isinstance(e, And) and any(value_of(c) is False for c in e.c):
+        return False
+    if isinstance(e, Or) and all(value_of(c) is False for c in e.c):
+        return False
+    if isinstance(e, Or) and any(value_of(c) is True for c in e.c):
+        return True
+    if isinstance(e, Not):
+        v = value_of(e.f)
+        if v is None: return None
+        return not v
+    return None
+def SimpleOr(*args: Formula) -> Formula:
+    final_args = []
+    for arg in args:
+        v = value_of(arg) 
+        if v is True: return And([])
+        if v is None:
+            final_args.append(arg)
+    if len(final_args) == 1:
+        return final_args[0]
+    return Or(final_args)
+            
+
 
 class FixedImplicationSeparatorPyCryptoSat(object):
     def __init__(self, sig: Signature, prefix: Sequence[Tuple[Optional[bool], int]], pc: PrefixConstraints = PrefixConstraints(), k_cubes: int = 1, expt_flags: Set[str] = set(), blocked_symbols: List[str] = [], debug: bool = False):
         self._sig = sig
         self._depth = len(prefix)
-        self._prefix = list(prefix)
-        # self._prefix_constraints = pc
+        self._prefix = [(is_forall, sort) for (is_forall, sort) in prefix if is_forall is not None]
+        assert len(prefix) == len(self._prefix)
+        self._prefix_constraints = pc
         self._n_sorts = len(sig.sort_names)
         self._solver = pycryptosat.Solver()
-        self._next_sat_var = 1
+        self._next_sat_var = 1 # not 0 as 0 means "end of clause"
         self._models: List[Model] = []
         self._collapse_cache: CollapseCache = CollapseCache(sig)
         self._expt_flags = set(expt_flags)
@@ -1661,15 +1693,22 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         self._fo_type_sat_vars: Dict[int, sat.Var] = {}
         self.prefix_var_names = pretty_prefix_var_names(self._sig, (s for _, s in self._prefix))
         self.atoms = list(atoms_of(self._sig, [(v, self._sig.sort_names[sort]) for v, (_, sort) in zip(self.prefix_var_names, self._prefix)]))
-        # self.atoms.append(And([])) # add "true" as an atom, and thus "true" and "false" as literals
+        self.atoms.append(And([])) # add "true" as an atom, and thus "true" and "false" as literals
+        
         self.literals = [a if pol else Not(a) for a in self.atoms for pol in [True, False]]
         
         self._literal_sat_vars: Dict[Tuple[int, int], sat.Var] = {}
-        for cube in range(1 + self._k_cubes):
+        for cube in range(self._k_cubes):
             for a in range(len(self.atoms)):
                 for p in [True, False]:
                     self._literal_sat_vars[(cube, self._literal_id(a, p))] = sat.Var(self._new_sat_var())
-
+        
+        # Vars for EPR pushdown
+        self._prefix_order_vars: Dict[Tuple[int, int], sat.Var] = {}
+        self._scope_vars: Dict[Tuple[int, int], sat.Var] = {}
+        self._free_literal_division_vars: Dict[int, sat.Var] = {}
+        self._quantifier_grouping = [list(l) for k, l in itertools.groupby(range(len(self._prefix)), key = lambda x: self._prefix[x][0])]
+        
         self._constrain_vars()
         self._solver.solve(model=False)
         self.solution_prefix, self.solution_matrix = self._extract_formula()
@@ -1679,12 +1718,14 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         self._next_sat_var += 1
         return v
 
-    def _add_sat_clause(self, e: sat.Expr) -> None:
+    def _add_sat_expr(self, e: sat.Expr) -> None:
         if self._debug:
             print("Adding clause:", e)
         r = sat.Reduction(self._new_sat_var)
         r.reduce(e)
         self._solver.add_clauses(r.clauses)
+        if self._debug:
+            print("Translated to: ", r.clauses)
 
     def _literal_id(self, atom_index: int, polarity: bool) -> int:
         return 2 * atom_index + (0 if polarity else 1)
@@ -1692,10 +1733,86 @@ class FixedImplicationSeparatorPyCryptoSat(object):
     def _constrain_vars(self) -> None:
         # Each atom can appear positively or negatively but not both
         for i in range(len(self.atoms)):
-            for c in range(1+self._k_cubes):
-                self._add_sat_clause(~self._literal_sat_vars[(c, self._literal_id(i, True))]
+            for c in range(self._k_cubes):
+                self._add_sat_expr(~self._literal_sat_vars[(c, self._literal_id(i, True))]
                                      | ~self._literal_sat_vars[(c, self._literal_id(i, False))])
+        
+        if self._prefix_constraints.logic == Logic.EPR:
+            for group_index, quantifier_group in enumerate(self._quantifier_grouping):
+                for i in quantifier_group:
+                    for j in quantifier_group:
+                        if i < j:
+                            self._prefix_order_vars[(i,j)] = sat.Var(self._new_sat_var())
 
+            for i in range(len(self._prefix)):
+                for j in range(self._k_cubes + 1):
+                    self._scope_vars[(i,j)] = sat.Var(self._new_sat_var())
+            for l in range(2 * len(self.atoms)):
+                self._free_literal_division_vars[l] = sat.Var(self._new_sat_var())
+
+            # Order variables must be transitive.
+            def _ord(i: int,j: int) -> sat.Expr: return self._prefix_order_vars[(i,j)] if i < j else ~self._prefix_order_vars[(j,i)]
+            for group in self._quantifier_grouping:
+                for a in group:
+                    for b in group:
+                        for c in group:
+                            if a != b and b != c and a != c:
+                                #print(f"{_ord(a,b)} ^ {_ord(b,c)} => {_ord(a,c)}")
+                                # group_clauses.append(~_ord(a,b) | ~_ord(b,c) | _ord(a,c))
+                                self._add_sat_expr(~_ord(a,b) | ~_ord(b,c) | _ord(a,c))
+
+            for a in range(len(self.atoms)):
+                fv = set(free_vars(self.atoms[a]))
+                l_0 = self._literal_id(a, True)
+                l_1 = self._literal_id(a, False)
+                for i in range(len(self._prefix)):
+                    if self.prefix_var_names[i] in fv:
+                        for j in range(self._k_cubes + 1):
+                            if j <= 1:
+                                # decision var true corresponds to literal in sub-term j == 0, false to j == 1
+                                c_0 = ~self._free_literal_division_vars[l_0] if j == 0 else self._free_literal_division_vars[l_0]
+                                c_1 = ~self._free_literal_division_vars[l_1] if j == 0 else self._free_literal_division_vars[l_1]
+                                self._add_sat_expr(c_0 | ~self._literal_sat_vars[(0, l_0)] | self._scope_vars[(i,j)])
+                                self._add_sat_expr(c_1 | ~self._literal_sat_vars[(0, l_1)] | self._scope_vars[(i,j)])
+                            else:
+                                cube_index = j - 1 # there are two free literal sub-terms
+                                self._add_sat_expr(~self._literal_sat_vars[(cube_index, l_0)] | self._scope_vars[(i,j)])
+                                self._add_sat_expr(~self._literal_sat_vars[(cube_index, l_1)] | self._scope_vars[(i,j)])
+
+            def _add_epr_constraint(i: int, i_p: int, order_var: sat.Expr) -> None:
+                # print(f"Considering EPR {i} {i_p} {order_var}", file = sys.stderr)
+                if self._prefix[i][0] == self._prefix[i_p][0]: return # we need either forall exists or exists forall
+                if (self._prefix[i][1], self._prefix[i_p][1]) not in self._prefix_constraints.disallowed_quantifier_edges: return
+                for j in range(self._k_cubes + 1):
+                    self._add_sat_expr(order_var >> ~(self._scope_vars[(i,j)] & self._scope_vars[(i_p,j)]))
+                    # print("Assert", order_var >> ~(self._scope_vars[(i,j)] & self._scope_vars[(i_p,j)]), file = sys.stderr)
+
+            for group_index, group in enumerate(self._quantifier_grouping):
+                for i in group:
+                    for i_p in group:
+                        if i!= i_p:
+                            _add_epr_constraint(i, i_p, _ord(i, i_p))
+                        if i != i_p and self._prefix[i_p][0]: # only need to process different quantifiers that are foralls
+                            for j in range(self._k_cubes + 1):
+                                for j_p in range(self._k_cubes + 1):
+                                    if j != j_p:
+                                        pass # assert Ord_ii' & S_ij & S_i'j & S_i'j' => S_ij'
+                                        self._add_sat_expr(~_ord(i, i_p) | ~self._scope_vars[(i,j)] | ~self._scope_vars[(i_p,j)] | ~self._scope_vars[(i_p,j_p)] | self._scope_vars[(i,j_p)])
+
+                    for sub_group in self._quantifier_grouping[group_index+1:]:
+                        for i_p in sub_group:
+                            _add_epr_constraint(i, i_p, sat.Val(True))
+                            if self._prefix[i_p][0]: # only need to process smaller quantifiers that are foralls
+                                for j in range(self._k_cubes + 1):
+                                    for j_p in range(self._k_cubes + 1):
+                                        if j != j_p:
+                                            self._add_sat_expr(~self._scope_vars[(i,j)] | ~self._scope_vars[(i_p,j)] | ~self._scope_vars[(i_p,j_p)] | self._scope_vars[(i,j_p)])
+                                            # assert S_ij & S_i'j & S_i'j' => S_ij'
+
+            # Ensure the solver has a higher numbered variable, so it doesn't ignore any of the above 
+            # even if they aren't included in any clauses. Particularly problematic for order vars
+
+            self._add_sat_expr(sat.Var(self._new_sat_var()))
 
     def _fo_type_sat_var(self, fo_type: int) -> sat.Var:
         if fo_type not in self._fo_type_sat_vars:
@@ -1712,8 +1829,8 @@ class FixedImplicationSeparatorPyCryptoSat(object):
             
             # This is for a implication expression
             ante = [self._literal_sat_vars[(0, lit)] for (lit, p) in literals_with_polarity if not p]
-            cnsq = [sat.And(*(~(self._literal_sat_vars[(1 + i, lit)]) for (lit, p) in literals_with_polarity if not p)) for i in range(self._k_cubes)]
-            self._add_sat_clause(self._fo_type_sat_vars[fo_type] == sat.Or(*ante, *cnsq))
+            cnsq = [sat.And(*(~(self._literal_sat_vars[(1 + i, lit)]) for (lit, p) in literals_with_polarity if not p)) for i in range(self._k_cubes - 1)]
+            self._add_sat_expr(self._fo_type_sat_vars[fo_type] == sat.Or(*ante, *cnsq))
             
         return self._fo_type_sat_vars[fo_type]
 
@@ -1724,7 +1841,7 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         self._node_count += 1
         # At the right depth, this node is exactly the FO type
         if len(inst) == self._depth:
-            self._add_sat_clause(node.sat_var == self._fo_type_sat_var(node.fo_type))
+            self._add_sat_expr(node.sat_var == self._fo_type_sat_var(node.fo_type))
         return node
 
     def _expand_node(self, node: InstNode3, sort: int) -> None:
@@ -1736,7 +1853,7 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         child_sat_vars = [c.sat_var for c in node.children]
         ifa = self._prefix[len(node.instantiation)][0]
         assert ifa is not None
-        self._add_sat_clause(node.sat_var == (sat.And(*child_sat_vars) if ifa else sat.Or(*child_sat_vars)))
+        self._add_sat_expr(node.sat_var == (sat.And(*child_sat_vars) if ifa else sat.Or(*child_sat_vars)))
         
     def _model_node(self, i: int) -> InstNode3:
         if i not in self._node_roots:
@@ -1750,11 +1867,11 @@ class FixedImplicationSeparatorPyCryptoSat(object):
         return l
     def add_constraint(self, c: Constraint) -> None:
         if isinstance(c, Pos):
-            self._add_sat_clause(self._model_node(c.i).sat_var)
+            self._add_sat_expr(self._model_node(c.i).sat_var)
         elif isinstance(c, Neg):
-            self._add_sat_clause(~self._model_node(c.i).sat_var)
+            self._add_sat_expr(~self._model_node(c.i).sat_var)
         elif isinstance(c, Imp):
-            self._add_sat_clause(self._model_node(c.i).sat_var >> self._model_node(c.j).sat_var)
+            self._add_sat_expr(self._model_node(c.i).sat_var >> self._model_node(c.j).sat_var)
         self.constraints.insert(0, c)
 
     def _query_literal(self, ante: int, literal: int) -> bool:
@@ -1764,23 +1881,21 @@ class FixedImplicationSeparatorPyCryptoSat(object):
     def block_last_separator(self) -> None:
         # cl = []
         cl_sat = []
-        for ante in range(1 + self._k_cubes):
+        for ante in range(self._k_cubes):
             for l in range(2 * len(self.atoms)):
                 if self._query_literal(ante, l):
                     cl_sat.append(self._literal_sat_vars[(ante, l)])
-        self._add_sat_clause(~sat.And(*cl_sat))
+        self._add_sat_expr(~sat.And(*cl_sat))
 
     def _extract_formula(self) -> Tuple[List[Tuple[bool, int, str]], List[List[int]]]:
         prefix = []
         for d in range(self._depth):
-            prefix_ifa = self._prefix[d][0]
-            assert prefix_ifa is not None
-            is_forall = prefix_ifa
+            is_forall = self._prefix[d][0]
             sort = self._prefix[d][1]
             name = self.prefix_var_names[d]
             prefix.append((is_forall, sort, name))
         phi = []
-        for ante in range(1 + self._k_cubes):
+        for ante in range(self._k_cubes):
             cb = []
             for l in range(2 * len(self.atoms)):
                 if self._query_literal(ante, l):
@@ -1788,14 +1903,39 @@ class FixedImplicationSeparatorPyCryptoSat(object):
             phi.append(cb)
         return (prefix, phi)
 
+    def _extract_ordered_prefix(self) -> List[Tuple[bool, int, str]]:
+        order_val: Dict[Tuple[int, int], bool] = {}
+        for k, v in zip(self._prefix_order_vars.keys(), self._solver.assignment(v.i for v in self._prefix_order_vars.values())):
+            order_val[k] = v if v else False
+
+        def cmp(i: int, i_p: int) -> int:
+            if i == i_p:
+                return 0
+            if i_p < i:
+                return -cmp(i_p, i)
+            return -1 if order_val.get((i, i_p), True) else 1
+
+        order = list(range(self._depth))
+        order.sort(key = functools.cmp_to_key(cmp))
+        return [(*self._prefix[d], self.prefix_var_names[d]) for d in order]
+
     def separate(self, minimize: bool = False) -> Optional[Formula]:
+        if self._debug:
+            print(f"Starting separate()")
         while True:
             if self._debug:
                 print(f"In implication solver (d={self._depth}) sat query...")
             sat_result, _ = self._solver.solve(model=False)
             if not sat_result:
+                if self._debug:
+                    print("unsep from solver")
                 return None
-            self.solution_prefix, self.solution_matrix = self._extract_formula()
+            
+            if minimize:
+                #self._local_minimize_sat2()
+                self._local_minimize_sat()
+            else:
+                self.solution_prefix, self.solution_matrix = self._extract_formula()
             # all_literal_vars = [v.i for v in self._literal_sat_vars.values()]
             # all_literal_vars.sort()
             # print(list(zip(all_literal_vars, self._solver.assignment(all_literal_vars))))
@@ -1805,43 +1945,161 @@ class FixedImplicationSeparatorPyCryptoSat(object):
                 print ("prefix", " ".join([f"{'A' if pol else 'E'} {name}:{self._sig.sort_names[sort]}" \
                     for (pol, sort, name) in self.solution_prefix]),
                     "matrix", And([self.literals[i] for i in self.solution_matrix[0]]), "->", "|".join(str(And([self.literals[i] for i in cube])) for cube in self.solution_matrix[1:]))
-            
+            # if minimize:
+            #     if self._local_minimize_sat2(): 
+            #         print("minimized changed")
+                #    continue
+                
             if self._check_formula_validity([(ifa, sort) for (ifa, sort, _) in self.solution_prefix], self.solution_matrix, self.constraints):
-                while minimize and self._local_minimize_sat(): pass
-                ante = [] if len(self.solution_matrix[0]) == 0 else [self.literals[i^1] for i in self.solution_matrix[0]]
-                f: Formula = Or([*ante, *(And([self.literals[i] for i in cube]) for cube in self.solution_matrix[1:])])
-                vars_used = set(free_vars(f))
-                # print(f"Vars used: {vars_used} in {f}")
-                for is_forall, sort, name in reversed(self.solution_prefix):
-                    if name in vars_used:
-                        f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
-                # print(f"Post simplification: {f}")
-                return f
+                # while minimize and self._local_minimize_sat(): pass
+                # if self._local_minimize_sat2(): 
+                #     continue
+                original_prefix = self.solution_prefix
+                if self._prefix_constraints.logic == Logic.EPR:
+                    self.solution_prefix = self._extract_ordered_prefix()
+                final = self._pushdown()
+                if self._prefix_constraints.logic == Logic.EPR and not self._check_epr(final):
+                    print(f"PANIC, not in EPR: {final}", file=sys.stderr)
+                    self._debug_epr(original_prefix, final)
+                    raise RuntimeError("Not in EPR")
+                return final
             # otherwise, _check_formula_validity has added constraints
             if self._debug:
                 print(f"expanded nodes: {self._node_count}/{sum(len(model.elems) ** d for model in self._models for d in range(self._depth + 1))}")
     
-    def _local_minimize_sat(self) -> bool:
-        not_present_literals: List[int] = []
-        present_literals: List[int] = []
+    def _local_minimize_sat(self) -> None:
+        
+        while True:
+            not_present_literals: List[int] = []
+            present_literals: List[int] = []
 
-        assignment = self._solver.assignment([v.i for _,v in self._literal_sat_vars.items()])
+            v_i_s = [v.i for (cube, lit), v in self._literal_sat_vars.items() if lit//2 != len(self.atoms) - 1]
+            assignment: List[bool] = self._solver.assignment(v_i_s)
 
-        for i, ((ante, l), v) in enumerate(self._literal_sat_vars.items()):
-            if assignment[i] == True:
-                present_literals.append(v.i)
+            for truthv, v_i in zip(assignment, v_i_s):
+                if truthv:
+                    present_literals.append(v_i)
+                else:
+                    not_present_literals.append(-v_i)
+
+            # for i, ((ante, l), v) in enumerate(self._literal_sat_vars.items()):
+            #     if assignment[i] == True:
+            #         present_literals.append(v.i)
+            #     else:
+            #         not_present_literals.append(-v.i)
+            random.shuffle(present_literals)
+            for p in present_literals:
+                ret, _ = self._solver.solve([*not_present_literals, -p], model=False)
+                if ret == True:
+                    if self._debug:
+                        print(f"Found smaller solution")
+                    break
             else:
-                not_present_literals.append(-v.i)
-
-        for p in present_literals:
-            ret, _ = self._solver.solve([*not_present_literals, -p], model=False)
-            if ret == True:
-                if self._debug:
-                    print(f"Found smaller solution")
-                # self.solution = self.solver.model()
                 self.solution_prefix, self.solution_matrix = self._extract_formula()
-                return True
-        return False
+                return
+
+    def _local_minimize_sat2(self) -> bool:
+        aa = list(self._literal_sat_vars.items())
+        aa.sort(key = lambda x: -x[0][0] + random.random())
+        v_i_s = [v.i for _, v in aa]
+        v_keys = [k for k, v in aa]
+        true_atom_id = len(self.atoms) - 1
+        # v_i_s = [v.i for _, v in self._literal_sat_vars.items()]
+        asserted: Set[int] = set()
+
+        # print("before minimization", self.solution_matrix)
+        
+        for (cube, literal), vi, index in zip(v_keys, v_i_s, range(len(v_i_s))):
+            if literal // 2 == true_atom_id: continue
+            if self._solver.assignment([vi]):
+                ret, _ = self._solver.solve(itertools.chain([-vi], asserted), model=False)
+                if ret is True:
+                    asserted.add(-vi)
+                else:
+                    pass 
+                    #asserted.add(vi)
+            else:
+                asserted.add(-vi)
+                    
+        self.solution_prefix, self.solution_matrix = self._extract_formula()
+        # print("after minimization", self.solution_matrix)
+        return True
+
+    def _pushdown_helper(self, is_forall: bool, sort: int, bv: str, terms: List[Formula]) -> List[Formula]:
+        in_terms = [bv in set(free_vars(t)) for t in terms]
+        p_plus = [t for t, in_term in zip(terms, in_terms) if in_term]
+        p_minus = [t for t, in_term in zip(terms, in_terms) if not in_term]
+        if len(p_plus) == 0: return p_minus
+        if not is_forall:
+            return [cast(Formula, Exists(bv, self._sig.sort_names[sort], t)) for t in p_plus] + p_minus
+        else:
+            body = SimpleOr(*p_plus)
+            return [cast(Formula, Forall(bv, self._sig.sort_names[sort], body))] + p_minus
+
+    def _pushdown(self) -> Formula:
+        # Implement pushdown. Relies on self.solution_prefix being in the right order
+        ante = [] if len(self.solution_matrix[0]) == 0 else [self.literals[i^1] for i in self.solution_matrix[0]]
+        body = [*ante, *(And([self.literals[i] for i in cube]) for cube in self.solution_matrix[1:])]
+        for is_forall, sort, name in reversed(self.solution_prefix):
+            body = self._pushdown_helper(is_forall, sort, name, body)
+        return SimpleOr(*body)
+
+        # Classic version:
+        # ante = [] if len(self.solution_matrix[0]) == 0 else [self.literals[i^1] for i in self.solution_matrix[0]]
+        # f: Formula = Or([*ante, *(And([self.literals[i] for i in cube]) for cube in self.solution_matrix[1:])])
+        # vars_used = set(free_vars(f))
+        # # print(f"Vars used: {vars_used} in {f}")
+        # for is_forall, sort, name in reversed(self.solution_prefix):
+        #     if name in vars_used:
+        #         f = (Forall if is_forall else Exists)(name, self._sig.sort_names[sort], f)
+        # # print(f"Post simplification: {f}")
+        # return f
+
+    def _check_epr(self, f: Formula, univ_sorts: Set[int] = set(), exst_sorts: Set[int] = set()) -> bool:
+        if isinstance(f, Forall):
+            this_sort = self._sig.sort_indices[f.sort]
+            if not self._check_epr(f.f, univ_sorts.union([this_sort]), exst_sorts):
+                return False
+            for larger in exst_sorts:
+                if (larger, this_sort) in self._prefix_constraints.disallowed_quantifier_edges:
+                    return False
+            return True
+        elif isinstance(f, Exists):
+            this_sort = self._sig.sort_indices[f.sort]
+            if not self._check_epr(f.f, univ_sorts, exst_sorts.union([this_sort])):
+                return False
+            for larger in univ_sorts:
+                if (larger, this_sort) in self._prefix_constraints.disallowed_quantifier_edges:
+                    return False
+            return True                
+        elif isinstance(f, Or) or isinstance(f, And):
+            return all(self._check_epr(subf, univ_sorts, exst_sorts) for subf in f.c)
+        elif isinstance(f, Not):
+            return self._check_epr(f.f, exst_sorts, univ_sorts)
+        elif isinstance(f, Iff):
+            return self._check_epr(f.c[0], univ_sorts, exst_sorts) and \
+                   self._check_epr(f.c[1], exst_sorts, univ_sorts)
+        else:
+            return True
+    
+    def _debug_epr(self, prefix: List[Tuple[bool, int, str]], final: Formula) -> None:
+        sys.stdout = sys.stderr
+        print("final", final)
+        print("initial prefix def", self._prefix)
+        print("initial prefix", prefix)
+        print(self.solution_prefix)
+        print(self.solution_matrix)
+        for ord, var in self._prefix_order_vars.items():
+            print("ord", ord, self._solver.assignment([var.i])[0])
+        
+        for i in range(len(self._prefix)):
+            print (f"{i}: ", end='')
+            for j in range(self._k_cubes + 1):
+                var = self._scope_vars[(i, j)]
+                print(1 if self._solver.assignment([var.i])[0] else 0, end = ' ')
+
+            print (f"({self.prefix_var_names[i]}, {'forall' if self._prefix[i][0] else 'exists'})")
+
 
     def _truth_value_conjunction(self, conj: List[int], model: Model, mapping: Dict[str, int]) -> Optional[bool]:
         all_true = True
@@ -1906,6 +2164,8 @@ class FixedImplicationSeparatorPyCryptoSat(object):
 
             is_forall, sort = prefix[len(n.instantiation)]
             self._expand_node(n, sort)
+            if 'showexpansions' in self._expt_flags:
+                print(f"Expanded node {n}")
             for c in n.children:
                 expand_to_prove(c, expected)
             return False
