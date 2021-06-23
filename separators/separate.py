@@ -258,6 +258,13 @@ class Logic(Enum):
     FOL = 1
     Universal = 2
     EPR = 3
+    @staticmethod
+    def from_str(s: str) -> 'Logic':
+        if s.lower() == 'fol': return Logic.FOL
+        if s.lower() == 'universal': return Logic.Universal
+        if s.lower() == 'epr': return Logic.EPR
+        assert False, f"{s} is not a logic"
+        
 
 @dataclass
 class PrefixConstraints:
