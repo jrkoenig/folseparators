@@ -18,10 +18,10 @@ from collections import defaultdict
 import z3
 
 from .interpret import FOLFile
-from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig, model_is_partial_wrt_sig
+from .logic import Signature, Environment, Model, And, Or, Not, Exists, Forall, Equal, Relation, Formula, Term, Var, Func, Iff, model_is_complete_wrt_sig
 from .check import check
-from .separate import Constraint, Pos, Neg, Imp, Logic, PrefixConstraints, Separator, HybridSeparator
-from .timer import Timer, UnlimitedTimer, TimeoutException
+from .separate import Constraint, Pos, Neg, Imp, Logic, PrefixConstraints
+from .timer import Timer, TimeoutException
 from .cvc4 import solve_with_cvc4
 from typing import *
 

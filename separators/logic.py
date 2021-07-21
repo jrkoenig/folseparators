@@ -12,11 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
 from collections import defaultdict
 import itertools
 from typing import Optional, Set, Dict, List, Tuple, DefaultDict, Iterable, Iterator
 
 reserved_names = ["", "sort", "relation", "constant", "function", "axiom", "model", "forall", "exists", "and", "or", "not", "implies", "iff", "="]
+
+@dataclass(frozen=True, order=True)
+class Constraint:
+    """A separation constraint, one of `Pos(i)`, `Neg(i)`, or `Imp(i,j)`"""
+    def map(self, m: Dict[int, int]) -> 'Constraint': ...
+    def states(self) -> Iterable[int]: ...
+@dataclass(frozen=True, order=True)
+class Pos(Constraint):
+    i: int
+    def map(self, m: Dict[int, int]) -> 'Pos': return Pos(m.get(self.i, self.i))
+    def states(self) -> Iterable[int]: return (self.i,)
+@dataclass(frozen=True, order=True)
+class Neg(Constraint):
+    i: int
+    def map(self, m: Dict[int, int]) -> 'Neg': return Neg(m.get(self.i, self.i))
+    def states(self) -> Iterable[int]: return (self.i,)
+@dataclass(frozen=True, order=True)
+class Imp(Constraint):
+    i: int
+    j: int
+    def map(self, m: Dict[int, int]) -> 'Imp': return Imp(m.get(self.i, self.i), m.get(self.j, self.j))
+    def states(self) -> Iterable[int]: return (self.i,self.j)
+
 
 # Represents the signature part of a FOL structure, such as sorts, functions, etc.
 class Signature(object):
