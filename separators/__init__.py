@@ -14,5 +14,5 @@
 
 from . import logic, separate, timer
 from .logic import Formula, Signature, Model, Neg, Pos, Imp
-from .separate import Separator, FixedImplicationSeparatorPyCryptoSat, Constraint
+from .separate import Separator, FixedImplicationSeparatorPyCryptoSat, FixedImplicationSeparatorPyCryptoSatCNF, Constraint
 from .timer import UnlimitedTimer
