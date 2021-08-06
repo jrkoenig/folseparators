@@ -1041,19 +1041,6 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
 
             print (f"({self.prefix_var_names[i]}, {'forall' if self._prefix[i][0] else 'exists'})")
 
-    # def _truth_value_conjunction(self, conj: List[int], model: Model, mapping: Dict[str, int]) -> Optional[bool]:
-    #     all_true = True
-    #     for lit in conj:
-    #         is_defined = all((v in mapping or v in model.constants) for v in vars_of(self.literals[lit]))
-    #         v = check(self.literals[lit], model, mapping) if is_defined else None
-    #         if v != True:
-    #             all_true = False
-    #         if v == False:
-    #             return False
-    #     # all literals are either unknown or true, because we would have early returned otherwise
-    #     if all_true: return True
-    #     # We must have at least one unknown, because not all are true
-    #     return None
 
     def _literal_value(self, lit: int, model: Model, mapping: Dict[str, int]) -> Optional[bool]:
         is_defined = all((v in mapping or v in model.constants) for v in vars_of(self.literals[lit]))
@@ -1063,27 +1050,15 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
         """Returns `True`/`False` if the matrix's value is determined on model, or `None` if it is not determined"""
         return _ternary_or((_ternary_not(_ternary_and(self._literal_value(lit, model, mapping) for lit in cl_cube)) if i == 0
                              else _ternary_and(self._literal_value(lit, model, mapping) for lit in cl_cube) for i, cl_cube in enumerate(matrix_list)))
-        
-        # [ante, *cnsq] = matrix_list
-        # A = self._truth_value_conjunction(ante, model, mapping)
-        # if A == False:
-        #     return True
-        # Bs = []
-        # for cube in cnsq:
-        #     B = self._truth_value_conjunction(cube, model, mapping)
-        #     if B == True:
-        #         return True
-        #     Bs.append(B)
-        # if A == True and all(B == False for B in Bs):
-        #     return False
-        # return None
 
     def _check_formula_validity(self, prefix: List[Quantifier], matrix_list: List[List[int]],
                                 constraints: List[Constraint]) -> bool:
         depth = len(prefix)
-        # matrix = Or([Not(And([self.literals[i] for i in matrix_list[0]])), *(And([self.literals[i] for i in cube]) for cube in matrix_list[1:])])
-
+        show_expansions = 'sep-show-expansions' in self._expt_flags
+        
         _matrix_value_cache: Dict[int, Optional[bool]] = {}
+        _actual_value_cache: Dict[Tuple[int, ...], bool] = {}
+
         def matrix_value_fo_type(fo_type: int) -> Optional[bool]:
             if fo_type not in _matrix_value_cache:
                 (model_i, assignment) = self._collapse_cache.get_example(fo_type)
@@ -1091,17 +1066,24 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
                 _matrix_value_cache[fo_type] = self._imp_matrix_value(matrix_list, self._models[model_i], mapping)
             return _matrix_value_cache[fo_type]
 
-        def check_assignment(asgn: Tuple[int, ...], model: Model) -> bool:
-            if len(asgn) == depth:
-                mapping = {v: e for v,e in zip(self.prefix_var_names, asgn)}
-                value = self._imp_matrix_value(matrix_list, model, mapping)
-                assert value is not None
-                return value
-                # return check(matrix, model, {v: e for v,e in zip(self.prefix_var_names, asgn)})
+        def check_assignment(asgn: Tuple[int, ...], model_i: int) -> bool:
+            cache_key = (model_i, *asgn)
+            cached = _actual_value_cache.get(cache_key, None)
+            
+            if cached is not None:
+                return cached
+            
+            mapping = {v: e for v,e in zip(self.prefix_var_names, asgn)}
+            matrix_value = self._imp_matrix_value(matrix_list, self._models[model_i], mapping)
+            if matrix_value is not None or len(asgn) == depth:
+                assert matrix_value is not None
+                value = matrix_value
             else:
                 (is_forall, sort) = prefix[len(asgn)]
-                univ = model.elems_of_sort[self._sig.sort_names[sort]]
-                return (all if is_forall else any)(check_assignment((*asgn, e), model) for e in univ)
+                univ = self._models[model_i].elems_of_sort[self._sig.sort_names[sort]]
+                value = (all if is_forall else any)(check_assignment((*asgn, e), model_i) for e in univ)
+            _actual_value_cache[cache_key] = value
+            return value
 
         def expand_to_prove(n: InstNode3, expected: bool) -> bool:
             matrix_value = matrix_value_fo_type(n.fo_type)
@@ -1109,22 +1091,22 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
                 assert matrix_value is not None
                 return expected is matrix_value
             # we aren't at the base, but check the rest of the quantifiers and return if they match
-            if matrix_value is expected or check_assignment(n.instantiation, self._models[n.model_i]) == expected:
+            if matrix_value is expected or check_assignment(n.instantiation, n.model_i) == expected:
                 return True
 
             _, sort = prefix[len(n.instantiation)]
             self._expand_node(n, sort)
-            if 'showexpansions' in self._expt_flags:
+            if show_expansions:
                 print(f"Expanded node {n}")
             for c in n.children:
                 expand_to_prove(c, expected)
             return False
 
         _root_node_cache: Dict[int, bool] = {}
-        def root_node_value(n: int) -> bool:
-            if n not in _root_node_cache:
-                _root_node_cache[n] = check_assignment((), self._models[n])
-            return _root_node_cache[n]
+        def root_node_value(model_i: int) -> bool:
+            if model_i not in _root_node_cache:
+                _root_node_cache[model_i] = check_assignment((), model_i)
+            return _root_node_cache[model_i]
 
         def swap_to_front(c: int) -> None:
             if c > 0:
@@ -1133,12 +1115,13 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
             # pass
         
         for c_i in range(len(constraints)):
+            _actual_value_cache.clear()
             c = constraints[c_i]
             if isinstance(c, Pos):
                 if not root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], True)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded + in {c.i}, {s}/{max}")
@@ -1147,7 +1130,7 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
                 if root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], False)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded - in {c.i}, {s}/{max}")
@@ -1157,7 +1140,7 @@ class FixedImplicationSeparatorPyCryptoSat(Separator):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], False)
                     expand_to_prove(self._node_roots[c.j], True)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded x-> in {c.i}, {s}/{max}")
@@ -1359,7 +1342,7 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
                 # while minimize and self._local_minimize_sat(): pass
                 # if self._local_minimize_sat2(): 
                 #     continue
-                print("formula is correct")
+                # print("formula is correct")
                 return self._to_formula()
             # otherwise, _check_formula_validity has added constraints
             if self._debug:
@@ -1403,11 +1386,15 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
         """Returns `True`/`False` if the matrix's value is determined on model, or `None` if it is not determined"""
         return _ternary_and(_ternary_or(self._literal_value(lit, model, mapping) for lit in cl) for cl in matrix_list)
         
+
     def _check_formula_validity(self, prefix: List[Quantifier], matrix_list: List[List[int]],
                                 constraints: List[Constraint]) -> bool:
         depth = len(prefix)
+        show_expansions = 'sep-show-expansions' in self._expt_flags
         
         _matrix_value_cache: Dict[int, Optional[bool]] = {}
+        _actual_value_cache: Dict[Tuple[int, ...], bool] = {}
+
         def matrix_value_fo_type(fo_type: int) -> Optional[bool]:
             if fo_type not in _matrix_value_cache:
                 (model_i, assignment) = self._collapse_cache.get_example(fo_type)
@@ -1415,18 +1402,24 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
                 _matrix_value_cache[fo_type] = self._cnf_matrix_value(matrix_list, self._models[model_i], mapping)
             return _matrix_value_cache[fo_type]
 
-        def check_assignment(asgn: Tuple[int, ...], model: Model) -> bool:
-            if len(asgn) == depth:
-                mapping = {v: e for v,e in zip(self.prefix_var_names, asgn)}
-                value = self._cnf_matrix_value(matrix_list, model, mapping)
-                assert value is not None
-                return value
+        def check_assignment(asgn: Tuple[int, ...], model_i: int) -> bool:
+            cache_key = (model_i, *asgn)
+            cached = _actual_value_cache.get(cache_key, None)
             
-                # return check(matrix, model, {v: e for v,e in zip(self.prefix_var_names, asgn)})
+            if cached is not None:
+                return cached
+            
+            mapping = {v: e for v,e in zip(self.prefix_var_names, asgn)}
+            matrix_value = self._cnf_matrix_value(matrix_list, self._models[model_i], mapping)
+            if matrix_value is not None or len(asgn) == depth:
+                assert matrix_value is not None
+                value = matrix_value
             else:
                 (is_forall, sort) = prefix[len(asgn)]
-                univ = model.elems_of_sort[self._sig.sort_names[sort]]
-                return (all if is_forall else any)(check_assignment((*asgn, e), model) for e in univ)
+                univ = self._models[model_i].elems_of_sort[self._sig.sort_names[sort]]
+                value = (all if is_forall else any)(check_assignment((*asgn, e), model_i) for e in univ)
+            _actual_value_cache[cache_key] = value
+            return value
 
         def expand_to_prove(n: InstNode3, expected: bool) -> bool:
             matrix_value = matrix_value_fo_type(n.fo_type)
@@ -1434,22 +1427,22 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
                 assert matrix_value is not None
                 return expected is matrix_value
             # we aren't at the base, but check the rest of the quantifiers and return if they match
-            if matrix_value is expected or check_assignment(n.instantiation, self._models[n.model_i]) == expected:
+            if matrix_value is expected or check_assignment(n.instantiation, n.model_i) == expected:
                 return True
 
-            is_forall, sort = prefix[len(n.instantiation)]
+            _, sort = prefix[len(n.instantiation)]
             self._expand_node(n, sort)
-            if 'showexpansions' in self._expt_flags:
+            if show_expansions:
                 print(f"Expanded node {n}")
             for c in n.children:
                 expand_to_prove(c, expected)
             return False
 
         _root_node_cache: Dict[int, bool] = {}
-        def root_node_value(n: int) -> bool:
-            if n not in _root_node_cache:
-                _root_node_cache[n] = check_assignment((), self._models[n])
-            return _root_node_cache[n]
+        def root_node_value(model_i: int) -> bool:
+            if model_i not in _root_node_cache:
+                _root_node_cache[model_i] = check_assignment((), model_i)
+            return _root_node_cache[model_i]
 
         def swap_to_front(c: int) -> None:
             if c > 0:
@@ -1458,12 +1451,13 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
             # pass
         
         for c_i in range(len(constraints)):
+            _actual_value_cache.clear()
             c = constraints[c_i]
             if isinstance(c, Pos):
                 if not root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], True)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded + in {c.i}, {s}/{max}")
@@ -1472,7 +1466,7 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
                 if root_node_value(c.i):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], False)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded - in {c.i}, {s}/{max}")
@@ -1482,7 +1476,7 @@ class FixedImplicationSeparatorPyCryptoSatCNF(Separator):
                     swap_to_front(c_i)
                     expand_to_prove(self._node_roots[c.i], False)
                     expand_to_prove(self._node_roots[c.j], True)
-                    if 'showexpansions' in self._expt_flags:
+                    if show_expansions:
                         s = self._node_roots[c.i].size()
                         max = sum(len(self._models[c.i].elems) ** d for d in range(len(prefix)+1))
                         print(f"Expanded x-> in {c.i}, {s}/{max}")
